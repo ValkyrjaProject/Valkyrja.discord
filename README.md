@@ -25,3 +25,4 @@ The Botwinder project is split into four repositories:
 This bot is using hacked up and modified [Discord.NET](https://github.com/RogueException/Discord.Net) library. These changes should never see the light of the day. Hacks over hacks made in a rush - but it works, and without memoryleaks.
 
 Oh and keep in mind that this project is undergoing major changes right now, such as porting it from netframework to netcore, porting the serialisation from json to sql, and also from the old Discord.NET library to the new one. Don't be surprised if I randomly submit a commit that will change all the files a lot. Join our Discord server to stay up-to-date =)
+And before someone else starts flipping tables over json - this bot was built for a single server use and to run on Raspberry. Raspberry has extremely slow storage, which is why my code loads everything into memory, and nicely works with it, saving only on the _"off-thread."_ Show me anything faster than in-memory data.
