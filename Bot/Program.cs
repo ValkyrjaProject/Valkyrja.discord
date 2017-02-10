@@ -219,30 +219,36 @@ namespace Botwinder.Bot
 
 		protected static async void MentionReceived(Discord.Message message)
 		{
-			if( Bot.IsGlobalAdmin(message.User) )
+			try
 			{
-				if( (new Regex(".*(compile|restart|update).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-					await Restart(message.Channel);
-				else if( (new Regex(".*you (back|there|awake).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-					await message.Channel.SendMessage("Yes I am!");
-				else if( (new Regex(".*get back.*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-					await message.Channel.SendMessage("Simplified Artificial Intelligence has returned!");
-				else if( (new Regex(".*wake up.*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-					await message.Channel.SendMessage("I am awake >_>");
-				else if( (new Regex(".*(type|typing).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
+				if( Bot.IsGlobalAdmin(message.User) )
 				{
-					string path = Path.Combine("data", "typing.gif");
-					await message.Channel.SendIsTyping();
-					if( File.Exists(path) )
-						await message.Channel.SendFile(path);
+					if( (new Regex(".*(compile|restart|update).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
+						await Restart(message.Channel);
+					else if( (new Regex(".*you (back|there|awake).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
+						await message.Channel.SendMessage("Yes I am!");
+					else if( (new Regex(".*get back.*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
+						await message.Channel.SendMessage("Simplified Artificial Intelligence has returned!");
+					else if( (new Regex(".*wake up.*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
+						await message.Channel.SendMessage("I am awake >_>");
+					else if( (new Regex(".*(type|typing).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
+					{
+						string path = Path.Combine("data", "typing.gif");
+						await message.Channel.SendIsTyping();
+						if( File.Exists(path) )
+							await message.Channel.SendFile(path);
+					}
+					else if( (new Regex(".*((red ?hat)|rhel|bwel|botwinderos|linux).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
+					{
+						string path = Path.Combine("data", "redhat.png");
+						await message.Channel.SendIsTyping();
+						if( File.Exists(path) )
+							await message.Channel.SendFile(path);
+					}
 				}
-				else if( (new Regex(".*((red ?hat)|rhel|bwel|botwinderos|linux).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-				{
-					string path = Path.Combine("data", "redhat.png");
-					await message.Channel.SendIsTyping();
-					if( File.Exists(path) )
-						await message.Channel.SendFile(path);
-				}
+			} catch(Exception e)
+			{
+				Bot.LogException(e, null, "MentionReceived failed");
 			}
 		}
 
