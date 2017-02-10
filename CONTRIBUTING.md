@@ -33,6 +33,12 @@ The workflow for outside contribution is recommended to be the same, we don't bi
 
 The only difference is that you would first fork the repository, then follow all the other stuff and eventually submit a PR from your fork, into our appropriate branch.
 
+## Solution file
+
+* The solution as-is won't compile for you, unless you have `Botwinder.core` repository cloned into your `Botwinder.discord/Core` directory. (If you clone it right there, you can ignore the below two points as they are irrelevant. See [Readme file](README.md) for info about Core)
+* You have to kick the missing Core project out of the solution file, and comment out the `#define UsingBotwinderCore` in Program.cs
+* Do not submit any of these changes, otherwise you will screw up our build!
+
 ## Code style and Naming Conventions
 
 Just a few guidelines about the code:
