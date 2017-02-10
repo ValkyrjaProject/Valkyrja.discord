@@ -24,5 +24,8 @@ The Botwinder project is split into four repositories:
 
 This bot is using hacked up and modified [Discord.NET](https://github.com/RogueException/Discord.Net) library. These changes should never see the light of the day. Hacks over hacks made in a rush - but it works, and without memoryleaks.
 
-Oh and keep in mind that this project is undergoing major changes right now, such as porting it from netframework to netcore, porting the serialisation from json to sql, and also from the old Discord.NET library to the new one. Don't be surprised if I randomly submit a commit that will change all the files a lot. Join our Discord server to stay up-to-date =)  
-And before someone else starts flipping tables over json - this bot was built for a single server use and to run on Raspberry. Raspberry has extremely slow storage, which is why my code loads everything into memory, and nicely works with it, saving only on the _"off-thread."_ Show me anything faster than in-memory data.
+Notes about the state of the code:
+* Oh and keep in mind that this project is undergoing major changes right now, such as porting it from netframework to netcore, porting the serialisation from json to sql, and also from the old Discord.NET library to the new one. Don't be surprised if I randomly submit a commit that will change all the files a lot. Join our Discord server to stay up-to-date =)  
+* This bot was built for a single server use, and to run on Raspberry. Raspberry has extremely slow storage, which is why it loads everything into memory, and nicely works with it, saving only on the _"off-thread."_
+* You may find a few underscores. These are leftovers from my game-programmer habits from over a year ago. Game coders love their underscores - this was the code style in our studio.
+* Yes the main class is all static and mess. As I already mentioned, it started out as a small bot implementing whatever was necessary at a time, and I was even lazy enough to write this one properly and i just shoved it into a few static things. Feel free to rewrite it lol :D
