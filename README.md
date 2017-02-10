@@ -23,3 +23,5 @@ The Botwinder project is split into four repositories:
 * `Botwinder.status` - private code of the status page, which is essentially unchanged [eZ Server Monitor](https://github.com/shevabam/ezservermonitor-web) with just some modules repositioned, and customised configuration.
 
 This bot is using hacked up and modified [Discord.NET](https://github.com/RogueException/Discord.Net) library. These changes should never see the light of the day. Hacks over hacks made in a rush - but it works, and without memoryleaks.
+
+Oh and keep in mind that this project is undergoing major changes right now, such as porting it from netframework to netcore, porting the serialisation from json to sql, and also from the old Discord.NET library to the new one. Don't be surprised if I randomly submit a commit that will change all the files a lot. Join our Discord server to stay up-to-date =)
