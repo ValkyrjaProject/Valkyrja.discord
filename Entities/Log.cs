@@ -23,12 +23,12 @@ namespace Botwinder.Entities
 			public const int Warning = 1 << 7;
 		}
 
-		private string _Filename = "log.txt";
-		private Object _Lock = new Object();
+		private string Filename = "log.txt";
+		private Object Lock = new Object();
 
 		public Log(string filename)
 		{
-			this._Filename = filename;
+			this.Filename = filename;
 		}
 
 		public void LogExceptionAsync(Exception e, string additionalData = "")
@@ -37,9 +37,9 @@ namespace Botwinder.Entities
 		}
 		private void LogException(Exception e, string additionalData = "")
 		{
-			lock(this._Lock)
+			lock(this.Lock)
 			{
-				using(StreamWriter writer = File.AppendText(this._Filename))
+				using(StreamWriter writer = File.AppendText(this.Filename))
 				{
 					writer.WriteLine("Exception: " + e.Message);
 					if( !string.IsNullOrWhiteSpace(additionalData) )
@@ -56,9 +56,9 @@ namespace Botwinder.Entities
 		}
 		public void LogMessage(string text, bool singleLine = false)
 		{
-			lock(this._Lock)
+			lock(this.Lock)
 			{
-				using(StreamWriter writer = File.AppendText(this._Filename))
+				using(StreamWriter writer = File.AppendText(this.Filename))
 				{
 					if( singleLine )
 						writer.Write(text);
@@ -69,13 +69,13 @@ namespace Botwinder.Entities
 			}
 		}
 
-		async public Task ArchiveList( List<Message> messages, bool niceFormatting = false, bool markdownList = false )
+		public async Task ArchiveList( List<Message> messages, bool niceFormatting = false, bool markdownList = false )
 		{
-			lock(this._Lock)
+			await Task.Delay(1000);
+			lock(this.Lock)
 			{}
 
-			await Task.Delay(1000);
-			using(StreamWriter writer = File.AppendText(this._Filename))
+			using(StreamWriter writer = File.AppendText(this.Filename))
 			{
 				for(int i = messages.Count - 1; i >= 0; i--)
 				{
@@ -123,12 +123,12 @@ namespace Botwinder.Entities
 
 		public string GetFile()
 		{
-			return File.ReadAllText(this._Filename);
+			return File.ReadAllText(this.Filename);
 		}
 
 		public void OverwriteFile(string newContent)
 		{
-			File.WriteAllText(this._Filename, newContent);
+			File.WriteAllText(this.Filename, newContent);
 		}
 	}
 }

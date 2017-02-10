@@ -17,7 +17,7 @@ namespace Botwinder.Entities
 
 
 		[NonSerialized]
-		private Object _Lock = new Object();
+		private Object Lock = new Object();
 		[NonSerialized]
 		public string Folder = "";
 
@@ -51,7 +51,7 @@ namespace Botwinder.Entities
 
 		public void AddOwner(guid id)
 		{
-			lock(this._Lock)
+			lock(this.Lock)
 			{
 				if( this.OwnerIDs == null )
 					this.OwnerIDs = new guid[1];
@@ -65,7 +65,7 @@ namespace Botwinder.Entities
 
 		public void RemoveOwner(guid id)
 		{
-			lock(this._Lock)
+			lock(this.Lock)
 			{
 				if( this.OwnerIDs == null )
 					return;
@@ -79,7 +79,7 @@ namespace Botwinder.Entities
 
 		public void AddServer(guid id)
 		{
-			lock(this._Lock)
+			lock(this.Lock)
 			{
 				if( this.ServerIDs == null )
 					this.ServerIDs = new guid[1];
@@ -93,7 +93,7 @@ namespace Botwinder.Entities
 
 		public void RemoveServer(guid id)
 		{
-			lock(this._Lock)
+			lock(this.Lock)
 			{
 				if( this.ServerIDs == null )
 					return;
