@@ -31,7 +31,7 @@ namespace Botwinder.Modules
 			List<Command> commands;
 			Command newCommand;
 
-			if( !client.GlobalConfig.GiveawaysEnabled )
+			if( !client.GlobalConfig.RedditEnabled )
 			{
 				commands = new List<Command>();
 				newCommand = new Command("verify");
@@ -48,14 +48,11 @@ namespace Botwinder.Modules
 
 			try
 			{
-				if( client.GlobalConfig.RedditEnabled )
-				{
-					Console.WriteLine("Reddit: Connecting...");
-					//BotWebAgent agent = new BotWebAgent(client.GlobalConfig.RedditUsername, client.GlobalConfig.RedditPassword, client.GlobalConfig.RedditClientId, client.GlobalConfig.RedditClientSecret, client.GlobalConfig.RedditRedirectUri);
-					//this.RedditClient = new RedditSharp.Reddit(agent, true);
-					this.RedditClient = new RedditSharp.Reddit(client.GlobalConfig.RedditUsername, client.GlobalConfig.RedditPassword);
-					Console.WriteLine("Reddit: Connected.");
-				}
+				Console.WriteLine("Reddit: Connecting...");
+				//BotWebAgent agent = new BotWebAgent(client.GlobalConfig.RedditUsername, client.GlobalConfig.RedditPassword, client.GlobalConfig.RedditClientId, client.GlobalConfig.RedditClientSecret, client.GlobalConfig.RedditRedirectUri);
+				//this.RedditClient = new RedditSharp.Reddit(agent, true);
+				this.RedditClient = new RedditSharp.Reddit(client.GlobalConfig.RedditUsername, client.GlobalConfig.RedditPassword);
+				Console.WriteLine("Reddit: Connected.");
 			} catch(Exception e)
 			{
 				if( HandleException != null )
