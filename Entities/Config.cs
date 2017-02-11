@@ -52,6 +52,7 @@ namespace Botwinder.Entities
 		public guid MainServerID = 155821059960995840;
 		public guid MainLogChannelID = 170139120318808065;
 		public bool IsPremium = false;
+		public guid[] PartneredServerIDs = null;
 		public guid[] PartneredUserIDs = null;
 		public string CommandCharacter = "!";
 		public int AntispamClearInterval = 10;
