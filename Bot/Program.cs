@@ -165,7 +165,7 @@ namespace Botwinder.Bot
 				}
 				Bot.AddCommands(newCommands);
 
-				Reddit.Get().ReVerifyLast100(Bot).Wait();
+				//Reddit.Get().ReVerifyLast100(Bot).Wait(); //This aint finished and doesn't really do anything now anyway.
 
 			} catch(Exception e)
 			{
