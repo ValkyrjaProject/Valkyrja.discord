@@ -165,6 +165,8 @@ namespace Botwinder.Bot
 				}
 				Bot.AddCommands(newCommands);
 
+				Reddit.Get().ReVerifyLast100(Bot).Wait();
+
 			} catch(Exception e)
 			{
 				Bot.LogException(e);

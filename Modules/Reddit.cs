@@ -164,8 +164,7 @@ namespace Botwinder.Modules
 			};
 			commands.Add(newCommand);
 
-
-			return commands;
+		return commands;
 		}
 
 
@@ -180,11 +179,9 @@ namespace Botwinder.Modules
 					return;
 
 				Discord.Server mainServer = client.GetServer(client.GlobalConfig.MainServerID);
-				if( mainServer == null )
-					return;
-				Discord.Channel mainChannel = mainServer.GetChannel(client.GlobalConfig.MainLogChannelID);
-				if( mainChannel == null )
-					return;
+				Discord.Channel mainChannel = null;
+				if( mainServer != null )
+					mainChannel = mainServer.GetChannel(client.GlobalConfig.MainLogChannelID);
 
 				foreach(RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages)
 				{
@@ -219,7 +216,7 @@ namespace Botwinder.Modules
 							//await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}", message.Author, message.Subject, message.Body, user == null ? "null" : user.Id.ToString(), link));
 						}
 					}
-					else if( !message.IsComment )
+					else if( !message.IsComment && mainChannel != null )
 					{
 						await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}", message.Author, message.Subject, message.Body));
 
@@ -298,6 +295,45 @@ namespace Botwinder.Modules
 			server.UserDatabase.SaveAsync();
 
 			await user.SendMessage(string.Format(VerifyDonePM, server.DiscordServer.Name));
+		}
+
+		public async Task ReVerifyLast100<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
+		{
+			if( this.RedditClient == null || this.RedditClient.User == null )
+				return;
+
+			foreach(RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages)
+			{
+				RedditSharp.Things.PrivateMessage message = thing as RedditSharp.Things.PrivateMessage;
+				if( message == null )
+					continue;
+
+				if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
+				    && !message.IsComment && message.Subject.Contains("DiscordVerification") )
+				{
+					string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "(\\s|%20)");
+					guid serverID = 0;
+					guid userID = 0;
+					Server<TUser> server = null;
+					Discord.Server discordServer = null;
+					Discord.User user = null;
+					string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ? "https://www.reddit.com/user/" + message.Author.Remove(0, 3) : "https://www.reddit.com/user/" + message.Author;
+
+					if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
+					    (discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
+					    (server = client.GetServerData(serverID)) != null && (user = discordServer.GetUser(userID)) != null )
+					{
+						await VerifyUser(user, server, link);
+
+						//await message.SetAsReadAsync();
+						message.SetAsRead();
+					}
+				}
+				else if( !message.IsComment )
+				{
+					message.SetAsRead();
+				}
+			}
 		}
 
 		public event EventHandler<ModuleExceptionArgs> HandleException;
