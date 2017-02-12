@@ -59,7 +59,7 @@ namespace Botwinder.Modules
 			}
 		}
 
-#pragma warning disable 1998
+#pragma warning disable 1998, 67
 		public virtual List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser: UserData, new()
 		{
 			Load(client.GlobalConfig.Folder);
@@ -67,6 +67,6 @@ namespace Botwinder.Modules
 		}
 		public virtual async Task Update<TUser>(IBotwinderClient<TUser> client) where TUser: UserData, new(){}
 		public virtual event EventHandler<ModuleExceptionArgs> HandleException;
-#pragma warning restore 1998
+#pragma warning restore 1998, 67
 	}
 }
