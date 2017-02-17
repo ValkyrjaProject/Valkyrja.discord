@@ -192,7 +192,7 @@ namespace Botwinder.Modules
 					if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
 						&& !message.IsComment && message.Subject.Contains("DiscordVerification") )
 					{
-						string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "(\\s|%20)");
+						string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
 						guid serverID = 0;
 						guid userID = 0;
 						Server<TUser> server = null;
@@ -297,11 +297,12 @@ namespace Botwinder.Modules
 			await user.SendMessage(string.Format(VerifyDonePM, server.DiscordServer.Name));
 		}
 
-		public async Task ReVerifyLast100<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
+		public async Task ReVerifyLast1000<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
 		{
 			if( this.RedditClient == null || this.RedditClient.User == null )
 				return;
 
+			int i = 1000;
 			foreach(RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages)
 			{
 				RedditSharp.Things.PrivateMessage message = thing as RedditSharp.Things.PrivateMessage;
@@ -311,7 +312,7 @@ namespace Botwinder.Modules
 				if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
 				    && !message.IsComment && message.Subject.Contains("DiscordVerification") )
 				{
-					string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "(\\s|%20)");
+					string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
 					guid serverID = 0;
 					guid userID = 0;
 					Server<TUser> server = null;
@@ -333,6 +334,8 @@ namespace Botwinder.Modules
 				{
 					message.SetAsRead();
 				}
+				if( --i <= 0 )
+					return;
 			}
 		}
 
