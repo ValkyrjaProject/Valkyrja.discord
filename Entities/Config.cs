@@ -244,7 +244,8 @@ namespace Botwinder.Entities
 		public guid[] ModChannelIgnoreUsers{ get; set; }
 
 		public guid UserActivityChannel{ get; set; }
-		public bool UserActivityMention{ get; set; }
+		public bool UserActivityMention{ get; set; } //MentionJoined - unable to change for compatibility.
+		public bool UserActivityMentionLeft{ get; set; }
 		public bool UserActivityLogJoined{ get; set; }
 		public bool UserActivityLogLeft { get; set; }
 		public bool UserActivityLogTimestamp{ get; set; }
@@ -342,6 +343,7 @@ namespace Botwinder.Entities
 			this.ModChannelLogAntispam = false;
 
 			this.UserActivityMention = false;
+			this.UserActivityMentionLeft = false;
 			this.UserActivityLogJoined = false;
 			this.UserActivityLogLeft = false;
 			this.UserActivityLogTimestamp = true;
