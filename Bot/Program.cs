@@ -165,7 +165,7 @@ namespace Botwinder.Bot
 				}
 				Bot.AddCommands(newCommands);
 
-				Reddit.Get().ReVerifyLast1000(Bot).Wait();
+				//Reddit.Get().ReVerifyLast1000(Bot).Wait(); // A Hack to reverify people who we failed to previously verify.
 
 			} catch(Exception e)
 			{
