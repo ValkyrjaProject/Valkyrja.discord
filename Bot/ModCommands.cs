@@ -219,6 +219,7 @@ namespace Botwinder.Bot
 					{
 						client.UserBanned(userToKick, server.DiscordServer, DateTimeOffset.MinValue, reason, true, e.Message.User);
 						await userToKick.SendMessage(string.Format("Hello!\nI regret to inform you, that you have been **kicked out of the {0} server** for the following reason:\n{1}\n\n_(You can rejoin the server in a few minutes.)_", server.Name, reason));
+						await Task.Delay(500);
 						await userToKick.Kick();
 						server.UserDatabase.AddWarning(userToKick, "Kicked: "+reason);
 					} catch(Exception exception)
