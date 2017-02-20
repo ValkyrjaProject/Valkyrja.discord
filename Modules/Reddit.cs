@@ -175,7 +175,7 @@ namespace Botwinder.Modules
 
 			try
 			{
-				if( this.RedditClient == null || this.RedditClient.User == null || this.RedditClient.User.UnreadMessages != null )
+				if( this.RedditClient == null || this.RedditClient.User == null || this.RedditClient.User.UnreadMessages == null )
 					return;
 
 				Discord.Server mainServer = client.GetServer(client.GlobalConfig.MainServerID);
