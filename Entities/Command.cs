@@ -222,8 +222,11 @@ namespace Botwinder.Entities
 				case CommandConfig.PermissionOverrides.Moderators:
 					requiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 					break;
+				case CommandConfig.PermissionOverrides.SubModerators:
+					requiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+					break;
 				case CommandConfig.PermissionOverrides.Members:
-					requiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.Member;
+					requiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator | PermissionType.Member;
 					break;
 				case CommandConfig.PermissionOverrides.Everyone:
 					requiredPermissions = PermissionType.WhitelistedOrEveryone | PermissionType.ServerOwner;
