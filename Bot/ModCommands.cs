@@ -865,7 +865,7 @@ namespace Botwinder.Bot
 		        }
 
 		        List<TUser> mentionedUsers = Utils.GetMentionedUsersData<TUser>(e);
-		        List<User> messageUsers = Utils.GetMentionedUsers(e);
+		        List<User> usersToMessage = Utils.GetMentionedUsers(e); //gets the users to be messaged
 
 		        if( mentionedUsers.Count == 0 )
 		        {
@@ -883,10 +883,10 @@ namespace Botwinder.Bot
 		        {
 		            user.AddWarning(warning);
 		        }
-		        foreach (User user in messageUsers)
+		        foreach (User user in usersToMessage) //iterates through all users mentioned
 		        {
 		            await user.SendMessage("The moderators of " + e.Message.Server.Name +
-		                                   " have issued you a warning: " + warning);
+		                                   " have issued you a warning: " + warning); //sends the warning message
 		        }
 		        (e.Server as Server<TUser>).UserDatabase.SaveAsync();
 		        await e.Message.Channel.SendMessage("It has been done!");
