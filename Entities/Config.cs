@@ -191,6 +191,7 @@ namespace Botwinder.Entities
 		public string CommandCharacter{ get; set; }
 		public bool ExecuteCommandsOnEditedMessages{ get; set; }
 
+		public bool PrioritizeAntispam{ get; set; }
 		public bool RemoveDiscordInvites{ get; set; }
 		public bool BanDiscordInvites{ get; set; }
 		public bool RemoveDuplicateMessages{ get; set; }
@@ -294,6 +295,7 @@ namespace Botwinder.Entities
 			this.CommandCharacter = "!";
 			this.ExecuteCommandsOnEditedMessages = true;
 
+			this.PrioritizeAntispam = false;
 			this.RemoveDiscordInvites = false;
 			this.BanDiscordInvites = false;
 			this.RemoveDuplicateMessages = false;
