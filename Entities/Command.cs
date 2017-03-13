@@ -28,7 +28,7 @@ namespace Botwinder.Entities
 			public const byte Member 				= 1 << (int)CommandConfig.PermissionOverrides.Members;
 		}
 
-		/// <summary> ID of a command is what you use in combination with the command character to execute it - they will be treated like any other member, they would need other permissions to use this command. </summary>
+		/// <summary> ID of a command is what you use in combination with the command character to execute it. </summary>
 		public string ID{ get{ return this._ID; } }
 		private string _ID = "";
 
