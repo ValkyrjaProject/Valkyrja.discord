@@ -50,7 +50,7 @@ namespace Botwinder.Bot
 
 		public Dictionary<guid, List<guid>> ClearedMessageIDs{ get; set; }
 
-		public BotwinderClient(string configFolder = GlobalConfig.DefaultFolder, int shardId = -1, bool isPremium = false){}
+		public BotwinderClient(string configFolder = GlobalConfig.DefaultFolder, int shardId = -1){}
 		public async Task Connect(){}
 		public void Wait(){}
 		public Server GetServer(guid id){ return null; }
@@ -83,12 +83,11 @@ namespace Botwinder.Bot
 		public static void Main(string[] args)
 		{
 			int shardId = -1;
-			bool isPremium = args != null && args.Length > 0 && args[0] == "premium";
 			if( args != null && (args.Length == 1 && int.TryParse(args[0], out shardId)) ||
 								(args.Length == 2 && int.TryParse(args[1], out shardId)) )
-				Bot = new BotwinderClient<UserData>(shardId: shardId, isPremium: isPremium);
+				Bot = new BotwinderClient<UserData>(shardId: shardId);
 			else
-				Bot = new BotwinderClient<UserData>(isPremium: isPremium);
+				Bot = new BotwinderClient<UserData>();
 
 			Bot.OnConnected +=  (sender, e) => OnConnected();
 			Bot.OnUpdate += async (sender, e) => await Update();
@@ -101,7 +100,7 @@ namespace Botwinder.Bot
 			CreateAllModules();
 
 
-			if( isPremium )
+			if( shardId == -1 )
 			{
 				Bot.Connect().Wait();
 			}
