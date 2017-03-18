@@ -185,43 +185,53 @@ namespace Botwinder.Modules
 
 				foreach(RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages)
 				{
-					RedditSharp.Things.PrivateMessage message = thing as RedditSharp.Things.PrivateMessage;
-					if( message == null )
-						continue;
-
-					if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
-						&& !message.IsComment && message.Subject.Contains("DiscordVerification") )
+					try
 					{
-						string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
-						guid serverID = 0;
-						guid userID = 0;
-						Server<TUser> server = null;
-						Discord.Server discordServer = null;
-						Discord.User user = null;
-						string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ? "https://www.reddit.com/user/" + message.Author.Remove(0, 3) : "https://www.reddit.com/user/" + message.Author;
+						RedditSharp.Things.PrivateMessage message = thing as RedditSharp.Things.PrivateMessage;
+						if( message == null )
+							continue;
 
-						if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
-						    (discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
-						    (server = client.GetServerData(serverID)) != null && (user = discordServer.GetUser(userID)) != null )
+						if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
+						    && !message.IsComment && message.Subject.Contains("DiscordVerification") )
 						{
-							await VerifyUser(user, server, link);
+							string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
+							guid serverID = 0;
+							guid userID = 0;
+							Server<TUser> server = null;
+							Discord.Server discordServer = null;
+							Discord.User user = null;
+							string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ? "https://www.reddit.com/user/" + message.Author.Remove(0, 3) : "https://www.reddit.com/user/" + message.Author;
+
+							if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
+							    (discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
+							    (server = client.GetServerData(serverID)) != null && (user = discordServer.GetUser(userID)) != null )
+							{
+								await VerifyUser(user, server, link);
+
+								//await message.SetAsReadAsync();
+								message.SetAsRead();
+							}
+							else
+							{
+								//await message.ReplyAsync("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
+								//message.Reply("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
+								//await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}", message.Author, message.Subject, message.Body, user == null ? "null" : user.Id.ToString(), link));
+							}
+						}
+						else if( !message.IsComment && mainChannel != null )
+						{
+							await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}", message.Author, message.Subject, message.Body));
 
 							//await message.SetAsReadAsync();
 							message.SetAsRead();
 						}
-						else
-						{
-							//await message.ReplyAsync("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
-							//message.Reply("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
-							//await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}", message.Author, message.Subject, message.Body, user == null ? "null" : user.Id.ToString(), link));
-						}
-					}
-					else if( !message.IsComment && mainChannel != null )
+					} catch(Exception e)
 					{
-						await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}", message.Author, message.Subject, message.Body));
-
-						//await message.SetAsReadAsync();
-						message.SetAsRead();
+						if( e.GetType() != typeof(System.Net.WebException) )
+							if( HandleException != null )
+								HandleException(this, new ModuleExceptionArgs(e, "Module.Reddit.Update failed for " + thing.Kind + ": " + thing.Shortlink + " | " + thing.FullName));
+							else
+								throw;
 					}
 				}
 			} catch(Exception e)
