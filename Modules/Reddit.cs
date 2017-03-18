@@ -183,13 +183,25 @@ namespace Botwinder.Modules
 				if( mainServer != null )
 					mainChannel = mainServer.GetChannel(client.GlobalConfig.MainLogChannelID);
 
+				RedditSharp.Things.PrivateMessage message = null;
 				foreach(RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages)
 				{
 					try
 					{
-						RedditSharp.Things.PrivateMessage message = thing as RedditSharp.Things.PrivateMessage;
+						message = thing as RedditSharp.Things.PrivateMessage;
 						if( message == null )
 							continue;
+
+						string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ? "https://www.reddit.com/user/" + message.Author.Remove(0, 3) : "https://www.reddit.com/user/" + message.Author;
+						if( message.Author == null || message.Subject == null || message.Body == null || link == null ) //Make sure that reddit's things are not retarded, the naming is retarded enough already.
+						{
+							if( HandleException != null )
+								HandleException(this, new ModuleExceptionArgs(null, string.Format("Module.Reddit.Update unexpectedly failed...\n  Author: `{0}`\n  Subject: `{1}`\n  Body: `{2}`", string.IsNullOrWhiteSpace(message.Author) ? "null" : message.Author, string.IsNullOrWhiteSpace(message.Subject) ? "null" : message.Subject, string.IsNullOrWhiteSpace(message.Body) ? "null" : message.Body)));
+
+							//await message.SetAsReadAsync();
+							message.SetAsRead();
+							continue;
+						}
 
 						if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
 						    && !message.IsComment && message.Subject.Contains("DiscordVerification") )
@@ -200,7 +212,6 @@ namespace Botwinder.Modules
 							Server<TUser> server = null;
 							Discord.Server discordServer = null;
 							Discord.User user = null;
-							string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ? "https://www.reddit.com/user/" + message.Author.Remove(0, 3) : "https://www.reddit.com/user/" + message.Author;
 
 							if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
 							    (discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
@@ -215,17 +226,20 @@ namespace Botwinder.Modules
 							{
 								//await message.ReplyAsync("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
 								//message.Reply("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
-								//await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}", message.Author, message.Subject, message.Body, user == null ? "null" : user.Id.ToString(), link));
+								if( mainChannel != null )
+									await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}", string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author, string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject, string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body, user == null ? "null" : user.Id.ToString(), string.IsNullOrWhiteSpace(link) ? "" : link));
 
+								//await message.SetAsReadAsync();
 								message.SetAsRead(); // Mark as read, cluster is disabled, no need to keep the message in the queue.
 							}
 						}
-						else if( !message.IsComment && mainChannel != null )
+						else
 						{
-							await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}", message.Author, message.Subject, message.Body));
+							if( mainChannel != null )
+								await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}", string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author, string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject, string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body));
 
-							//await message.SetAsReadAsync();
 							message.SetAsRead();
+							//await message.SetAsReadAsync();
 						}
 					} catch(Exception e)
 					{
@@ -234,6 +248,9 @@ namespace Botwinder.Modules
 								HandleException(this, new ModuleExceptionArgs(e, "Module.Reddit.Update failed for " + thing.Kind + ": " + thing.Shortlink + " | " + thing.FullName));
 							else
 								throw;
+
+						if( message != null )
+							message.SetAsRead(); //The message is invalid, skip it.
 					}
 				}
 			} catch(Exception e)

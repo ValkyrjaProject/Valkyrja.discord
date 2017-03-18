@@ -143,7 +143,7 @@ namespace Botwinder.Bot
 			Modules.Add(new Reddit());
 			Modules.Add(new TimeAtWork());
 			foreach(IModule module in Modules)
-				module.HandleException += (sender, e) => Bot.LogException(e.Exception, null, e.Data);
+				module.HandleException += (sender, e) => Bot.AddException(e.Exception, e.Data);
 		}
 
 		protected static void OnConnected()
