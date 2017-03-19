@@ -103,7 +103,6 @@ namespace Botwinder.Modules
 		}
 
 
-		public override event EventHandler<ModuleExceptionArgs> HandleException;
 		protected override string Filename => "livestream.json";
 
 		protected const float EventCooldown = 300f;
@@ -317,10 +316,7 @@ namespace Botwinder.Modules
 					}
 				} catch(Exception e)
 				{
-					if( HandleException != null )
-						HandleException(this, new ModuleExceptionArgs(e, pair.Value.ChannelName +" | "+ pair.Value.Type));
-					else
-						throw;
+					TriggerException(this, new ModuleExceptionArgs(e, pair.Value.ChannelName +" | "+ pair.Value.Type));
 				}
 			}
 
@@ -377,10 +373,7 @@ namespace Botwinder.Modules
 				SaveAsync();
 			} catch(Exception e)
 			{
-				if( HandleException != null )
-					HandleException(this, new ModuleExceptionArgs(e, channelName +" | "+ type));
-				else
-					throw;
+				TriggerException(this, new ModuleExceptionArgs(e, channelName +" | "+ type));
 				return false;
 			}
 			return true;
