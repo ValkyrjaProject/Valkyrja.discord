@@ -79,6 +79,7 @@ namespace Botwinder.Bot
 		protected const string LockFile = "BotwinderConnectionLockFile";
 
 		protected static List<IModule> Modules = new List<IModule>();
+		protected static int ModulesUpdateIndex = -1;
 
 		public static void Main(string[] args)
 		{
@@ -172,16 +173,17 @@ namespace Botwinder.Bot
 
 		protected static async Task Update()
 		{
-			//Update all modules
-			for( int i = 0; i < Modules.Count; i++ )
+			//Update modules
+
+			if( ++ModulesUpdateIndex >= Modules.Count )
+				ModulesUpdateIndex = 0;
+			try
 			{
-				try
-				{
-					await Modules[i].Update(Bot);
-				} catch(Exception e)
-				{
-					Bot.LogException(e, null, "Module.Update failed for "+ Modules[i].GetType().ToString());
-				}
+				//Bot.GetServer(Bot.GlobalConfig.MainServerID).GetChannel(Bot.GlobalConfig.MainLogChannelID).SendMessage("Running update for " + Modules[ModulesUpdateIndex].ToString());
+				await Modules[ModulesUpdateIndex].Update(Bot);
+			} catch(Exception e)
+			{
+				Bot.LogException(e, null, "Module.Update failed for "+ Modules[ModulesUpdateIndex].GetType().ToString());
 			}
 		}
 
