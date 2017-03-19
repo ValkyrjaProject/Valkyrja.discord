@@ -164,8 +164,6 @@ namespace Botwinder.Bot
 				}
 				Bot.AddCommands(newCommands);
 
-				//Reddit.Get().ReVerifyLast1000(Bot).Wait(); // A Hack to reverify people who we failed to previously verify.
-
 			} catch(Exception e)
 			{
 				Bot.LogException(e);
@@ -180,7 +178,6 @@ namespace Botwinder.Bot
 				try
 				{
 					await module.Update(Bot);
-					await Task.Yield();
 				} catch(Exception e)
 				{
 					Bot.LogException(e, null, "Module.Update failed for "+ module.GetType().ToString());
