@@ -178,7 +178,6 @@ namespace Botwinder.Bot
 				try
 				{
 					await Modules[i].Update(Bot);
-					await Task.Yield();
 				} catch(Exception e)
 				{
 					Bot.LogException(e, null, "Module.Update failed for "+ Modules[i].GetType().ToString());
