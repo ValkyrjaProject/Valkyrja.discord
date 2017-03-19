@@ -173,14 +173,15 @@ namespace Botwinder.Bot
 		protected static async Task Update()
 		{
 			//Update all modules
-			foreach(IModule module in Modules)
+			for( int i = 0; i < Modules.Count; i++ )
 			{
 				try
 				{
-					await module.Update(Bot);
+					await Modules[i].Update(Bot);
+					await Task.Yield();
 				} catch(Exception e)
 				{
-					Bot.LogException(e, null, "Module.Update failed for "+ module.GetType().ToString());
+					Bot.LogException(e, null, "Module.Update failed for "+ Modules[i].GetType().ToString());
 				}
 			}
 		}
