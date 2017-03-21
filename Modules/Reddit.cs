@@ -266,7 +266,8 @@ namespace Botwinder.Modules
 					mainChannel = mainServer.GetChannel(client.GlobalConfig.MainLogChannelID);
 
 				RedditSharp.Things.PrivateMessage message = null;
-				foreach( RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages )
+				List<RedditSharp.Things.Thing> list = this.RedditClient.User.UnreadMessages.ToList();
+				foreach( RedditSharp.Things.Thing thing in list )
 				{
 					try
 					{
