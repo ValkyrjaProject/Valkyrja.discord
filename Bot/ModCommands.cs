@@ -309,38 +309,45 @@ namespace Botwinder.Bot
 				for(int i = 2; i < e.MessageArgs.Length; i++)
 					reason += e.MessageArgs[i] + " ";
 
-				string response = "_\\*fires them railguns at <@"+ idToBan.ToString() +">*_  Ò_Ó";
-
-				try
-				{
-					await client.Ban(idToBan, server, banDurationHours, reason, (e.Command.ID.ToLower() == "silentban"), (e.Command.ID.ToLower() == "purgeban"), bannedBy: e.Message.User);
-				} catch(Exception exception)
-				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null )
-					{
-						if( ex.StatusCode == System.Net.HttpStatusCode.Forbidden )
-							response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
-						else
-							response = GlobalConfig.DisplayError500 ? "Discord server may have had a derp there, please try again if it didn't work!" : "";
-					}
-					else
-					{
-						client.LogException(exception, e);
-						response = "Unknown error, please poke <@"+ (client.GlobalConfig.OwnerIDs != null && client.GlobalConfig.OwnerIDs.Length > 0 ? client.GlobalConfig.OwnerIDs[0] : GlobalConfig.Rhea) +"> (`"+ GlobalConfig.RheaName +"`) to take a look x_x";
-					}
+				if (idToBan == e.Message.Author.Id) {
+					string reason = "Sorry, you cannot ban yourself. ¯\_(ツ)_/¯";
+					await e.Message.Channel.SendMessage(response);
 				}
-
-				await e.Message.Channel.SendMessage(response);
-				if( !response.Contains("permissions") && !response.Contains("error") && !response.Contains("derp") )
+				else
 				{
+					string response = "_\\*fires them railguns at <@"+ idToBan.ToString() +">*_  Ò_Ó";
+
 					try
 					{
-						await SendBanImage(e.Message.Channel);
+						await client.Ban(idToBan, server, banDurationHours, reason, (e.Command.ID.ToLower() == "silentban"), (e.Command.ID.ToLower() == "purgeban"), bannedBy: e.Message.User);
 					} catch(Exception exception)
 					{
+						Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
+						if( ex != null )
+						{
+							if( ex.StatusCode == System.Net.HttpStatusCode.Forbidden )
+								response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
+							else
+								response = GlobalConfig.DisplayError500 ? "Discord server may have had a derp there, please try again if it didn't work!" : "";
+						}
+						else
+						{
+							client.LogException(exception, e);
+							response = "Unknown error, please poke <@"+ (client.GlobalConfig.OwnerIDs != null && client.GlobalConfig.OwnerIDs.Length > 0 ? client.GlobalConfig.OwnerIDs[0] : GlobalConfig.Rhea) +"> (`"+ GlobalConfig.RheaName +"`) to take a look x_x";
+						}
+					}
 
-						client.LogException(exception, null, "OnUserBanned.SendFile failed");
+					await e.Message.Channel.SendMessage(response);
+					if( !response.Contains("permissions") && !response.Contains("error") && !response.Contains("derp") )
+					{
+						try
+						{
+							await SendBanImage(e.Message.Channel);
+						} catch(Exception exception)
+						{
+
+							client.LogException(exception, null, "OnUserBanned.SendFile failed");
+						}
 					}
 				}
 			};
