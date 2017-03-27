@@ -346,7 +346,7 @@ namespace Botwinder.Modules
 					}
 				}
 			}
-			catch( System.Net.WebException e ){}
+			catch( System.Net.WebException ){}
 			catch( Exception e )
 			{
 				if( HandleException != null )
@@ -429,7 +429,7 @@ namespace Botwinder.Modules
 				if( !alreadyVerified )
 					await user.SendMessage(string.Format(VerifyDonePM, server.DiscordServer.Name));
 			}
-			catch( Exception exception ){}
+			catch( Exception ){}
 		}
 
 		public async Task ReVerify<TUser>(IBotwinderClient<TUser> client, int n) where TUser : UserData, new()
@@ -480,7 +480,7 @@ namespace Botwinder.Modules
 						}
 					}
 				}
-				catch( Exception e )
+				catch( Exception )
 				{
 					if( message != null )
 						message.SetAsRead(); //The message is invalid, skip it.

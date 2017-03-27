@@ -852,7 +852,7 @@ namespace Botwinder.Bot
 					{
 						User user = e.Server.DiscordServer.GetUser(userData.ID);
 						if( user != null )
-							user.SendMessage(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
+							await user.SendMessage(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
 								e.Server.DiscordServer.Name, warning));
 					}
 				}
