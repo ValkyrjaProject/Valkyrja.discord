@@ -40,6 +40,7 @@ namespace Botwinder.Entities
 		public bool GiveawaysEnabled = true;
 		public bool LivestreamEnabled = true;
 
+		public bool EnforceRequirements = false;
 		public int TotalShards = 3;
 		public int InitialUpdateDelay = 3;
 		public string ServerConfigPath = "config";
