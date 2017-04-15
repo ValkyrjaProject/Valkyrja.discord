@@ -205,7 +205,7 @@ namespace Botwinder.Modules
 			List<Command> commands;
 			Command newCommand;
 
-			if( !client.GlobalConfig.GiveawaysEnabled )
+			if( !client.GlobalConfig.PollsEnabled )
 			{
 				commands = new List<Command>();
 				newCommand = new Command("vote");

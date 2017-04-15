@@ -116,7 +116,7 @@ namespace Botwinder.Modules
 			List<Command> commands;
 			Command newCommand;
 
-			if( !client.GlobalConfig.GiveawaysEnabled )
+			if( !client.GlobalConfig.LivestreamEnabled )
 			{
 				commands = new List<Command>();
 				newCommand = new Command("livestreamAdd");
@@ -139,10 +139,9 @@ namespace Botwinder.Modules
 			commands = base.Init<TUser>(client);
 
 			this.ChannelDictionary = new Dictionary<string, LivestreamChannel>();
-
 			if( this.Data != null && this.Data.Channels != null )
 			{
-				foreach(LivestreamChannel data in this.Data.Channels)
+				foreach( LivestreamChannel data in this.Data.Channels )
 				{
 					this.ChannelDictionary.Add(data.ChannelName + data.Type.ToString(), data);
 				}
@@ -281,9 +280,17 @@ namespace Botwinder.Modules
 			return commands;
 		}
 
+		protected override void Save()
+		{
+			this.Data.Channels = new LivestreamChannel[this.ChannelDictionary.Count];
+			this.ChannelDictionary.Values.CopyTo(this.Data.Channels, 0);
+
+			base.Save();
+		}
+
 		public override async Task Update<TUser>(IBotwinderClient<TUser> client)
 		{
-			if( !client.GlobalConfig.LivestreamEnabled || !this.ChannelDictionary.Any() )
+			if( !client.GlobalConfig.LivestreamEnabled || this.ChannelDictionary == null || !this.ChannelDictionary.Any() )
 				return;
 
 			foreach(KeyValuePair<string, LivestreamChannel> pair in this.ChannelDictionary)
