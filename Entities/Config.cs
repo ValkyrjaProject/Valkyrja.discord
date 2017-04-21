@@ -69,7 +69,7 @@ namespace Botwinder.Entities
 		public bool ContributorsIgnoreOperationsQueue = true;
 		public float MaintenanceMemoryMultiplier = 1.2f;
 		public float MaintenanceDisconnectThreshold = 4;
-		public string AboutYourBot = "See http://botwinder.info for full list of features, where you can also configure them for your server, or invite me to your server using <http://invite.botwinder.info>";
+		public string AboutYourBot = "See http://botwinder.info for full list of features, where you can also configure them for your server, or invite me to your server.";
 		public string[] AntispamIgnoredWords = null;
 
 		[NonSerialized]
