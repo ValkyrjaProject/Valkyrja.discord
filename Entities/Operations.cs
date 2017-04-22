@@ -54,7 +54,7 @@ namespace Botwinder.Entities
 				return true;
 			}
 
-			if( sender.IsContributor(this.CommandArgs.Message.User) || sender.IsContributor(this.CommandArgs.Message.Server.Owner) )
+			if( sender.GlobalConfig.ContributorsIgnoreOperationsQueue && (sender.IsContributor(this.CommandArgs.Message.User) || sender.IsContributor(this.CommandArgs.Message.Server.Owner)) )
 			{
 				sender.CurrentOperations.Remove(this);
 				sender.CurrentOperations.Insert(0, this);

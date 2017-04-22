@@ -25,7 +25,6 @@ namespace Botwinder.Entities
 		public const string OperationQueuedText = "This command was placed in a queue for large operations at position `{0}` and will be executed as soon as possible. Should you wish to cancel it at any time, use `!cancel {1}`\n_(Contributors do not have to wait.)_";
 
 		public string BotToken = "";
-		public string PremiumToken = "";
 		public guid[] UserIds = { 140307918200242176, 278834060053446666 };
 
 		public bool RedditEnabled = true;
@@ -41,6 +40,7 @@ namespace Botwinder.Entities
 		public bool GiveawaysEnabled = true;
 		public bool LivestreamEnabled = true;
 
+		public bool EnforceRequirements = false;
 		public int TotalShards = 3;
 		public int InitialUpdateDelay = 3;
 		public string ServerConfigPath = "config";
@@ -51,7 +51,6 @@ namespace Botwinder.Entities
 		public guid[] OwnerIDs = { Rhea, Rhea };
 		public guid MainServerID = 155821059960995840;
 		public guid MainLogChannelID = 170139120318808065;
-		public bool IsPremium = false;
 		public guid[] PartneredServerIDs = null;
 		public guid[] PartneredUserIDs = null;
 		public string CommandCharacter = "!";
@@ -67,9 +66,10 @@ namespace Botwinder.Entities
 		public float TargetFPS = 1;
 		public int MaximumConcurrentOperations = 1;
 		public int ExtraSmallOperations = 1;
+		public bool ContributorsIgnoreOperationsQueue = true;
 		public float MaintenanceMemoryMultiplier = 1.2f;
 		public float MaintenanceDisconnectThreshold = 4;
-		public string AboutYourBot = "See http://botwinder.info for full list of features, where you can also configure them for your server, or invite me to your server using <http://invite.botwinder.info>";
+		public string AboutYourBot = "See http://botwinder.info for full list of features, where you can also configure them for your server, or invite me to your server.";
 		public string[] AntispamIgnoredWords = null;
 
 		[NonSerialized]
@@ -191,6 +191,7 @@ namespace Botwinder.Entities
 		public string CommandCharacter{ get; set; }
 		public bool ExecuteCommandsOnEditedMessages{ get; set; }
 
+		public bool PrioritizeAntispam{ get; set; }
 		public bool RemoveDiscordInvites{ get; set; }
 		public bool BanDiscordInvites{ get; set; }
 		public bool RemoveDuplicateMessages{ get; set; }
@@ -294,6 +295,7 @@ namespace Botwinder.Entities
 			this.CommandCharacter = "!";
 			this.ExecuteCommandsOnEditedMessages = true;
 
+			this.PrioritizeAntispam = false;
 			this.RemoveDiscordInvites = false;
 			this.BanDiscordInvites = false;
 			this.RemoveDuplicateMessages = false;

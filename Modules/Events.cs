@@ -105,7 +105,7 @@ namespace Botwinder.Modules
 			List<Command> commands;
 			Command newCommand;
 
-			if( !client.GlobalConfig.GiveawaysEnabled )
+			if( !client.GlobalConfig.EventsEnabled )
 			{
 				commands = new List<Command>();
 				newCommand = new Command("event");
@@ -122,7 +122,6 @@ namespace Botwinder.Modules
 			commands = base.Init<TUser>(client);
 
 			this.EventsDictionary = new Dictionary<guid, Event>();
-
 			if( this.Data != null && this.Data.Events != null )
 			{
 				foreach(Event e in this.Data.Events)

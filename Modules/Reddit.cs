@@ -5,25 +5,32 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.Entities;
 using RedditSharp;
-
 using guid = System.UInt64;
 
 namespace Botwinder.Modules
 {
-	public class Reddit: IModule
+	public class Reddit : IModule
 	{
 		protected static Reddit Instance = null;
-		public static Reddit Get(){ return Instance; }
+
+		public static Reddit Get()
+		{
+			return Instance;
+		}
 
 
 		public const string VerifySent = "<@{0}>, check your messages!";
 		public const string VerifyDonePM = "You have been verified on the `{0}` server =]";
 		public const string VerifyDone = "<@{0}> has been verified.";
-		public const string VerifyError = "If you want me to send a PM with the info to someone, you have to @mention them (only one person though)";
+
+		public const string VerifyError =
+			"If you want me to send a PM with the info to someone, you have to @mention them (only one person though)";
+
 		public const string UserNotFound = "I couldn't find them :(";
 
 		private RedditSharp.Reddit RedditClient = null;
 		private string LastVerifyMessage = "";
+		private readonly List<string> RecentRedditMessages = new List<string>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
@@ -37,8 +44,10 @@ namespace Botwinder.Modules
 				newCommand = new Command("verify");
 				newCommand.Type = Command.CommandType.ChatOnly;
 				newCommand.Description = "Participate in currently active giveaway.";
-				newCommand.OnExecute += async (sender, e) => {
-					await e.Message.Channel.SendMessage("Reddit verification is currently disabled for technical difficulties. Please be patient, we are working on it.");
+				newCommand.OnExecute += async (sender, e) =>
+				{
+					await e.Message.Channel.SendMessage(
+						"Reddit verification is currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
 				return commands;
@@ -53,7 +62,8 @@ namespace Botwinder.Modules
 				//this.RedditClient = new RedditSharp.Reddit(agent, true);
 				this.RedditClient = new RedditSharp.Reddit(client.GlobalConfig.RedditUsername, client.GlobalConfig.RedditPassword);
 				Console.WriteLine("Reddit: Connected.");
-			} catch(Exception e)
+			}
+			catch( Exception e )
 			{
 				if( HandleException != null )
 					HandleException(this, new ModuleExceptionArgs(e, "Module.Reddit.Init failed to connect RedditClient"));
@@ -66,9 +76,12 @@ namespace Botwinder.Modules
 // !verify
 			newCommand = new Command("verify");
 			newCommand.Type = Command.CommandType.ChatOnly;
-			newCommand.Description = "This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
-			newCommand.OnExecute += async (sender, e) =>{
-				if( (!e.Server.ServerConfig.VerifyEnabled || e.Server.ServerConfig.VerifyRoleID == 0) && !client.IsGlobalAdmin(e.Message.User) )
+			newCommand.Description =
+				"This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
+			newCommand.OnExecute += async (sender, e) =>
+			{
+				if( (!e.Server.ServerConfig.VerifyEnabled || e.Server.ServerConfig.VerifyRoleID == 0) &&
+				    !client.IsGlobalAdmin(e.Message.User) )
 				{
 					await e.Message.Channel.SendMessage("Verification is disabled on this server.");
 					return;
@@ -87,7 +100,8 @@ namespace Botwinder.Modules
 
 					guid serverID, userID;
 					Discord.Server discordServer = null;
-					if( !guid.TryParse(e.MessageArgs[0], out serverID) || (discordServer = client.GetServer(serverID)) == null || !guid.TryParse(e.MessageArgs[1], out userID) || (user = discordServer.GetUser(userID)) == null  )
+					if( !guid.TryParse(e.MessageArgs[0], out serverID) || (discordServer = client.GetServer(serverID)) == null ||
+					    !guid.TryParse(e.MessageArgs[1], out userID) || (user = discordServer.GetUser(userID)) == null )
 					{
 						await e.Message.Channel.SendMessage(UserNotFound);
 						return;
@@ -107,7 +121,8 @@ namespace Botwinder.Modules
 					this.LastVerifyMessage = e.Message.RawText;
 
 					guid id;
-					if( (e.Message.MentionedUsers.Count() != 1 || (user = e.Message.MentionedUsers.ElementAt(0)) == null) && (!guid.TryParse(e.MessageArgs[0], out id) || (user = e.Message.Server.GetUser(id)) == null) )
+					if( (e.Message.MentionedUsers.Count() != 1 || (user = e.Message.MentionedUsers.ElementAt(0)) == null) &&
+					    (!guid.TryParse(e.MessageArgs[0], out id) || (user = e.Message.Server.GetUser(id)) == null) )
 					{
 						await e.Message.Channel.SendMessage(UserNotFound);
 						return;
@@ -149,7 +164,8 @@ namespace Botwinder.Modules
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.Description = "Print information about current reddit user.";
 			newCommand.RequiredPermissions = Command.PermissionType.OwnerOnly;
-			newCommand.OnExecute += async (sender, e) =>{
+			newCommand.OnExecute += async (sender, e) =>
+			{
 				string message = "";
 				if( this.RedditClient == null )
 					message = "_Reddit == null";
@@ -157,14 +173,80 @@ namespace Botwinder.Modules
 					message = "_Reddit.User == null";
 				else
 				{
-					message = string.Format("Mail: {0}\nModMail: {1}\nMessages: {2}", this.RedditClient.User.HasMail, (this.RedditClient.User.HasModMail ? this.RedditClient.User.ModMail.Count() : 0), this.RedditClient.User.UnreadMessages.Count());
+					message = string.Format("Mail: {0}\nModMail: {1}\nMessages: {2}", this.RedditClient.User.HasMail,
+						(this.RedditClient.User.HasModMail ? this.RedditClient.User.ModMail.Count() : 0),
+						this.RedditClient.User.UnreadMessages.Count());
 				}
 
 				await e.Message.Channel.SendMessage(message);
 			};
 			commands.Add(newCommand);
 
-		return commands;
+// !redditReadAll
+			newCommand = new Command("redditReadAll");
+			newCommand.Type = Command.CommandType.PmAndChat;
+			newCommand.Description = "Read all messages.";
+			newCommand.RequiredPermissions = Command.PermissionType.OwnerOnly;
+			newCommand.OnExecute += async (sender, e) =>
+			{
+				string message = "";
+				if( this.RedditClient == null )
+					message = "_Reddit == null";
+				else if( this.RedditClient.User == null )
+					message = "_Reddit.User == null";
+				else
+				{
+					foreach( RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages )
+					{
+						try
+						{
+							RedditSharp.Things.PrivateMessage redditMessage = thing as RedditSharp.Things.PrivateMessage;
+							if( redditMessage == null )
+								message += "\nnull message: " + thing.Kind + " | " + thing.FullName;
+							else
+							{
+								redditMessage.SetAsRead();
+								message += "\nread: " + redditMessage.Body;
+							}
+						}
+						catch( Exception ex )
+						{
+							message += "\nexception: " + ex.Message;
+						}
+					}
+				}
+
+				await e.Message.Channel.SendMessage(message);
+			};
+			commands.Add(newCommand);
+
+// !verifyAgain
+			newCommand = new Command("verifyAgain");
+			newCommand.Type = Command.CommandType.PmAndChat;
+			newCommand.Description = "Verify the last `n` reddit messages.";
+			newCommand.RequiredPermissions = Command.PermissionType.OwnerOnly;
+			newCommand.OnExecute += async (sender, e) =>
+			{
+				int n = 0;
+				string message = "";
+				if( this.RedditClient == null )
+					message = "_Reddit == null";
+				else if( this.RedditClient.User == null )
+					message = "_Reddit.User == null";
+				else if( !int.TryParse(e.TrimmedMessage, out n) )
+					message = "Invalid parameter.";
+				else
+				{
+
+					await ReVerify(client, n);
+					message = "Done.";
+				}
+
+				await e.Message.Channel.SendMessage(message);
+			};
+			commands.Add(newCommand);
+
+			return commands;
 		}
 
 
@@ -183,54 +265,94 @@ namespace Botwinder.Modules
 				if( mainServer != null )
 					mainChannel = mainServer.GetChannel(client.GlobalConfig.MainLogChannelID);
 
-				foreach(RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages)
+				RedditSharp.Things.PrivateMessage message = null;
+				List<RedditSharp.Things.Thing> list = this.RedditClient.User.UnreadMessages.ToList();
+				foreach( RedditSharp.Things.Thing thing in list )
 				{
-					RedditSharp.Things.PrivateMessage message = thing as RedditSharp.Things.PrivateMessage;
-					if( message == null )
-						continue;
-
-					if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
-						&& !message.IsComment && message.Subject.Contains("DiscordVerification") )
+					try
 					{
-						string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
-						guid serverID = 0;
-						guid userID = 0;
-						Server<TUser> server = null;
-						Discord.Server discordServer = null;
-						Discord.User user = null;
-						string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ? "https://www.reddit.com/user/" + message.Author.Remove(0, 3) : "https://www.reddit.com/user/" + message.Author;
-
-						if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
-						    (discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
-						    (server = client.GetServerData(serverID)) != null && (user = discordServer.GetUser(userID)) != null )
-						{
-							await VerifyUser(user, server, link);
-
-							//await message.SetAsReadAsync();
-							message.SetAsRead();
-						}
-						else
-						{
-							//await message.ReplyAsync("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
-							//message.Reply("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
-							//await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}", message.Author, message.Subject, message.Body, user == null ? "null" : user.Id.ToString(), link));
-						}
-					}
-					else if( !message.IsComment && mainChannel != null )
-					{
-						await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}", message.Author, message.Subject, message.Body));
+						message = thing as RedditSharp.Things.PrivateMessage;
+						if( message == null )
+							continue;
 
 						//await message.SetAsReadAsync();
 						message.SetAsRead();
+
+						string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ?
+							"https://www.reddit.com/user/" + message.Author.Remove(0, 3) :
+							"https://www.reddit.com/user/" + message.Author;
+						if( message.Author == null || message.Subject == null || message.Body == null ||
+						    link == null ) //Make sure that reddit's things are not retarded, the naming is retarded enough already.
+						{
+							if( HandleException != null )
+								HandleException(this,
+									new ModuleExceptionArgs(null, string.Format("Module.Reddit.Update unexpectedly failed...\n  Author: `{0}`\n  Subject: `{1}`\n  Body: `{2}`",
+											string.IsNullOrWhiteSpace(message.Author) ? "null" : message.Author,
+											string.IsNullOrWhiteSpace(message.Subject) ? "null" : message.Subject,
+											string.IsNullOrWhiteSpace(message.Body) ? "null" : message.Body)));
+							continue;
+						}
+
+						if( this.RecentRedditMessages.Contains(message.Body) )
+							continue;
+						this.RecentRedditMessages.Add(message.Body);
+
+						if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
+						    && !message.IsComment && message.Subject.Contains("DiscordVerification") )
+						{
+							string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
+							guid serverID = 0;
+							guid userID = 0;
+							Server<TUser> server = null;
+							Discord.Server discordServer = null;
+							Discord.User user = null;
+
+							if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
+							    (discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
+							    (server = client.GetServerData(serverID)) != null && (user = discordServer.GetUser(userID)) != null )
+							{
+								await VerifyUser(user, server, link);
+							}
+							else
+							{
+								//await message.ReplyAsync("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
+								//message.Reply("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
+								if( mainChannel != null )
+									await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}",
+										string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author,
+										string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject,
+										string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body, user == null ? "null" : user.Id.ToString(),
+										string.IsNullOrWhiteSpace(link) ? "" : link));
+							}
+						}
+						else
+						{
+							if( mainChannel != null )
+								await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}",
+									string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author,
+									string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject,
+									string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body));
+						}
+					}
+					catch( Exception e )
+					{
+						if( HandleException != null )
+							HandleException(this, new ModuleExceptionArgs(e, "Module.Reddit.Update failed for " + thing.Kind + ": " + thing.Shortlink + " | " + thing.FullName));
+						else
+							throw;
+
+						if( message != null )
+							message.SetAsRead(); //The message is invalid, skip it.
 					}
 				}
-			} catch(Exception e)
+			}
+			catch( System.Net.WebException ){}
+			catch( Exception e )
 			{
-				if( e.GetType() != typeof(System.Net.WebException) )
-					if( HandleException != null )
-						HandleException(this, new ModuleExceptionArgs(e, "Module.Reddit.Update failed"));
-					else
-						throw;
+				if( HandleException != null )
+					HandleException(this, new ModuleExceptionArgs(e, "Module.Reddit.Update failed"));
+				else
+					throw;
 			}
 		}
 
@@ -244,19 +366,20 @@ namespace Botwinder.Modules
 				return true;
 			}
 
-			string message = string.Format("Hi {0},\n" +
-			                               "the `{1}` server is using reddit verification.\n\n" +
-			                               "{2}\n\n", user.Name, user.Server.Name, server.ServerConfig.VerifyPM);
+			string message = string.Format("Hi {0},\nthe `{1}` server is using reddit verification.\n\n{2}\n\n",
+				user.Name, user.Server.Name, server.ServerConfig.VerifyPM);
 
 			if( server.ServerConfig.VerifyKarma > 0 )
-				message += string.Format("You will also get {0} `{1}{2}` for verifying!\n\n", server.ServerConfig.VerifyKarma, server.ServerConfig.CommandCharacter, server.ServerConfig.KarmaCurrency);
+				message += string.Format("You will also get {0} `{1}{2}` for verifying!\n\n", server.ServerConfig.VerifyKarma,
+					server.ServerConfig.CommandCharacter, server.ServerConfig.KarmaCurrency);
 
-			string newMessage = string.Format("The only requirement is to have registered Discord account with valid email address, otherwise you may lose this status.\n" +
-			                                  "In order to complete the verification, please send me this message on Reddit _(Do not change anything, just click the link and hit send.)_\n" +
-			                                  "https://www.reddit.com/message/compose/?to=Botwinder&subject=DiscordVerification&message={0}%20{1}" +
-			                                  "\n_(Please note that this will **not** work on **mobile** version of Reddit." +
-			                                  "If you are on mobile, you have to 1. click the link, 2. click reddit menu, 3. click \"Desktop Site\", 4. hit \"send.\")_" +
-			                                  "\n\nCheers! :smiley:",
+			string newMessage = string.Format(
+				"The only requirement is to have registered Discord account with valid email address, otherwise you may lose this status.\n" +
+				"In order to complete the verification, please send me this message on Reddit _(Do not change anything, just click the link and hit send.)_\n" +
+				"https://www.reddit.com/message/compose/?to=Botwinder&subject=DiscordVerification&message={0}%20{1}" +
+				"\n_(Please note that this will **not** work on **mobile** version of Reddit." +
+				"If you are on mobile, you have to 1. click the link, 2. click reddit menu, 3. click \"Desktop Site\", 4. hit \"send.\")_" +
+				"\n\nCheers! :smiley:",
 				user.Server.Id, user.Id);
 
 			if( newMessage.Length + message.Length > GlobalConfig.MessageCharacterLimit )
@@ -270,23 +393,15 @@ namespace Botwinder.Modules
 			return false;
 		}
 
-		private async Task VerifyUser<TUser>(Discord.User user, Server<TUser> server, string verifiedInfo = null) where TUser : UserData, new()
+		private async Task VerifyUser<TUser>(Discord.User user, Server<TUser> server, string verifiedInfo = null)
+			where TUser : UserData, new()
 		{
-			Discord.Role verifiedRole = server.DiscordServer.GetRole(server.ServerConfig.VerifyRoleID);
-			try
-			{
-				if( verifiedRole != null )
-					await user.AddRoles(verifiedRole);
-			} catch(Exception exception)
-			{
-				if( HandleException != null )
-					HandleException(this, new ModuleExceptionArgs(exception, server.Name + ": Failed to assign VerifyRole to " + user.Name));
-				else
-					throw;
-			}
+			if( user.Roles.FirstOrDefault(r => r.Id == server.ServerConfig.VerifyRoleID) != null )
+				return;
 
 			TUser userData = server.UserDatabase.GetOrAddUser(user);
-			if( !userData.Verified && server.ServerConfig.VerifyKarma < int.MaxValue / 2f )
+			bool alreadyVerified = userData.Verified;
+			if( !alreadyVerified && server.ServerConfig.VerifyKarma < int.MaxValue / 2f )
 				userData.KarmaCount += server.ServerConfig.VerifyKarma;
 			if( !string.IsNullOrEmpty(verifiedInfo) )
 				userData.VerifiedInfo = verifiedInfo;
@@ -294,47 +409,83 @@ namespace Botwinder.Modules
 			userData.Verified = true;
 			server.UserDatabase.SaveAsync();
 
-			await user.SendMessage(string.Format(VerifyDonePM, server.DiscordServer.Name));
+			try
+			{
+				Discord.Role verifiedRole = server.DiscordServer.GetRole(server.ServerConfig.VerifyRoleID);
+				if( verifiedRole != null )
+					await user.AddRoles(verifiedRole);
+			}
+			catch( Exception exception )
+			{
+				if( HandleException != null )
+					HandleException(this,
+						new ModuleExceptionArgs(exception, server.Name + ": Failed to assign VerifyRole to " + user.Name));
+				else
+					throw;
+			}
+
+			try
+			{
+				if( !alreadyVerified )
+					await user.SendMessage(string.Format(VerifyDonePM, server.DiscordServer.Name));
+			}
+			catch( Exception ){}
 		}
 
-		public async Task ReVerifyLast1000<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
+		public async Task ReVerify<TUser>(IBotwinderClient<TUser> client, int n) where TUser : UserData, new()
 		{
-			if( this.RedditClient == null || this.RedditClient.User == null )
+			if( this.RedditClient == null || this.RedditClient.User == null || this.RedditClient.User.UnreadMessages == null )
 				return;
 
-			int i = 1000;
-			foreach(RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages)
+			RedditSharp.Things.PrivateMessage message = null;
+			foreach( RedditSharp.Things.Thing thing in this.RedditClient.User.UnreadMessages )
 			{
-				RedditSharp.Things.PrivateMessage message = thing as RedditSharp.Things.PrivateMessage;
-				if( message == null )
-					continue;
-
-				if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
-				    && !message.IsComment && message.Subject.Contains("DiscordVerification") )
+				try
 				{
-					string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
-					guid serverID = 0;
-					guid userID = 0;
-					Server<TUser> server = null;
-					Discord.Server discordServer = null;
-					Discord.User user = null;
-					string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ? "https://www.reddit.com/user/" + message.Author.Remove(0, 3) : "https://www.reddit.com/user/" + message.Author;
+					message = thing as RedditSharp.Things.PrivateMessage;
+					if( message == null )
+						continue;
 
-					if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
-					    (discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
-					    (server = client.GetServerData(serverID)) != null && (user = discordServer.GetUser(userID)) != null )
+					//await message.SetAsReadAsync();
+					message.SetAsRead();
+
+					string link = message.Author.StartsWith("http") ? message.Author : message.Author.StartsWith("/u/") ?
+						"https://www.reddit.com/user/" + message.Author.Remove(0, 3) :
+						"https://www.reddit.com/user/" + message.Author;
+					if( message.Author == null || message.Subject == null || message.Body == null ||
+						link == null ) //Make sure that reddit's things are not retarded, the naming is retarded enough already.
 					{
-						await VerifyUser(user, server, link);
+						continue;
+					}
 
-						//await message.SetAsReadAsync();
-						message.SetAsRead();
+					if( this.RecentRedditMessages.Contains(message.Body) )
+						continue;
+					this.RecentRedditMessages.Add(message.Body);
+
+					if( !string.IsNullOrWhiteSpace(message.Subject) && !string.IsNullOrWhiteSpace(message.Body)
+						&& !message.IsComment && message.Subject.Contains("DiscordVerification") )
+					{
+						string[] ids = Regex.Split(Regex.Match(message.Body, "\\d+[\\s%]\\d+").Value, "\\s|%20");
+						guid serverID = 0;
+						guid userID = 0;
+						Server<TUser> server = null;
+						Discord.Server discordServer = null;
+						Discord.User user = null;
+
+						if( ids != null && ids.Length == 2 && guid.TryParse(ids[0], out serverID) && guid.TryParse(ids[1], out userID) &&
+							(discordServer = client.GetServer(serverID)) != null && client.Servers.ContainsKey(serverID) &&
+							(server = client.GetServerData(serverID)) != null && (user = discordServer.GetUser(userID)) != null )
+						{
+							await VerifyUser(user, server, link);
+						}
 					}
 				}
-				else if( !message.IsComment )
+				catch( Exception )
 				{
-					message.SetAsRead();
+					if( message != null )
+						message.SetAsRead(); //The message is invalid, skip it.
 				}
-				if( --i <= 0 )
+				if( --n <= 0 )
 					return;
 			}
 		}
@@ -342,3 +493,4 @@ namespace Botwinder.Modules
 		public event EventHandler<ModuleExceptionArgs> HandleException;
 	}
 }
+

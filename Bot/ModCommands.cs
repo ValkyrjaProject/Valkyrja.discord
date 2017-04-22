@@ -861,14 +861,28 @@ namespace Botwinder.Bot
 					warning += e.MessageArgs[i] + " ";
 				}
 
-				foreach(TUser user in mentionedUsers)
-					user.AddWarning(warning);
-
+				bool sendMessage = e.Command.ID.ToLower() == "issuewarning";
+				foreach(TUser userData in mentionedUsers)
+				{
+					userData.AddWarning(warning);
+					if( sendMessage )
+					{
+						User user = e.Server.DiscordServer.GetUser(userData.ID);
+						if( user != null )
+							await user.SendMessage(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
+								e.Server.DiscordServer.Name, warning));
+					}
+				}
 				(e.Server as Server<TUser>).UserDatabase.SaveAsync();
 				await e.Message.Channel.SendMessage("It has been done!");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("addwarning"));
+
+			newCommand = newCommand.CreateCopy("issueWarning");
+			newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database. This will also be PMed to the user.";
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("issuewarning"));
 
 // !removeWarning
 			newCommand = new Command("removeWarning");

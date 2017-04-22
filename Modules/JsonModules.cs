@@ -66,7 +66,16 @@ namespace Botwinder.Modules
 			return new List<Command>();
 		}
 		public virtual async Task Update<TUser>(IBotwinderClient<TUser> client) where TUser: UserData, new(){}
-		public virtual event EventHandler<ModuleExceptionArgs> HandleException;
+		public event EventHandler<ModuleExceptionArgs> HandleException;
+
+		public virtual void TriggerException(object sender, ModuleExceptionArgs args)
+		{
+			if( HandleException != null )
+				HandleException(sender, args);
+			else
+				throw args.Exception;
+		}
+
 #pragma warning restore 1998, 67
 	}
 }

@@ -50,7 +50,7 @@ namespace Botwinder.Bot
 
 		public Dictionary<guid, List<guid>> ClearedMessageIDs{ get; set; }
 
-		public BotwinderClient(string configFolder = GlobalConfig.DefaultFolder, int shardId = -1, bool isPremium = false){}
+		public BotwinderClient(string configFolder = GlobalConfig.DefaultFolder, int shardId = -1){}
 		public async Task Connect(){}
 		public void Wait(){}
 		public Server GetServer(guid id){ return null; }
@@ -79,16 +79,16 @@ namespace Botwinder.Bot
 		protected const string LockFile = "BotwinderConnectionLockFile";
 
 		protected static List<IModule> Modules = new List<IModule>();
+		protected static int ModulesUpdateIndex = -1;
 
 		public static void Main(string[] args)
 		{
 			int shardId = -1;
-			bool isPremium = args != null && args.Length > 0 && args[0] == "premium";
 			if( args != null && (args.Length == 1 && int.TryParse(args[0], out shardId)) ||
 								(args.Length == 2 && int.TryParse(args[1], out shardId)) )
-				Bot = new BotwinderClient<UserData>(shardId: shardId, isPremium: isPremium);
+				Bot = new BotwinderClient<UserData>(shardId: shardId);
 			else
-				Bot = new BotwinderClient<UserData>(isPremium: isPremium);
+				Bot = new BotwinderClient<UserData>();
 
 			Bot.OnConnected +=  (sender, e) => OnConnected();
 			Bot.OnUpdate += async (sender, e) => await Update();
@@ -101,7 +101,7 @@ namespace Botwinder.Bot
 			CreateAllModules();
 
 
-			if( isPremium )
+			if( shardId == -1 )
 			{
 				Bot.Connect().Wait();
 			}
@@ -144,7 +144,7 @@ namespace Botwinder.Bot
 			Modules.Add(new Reddit());
 			Modules.Add(new TimeAtWork());
 			foreach(IModule module in Modules)
-				module.HandleException += (sender, e) => Bot.LogException(e.Exception, null, e.Data);
+				module.HandleException += (sender, e) => Bot.AddException(e.Exception, e.Data);
 		}
 
 		protected static void OnConnected()
@@ -165,8 +165,6 @@ namespace Botwinder.Bot
 				}
 				Bot.AddCommands(newCommands);
 
-				//Reddit.Get().ReVerifyLast1000(Bot).Wait(); // A Hack to reverify people who we failed to previously verify.
-
 			} catch(Exception e)
 			{
 				Bot.LogException(e);
@@ -175,17 +173,17 @@ namespace Botwinder.Bot
 
 		protected static async Task Update()
 		{
-			//Update all modules
-			foreach(IModule module in Modules)
+			//Update modules
+
+			if( ++ModulesUpdateIndex >= Modules.Count )
+				ModulesUpdateIndex = 0;
+			try
 			{
-				try
-				{
-					await module.Update(Bot);
-					await Task.Yield();
-				} catch(Exception e)
-				{
-					Bot.LogException(e, null, "Module.Update failed for "+ module.GetType().ToString());
-				}
+				//Bot.GetServer(Bot.GlobalConfig.MainServerID).GetChannel(Bot.GlobalConfig.MainLogChannelID).SendMessage("Running update for " + Modules[ModulesUpdateIndex].ToString());
+				await Modules[ModulesUpdateIndex].Update(Bot);
+			} catch(Exception e)
+			{
+				Bot.LogException(e, null, "Module.Update failed for "+ Modules[ModulesUpdateIndex].GetType().ToString());
 			}
 		}
 

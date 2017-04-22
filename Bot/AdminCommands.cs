@@ -254,7 +254,7 @@ namespace Botwinder.Bot
 					guid lastMessageID = e.Message.Id;
 					Message[] chunk = null;
 					List<Message> messages = new List<Message>();
-					bool huge = e.TrimmedMessage.Contains("huge") && e.Server.IsGlobalAdmin(e.Message.User);
+					bool huge = e.Server.IsGlobalAdmin(e.Message.User);
 
 					op = Operation.Create<TUser>(client, e, true);
 					if( await op.Await(client, async () => await e.Message.Channel.SendMessage(string.Format(GlobalConfig.OperationQueuedText, client.CurrentOperations.Count, e.Command.ID))) )
