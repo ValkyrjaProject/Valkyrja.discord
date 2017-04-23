@@ -12,7 +12,7 @@ namespace Botwinder.Entities
 	public class CommandOptions
 	{
 		public string CommandId = "";
-		public CommandConfig.PermissionOverrides PermissionOverrides = CommandConfig.PermissionOverrides.None;
+		public CommandConfig.PermissionOverrides PermissionOverrides = CommandConfig.PermissionOverrides.Default;
 		public bool DeleteRequest = false;
 		public guid[] ChannelBlacklist = null;
 
@@ -26,7 +26,7 @@ namespace Botwinder.Entities
 	{
 		public enum PermissionOverrides
 		{
-			None = -1,
+			Default = -1,
 			Everyone = 0,
 			Nobody,
 			ServerOwner,
