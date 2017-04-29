@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.Entities;
 using Discord;
-using Discord.API.Client.GatewaySocket;
 using RedditSharp;
 
 using guid = System.UInt64;
@@ -47,7 +47,7 @@ namespace Botwinder.Modules
 		private string LastVerifyMessage = "";
 		private readonly List<string> RecentRedditMessages = new List<string>();
 
-		private readonly Dictionary<string, HashedValue> HashedValues = new Dictionary<string, HashedValue>();
+		private readonly ConcurrentDictionary<string, HashedValue> HashedValues = new ConcurrentDictionary<string, HashedValue>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()

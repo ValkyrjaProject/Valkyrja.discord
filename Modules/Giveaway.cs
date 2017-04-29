@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,13 +26,13 @@ namespace Botwinder.Modules
 		private DateTime LastSaved{ get; set; }
 
 
-		private Dictionary<guid, Dictionary<guid, Discord.User>> ServerDictionary{ get; set; }
-		private Dictionary<guid, Dictionary<guid, Discord.User>> ClosedGiveaways{ get; set; }
+		private ConcurrentDictionary<guid, ConcurrentDictionary<guid, Discord.User>> ServerDictionary{ get; set; }
+		private ConcurrentDictionary<guid, ConcurrentDictionary<guid, Discord.User>> ClosedGiveaways{ get; set; }
 
 		private int Count{ get{ return this.ServerDictionary.Count; } }
 		private bool ContainsKey(guid id) => this.ServerDictionary.ContainsKey(id);
 
-		private Dictionary<guid, Discord.User> this[guid id]
+		private ConcurrentDictionary<guid, Discord.User> this[guid id]
 		{
 			get{
 				if( !this.ServerDictionary.ContainsKey(id) )
@@ -76,8 +77,8 @@ namespace Botwinder.Modules
 
 			commands = base.Init<TUser>(client);
 
-			this.ServerDictionary = new Dictionary<guid, Dictionary<guid, Discord.User>>();
-			this.ClosedGiveaways = new Dictionary<guid, Dictionary<guid, Discord.User>>();
+			this.ServerDictionary = new ConcurrentDictionary<guid, ConcurrentDictionary<guid, Discord.User>>();
+			this.ClosedGiveaways = new ConcurrentDictionary<guid, ConcurrentDictionary<guid, Discord.User>>();
 
 			if( this.Data != null && this.Data.Servers != null )
 			{
@@ -87,7 +88,7 @@ namespace Botwinder.Modules
 					if( !client.Servers.ContainsKey(serverData.ID) || (server = client.Servers[serverData.ID]) == null )
 						continue;
 
-					Dictionary<guid, Discord.User> dict = new Dictionary<guid, Discord.User>();
+					ConcurrentDictionary<guid, Discord.User> dict = new ConcurrentDictionary<guid, Discord.User>();
 					for(int i = 0; i < serverData.Users.Length; i++)
 					{
 						Discord.User user = server.DiscordServer.GetUser(serverData.Users[i]);
@@ -134,7 +135,7 @@ namespace Botwinder.Modules
 								break;
 							}
 
-							this[e.Server.ID] = new Dictionary<guid, Discord.User>();
+							this[e.Server.ID] = new ConcurrentDictionary<guid, Discord.User>();
 							responseMessage = "New giveaway is open, you can participate by typing `" + e.Server.ServerConfig.CommandCharacter.ToString() + "g` in the chat.";
 							this.LastChanged = DateTime.UtcNow;
 							break;

@@ -2,6 +2,7 @@
  * Copyright Radka Janek aka RheaAyase www.ayase.eu - modifications only with explicit permission.
  */
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -108,7 +109,7 @@ namespace Botwinder.Modules
 		protected const float EventCooldown = 300f;
 
 
-		public Dictionary<string, LivestreamChannel> ChannelDictionary;
+		public ConcurrentDictionary<string, LivestreamChannel> ChannelDictionary;
 
 
 		public override List<Command> Init<TUser>(IBotwinderClient<TUser> client)
@@ -138,7 +139,7 @@ namespace Botwinder.Modules
 
 			commands = base.Init<TUser>(client);
 
-			this.ChannelDictionary = new Dictionary<string, LivestreamChannel>();
+			this.ChannelDictionary = new ConcurrentDictionary<string, LivestreamChannel>();
 			if( this.Data != null && this.Data.Channels != null )
 			{
 				foreach( LivestreamChannel data in this.Data.Channels )

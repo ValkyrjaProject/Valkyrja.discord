@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Discord;
@@ -134,6 +135,18 @@ namespace Botwinder.Entities
 			}
 
 			return userNames;
+		}
+	}
+
+	public static class ConcurrentDictionaryEx {
+		public static bool Remove<TKey, TValue>(
+			this ConcurrentDictionary<TKey, TValue> self, TKey key) {
+			TValue ignored;
+			return self.TryRemove(key, out ignored);
+		}
+		public static bool Add<TKey, TValue>(
+			this ConcurrentDictionary<TKey, TValue> self, TKey key, TValue value) {
+			return self.TryAdd(key, value);
 		}
 	}
 }

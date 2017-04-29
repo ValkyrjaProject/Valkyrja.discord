@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -172,7 +173,7 @@ namespace Botwinder.Modules
 		protected override string Filename => "polls.json";
 
 
-		private Dictionary<guid, Poll> PollDictionary;
+		private ConcurrentDictionary<guid, Poll> PollDictionary;
 
 		public int Count(){ return this.PollDictionary.Count; }
 		public bool ContainsKey(guid id)
@@ -224,7 +225,7 @@ namespace Botwinder.Modules
 
 			commands = base.Init<TUser>(client);
 
-			this.PollDictionary = new Dictionary<guid, Poll>();
+			this.PollDictionary = new ConcurrentDictionary<guid, Poll>();
 
 			if( this.Data != null && this.Data.Polls != null )
 			{

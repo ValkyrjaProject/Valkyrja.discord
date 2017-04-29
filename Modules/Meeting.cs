@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace Botwinder.Modules
 {
 	public class Meetings: IModule
 	{
-		private Dictionary<guid, Meeting> MeetingsCache = new Dictionary<guid, Meeting>();
+		private ConcurrentDictionary<guid, Meeting> MeetingsCache = new ConcurrentDictionary<guid, Meeting>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
