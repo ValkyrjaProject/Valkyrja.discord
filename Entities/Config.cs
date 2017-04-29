@@ -261,7 +261,7 @@ namespace Botwinder.Entities
 		public guid VerifyRoleID{ get; set; }
 		public int VerifyKarma{ get; set; }
 		public string VerifyPM{ get; set; }
-		public bool VerifyUseReddit{ get; set; } //Default to true for compatibility.
+		public bool VerifyUseReddit{ get; set; } //Default to false for new servers.
 
 		public bool RemovePromote{ get; set; }
 		public bool RemoveJoin{ get; set; }
@@ -371,7 +371,7 @@ namespace Botwinder.Entities
 			                "**8.** Respect authority, and do not troll moderators on duty. Do not impersonate Admins or Mods, or anyone else.\n" +
 			                "**9.** Don't join just to advertise your stuff, it's rude. If you have something worthy, get in touch with us, and we can maybe give you a place in the news channel. This includes discord invite links, which will be automatically removed - get in touch with the Mods.\n" +
 			                "**10.** Use common sense together with everything above.";
-			this.VerifyUseReddit = true;
+			this.VerifyUseReddit = false;
 
 			this.RemovePromote = false;
 			this.RemoveJoin = false;
