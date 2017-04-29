@@ -19,6 +19,7 @@ namespace Botwinder.Entities
 			public string[] Messages;
 			public DateTime LastTriggeredTime = DateTime.MinValue;
 			public DateTime StartAt = DateTime.MinValue;
+			public DateTime ExpireAfter = DateTime.MaxValue;
 			public TimeSpan RepeatInterval = TimeSpan.Zero;
 
 			public Timer(){}
