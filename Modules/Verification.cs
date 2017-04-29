@@ -1,23 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.Entities;
+using Discord;
+using Discord.API.Client.GatewaySocket;
 using RedditSharp;
+
 using guid = System.UInt64;
 
 namespace Botwinder.Modules
 {
-	public class Reddit : IModule
+	public class Verification : IModule
 	{
-		protected static Reddit Instance = null;
+		protected static Verification Instance = null;
 
-		public static Reddit Get()
+		public static Verification Get()
 		{
 			return Instance;
 		}
 
+		private class HashedValue
+		{
+			public guid UserId;
+			public guid ServerId;
+
+			public HashedValue(guid userId, guid serverId)
+			{
+				this.UserId = userId;
+				this.ServerId = serverId;
+			}
+		}
 
 		public const string VerifySent = "<@{0}>, check your messages!";
 		public const string VerifyDonePM = "You have been verified on the `{0}` server =]";
@@ -31,6 +46,8 @@ namespace Botwinder.Modules
 		private RedditSharp.Reddit RedditClient = null;
 		private string LastVerifyMessage = "";
 		private readonly List<string> RecentRedditMessages = new List<string>();
+
+		private readonly Dictionary<string, HashedValue> HashedValues = new Dictionary<string, HashedValue>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
@@ -366,31 +383,90 @@ namespace Botwinder.Modules
 				return true;
 			}
 
-			string message = string.Format("Hi {0},\nthe `{1}` server is using reddit verification.\n\n{2}\n\n",
-				user.Name, user.Server.Name, server.ServerConfig.VerifyPM);
+			string verifyPm = server.ServerConfig.VerifyPM;
+			if( !server.ServerConfig.VerifyUseReddit )
+			{
+				int source = Math.Abs((user.Id.ToString() + server.ID).GetHashCode());
+				int chunkNum = (int)Math.Ceiling(Math.Ceiling(Math.Log(source)) / 2);
+				StringBuilder hashBuilder = new StringBuilder(chunkNum);
+				for( int i = 0; i < chunkNum; i++ )
+				{
+					char c = (char)((source % 100) / 4 + 97);
+					hashBuilder.Append(c);
+					source = source / 100;
+				}
+				string hash = hashBuilder.ToString();
+				hash = hash.Length > 5 ? hash.Substring(0, 5) : hash;
+				if( !this.HashedValues.ContainsKey(hash) )
+					this.HashedValues.Add(hash, new HashedValue(user.Id, server.ID));
+
+				verifyPm = "In order to get verified, you must reply to me with a hidden code within the below rules. " +
+				           "_(Just the code by itself, do not add anything extra. Read the rules and you will find the code.)_";
+
+				string[] lines = server.ServerConfig.VerifyPM.Split('\n');
+				string[] words = null;
+				Task t = Task.Run(() =>{
+					while( (words = lines[(chunkNum = Utils.Random.Next(lines.Length / 2, lines.Length))].Split(' ')).Length < 10 );
+				});
+				if( !t.Wait(300) || verifyPm.Length + server.ServerConfig.VerifyPM.Length + hash.Length + 100 >= GlobalConfig.MessageCharacterLimit )
+				{
+					verifyPm = "```diff\n- Error!\n\n  " +
+					           "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
+					           "(It may be either too short, or too long. The algorithm is looking for lines with at least 10 words.)```";
+				}
+				else
+				{
+					int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
+					lines[chunkNum] = lines[chunkNum].Insert(lines[chunkNum].IndexOf(words[space]) - 1, " the secret is: " + hash );
+
+					hashBuilder = new StringBuilder(lines.Length+1);
+					hashBuilder.AppendLine(verifyPm).AppendLine("");
+					for(int i = 0; i < lines.Length; i++)
+						hashBuilder.AppendLine(lines[i]);
+					verifyPm = hashBuilder.ToString();
+				}
+			}
+
+			string message = string.Format("Hi {0},\nthe `{1}` server is using "+ (server.ServerConfig.VerifyUseReddit ? "reddit" : "code") +" verification.\n\n{2}\n\n",
+				user.Name, user.Server.Name, verifyPm);
 
 			if( server.ServerConfig.VerifyKarma > 0 )
 				message += string.Format("You will also get {0} `{1}{2}` for verifying!\n\n", server.ServerConfig.VerifyKarma,
 					server.ServerConfig.CommandCharacter, server.ServerConfig.KarmaCurrency);
 
-			string newMessage = string.Format(
-				"The only requirement is to have registered Discord account with valid email address, otherwise you may lose this status.\n" +
-				"In order to complete the verification, please send me this message on Reddit _(Do not change anything, just click the link and hit send.)_\n" +
-				"https://www.reddit.com/message/compose/?to=Botwinder&subject=DiscordVerification&message={0}%20{1}" +
-				"\n_(Please note that this will **not** work on **mobile** version of Reddit." +
-				"If you are on mobile, you have to 1. click the link, 2. click reddit menu, 3. click \"Desktop Site\", 4. hit \"send.\")_" +
-				"\n\nCheers! :smiley:",
-				user.Server.Id, user.Id);
-
-			if( newMessage.Length + message.Length > GlobalConfig.MessageCharacterLimit )
+			if( server.ServerConfig.VerifyUseReddit )
 			{
-				await user.SendMessage(message);
-				message = "";
+				string newMessage = string.Format(
+					"The only requirement is to have registered Discord account with valid email address, otherwise you may lose this status.\n" +
+					"In order to complete the verification, please send me this message on Reddit _(Do not change anything, just click the link and hit send.)_\n" +
+					"https://www.reddit.com/message/compose/?to=Botwinder&subject=DiscordVerification&message={0}%20{1}" +
+					"\n_(Please note that this will **not** work on **mobile** version of Reddit." +
+					"If you are on mobile, you have to 1. click the link, 2. click reddit menu, 3. click \"Desktop Site\", 4. hit \"send.\")_" +
+					"\n\nCheers! :smiley:",
+					user.Server.Id, user.Id);
+
+				if( newMessage.Length + message.Length > GlobalConfig.MessageCharacterLimit )
+				{
+					await user.SendMessage(message);
+					message = "";
+				}
+				message += newMessage;
 			}
-			message += newMessage;
 
 			await user.SendMessage(message);
 			return false;
+		}
+
+		/// <summary>Verifies a user based on a hashCode string and returns true if successful.</summary>
+		public async Task<bool> VerifyUserHash<TUser>(IBotwinderClient<TUser> client, Discord.User user, string hashCode)
+			where TUser : UserData, new()
+		{
+			if( !this.HashedValues.ContainsKey(hashCode) || this.HashedValues[hashCode].UserId != user.Id )
+				return false;
+
+			Server<TUser> server = client.GetServerData(this.HashedValues[hashCode].ServerId);
+			await VerifyUser(server.DiscordServer.GetUser(user.Id), server, null);
+			return true;
 		}
 
 		private async Task VerifyUser<TUser>(Discord.User user, Server<TUser> server, string verifiedInfo = null)

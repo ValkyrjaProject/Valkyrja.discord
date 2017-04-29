@@ -27,7 +27,7 @@ namespace Botwinder.Entities
 		public string BotToken = "";
 		public guid[] UserIds = { 140307918200242176, 278834060053446666 };
 
-		public bool RedditEnabled = true;
+		public bool RedditEnabled = true; //This boolean does not work because I borked it when I implemented the new generic verification system.
 		public string RedditUsername = "";
 		public string RedditPassword = "";
 		public string RedditClientId = "";
@@ -261,6 +261,7 @@ namespace Botwinder.Entities
 		public guid VerifyRoleID{ get; set; }
 		public int VerifyKarma{ get; set; }
 		public string VerifyPM{ get; set; }
+		public bool VerifyUseReddit{ get; set; } //Default to true for compatibility.
 
 		public bool RemovePromote{ get; set; }
 		public bool RemoveJoin{ get; set; }
@@ -361,6 +362,7 @@ namespace Botwinder.Entities
 			this.VerifyRoleID = 0;
 			this.VerifyKarma = 3;
 			this.VerifyPM = "Benefits of verifying are:\n**1.** Verified accounts can embed links and images.\n**2.** Ability to use voice activation instead of being forced to use push to talk.\n**3.** It will allow us to throw you a message off-discord if something happens, and it serves as a protection against bots, spammers and trolls.";
+			this.VerifyUseReddit = true;
 
 			this.RemovePromote = false;
 			this.RemoveJoin = false;

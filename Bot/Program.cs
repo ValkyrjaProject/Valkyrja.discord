@@ -97,6 +97,12 @@ namespace Botwinder.Bot
 			Bot.OnUserJoinedServer += (sender, e) => OnUserJoinedServer(e);
 			Bot.OnLoggedInfo += (sender, e) => Console.WriteLine(e.Replace("Info:", "Discord:"));
 			Bot.OnException += (sender, e) => Exception(e);
+			Bot.OnPrivateMessageReceived += async (sender, e) => {
+				if( Verification.Get() == null )
+					return;
+				if( !e.Message.RawText.StartsWith(Bot.GlobalConfig.CommandCharacter) && !await Verification.Get().VerifyUserHash(Bot, e.User, e.Message.RawText.Trim()) )
+					await e.Message.Channel.SendMessage("I'm sorry but I do not understand that. I'm just a bot.\n_(If you are trying to verify yourself, then the code was invalid.)_");
+			};
 
 			CreateAllModules();
 
@@ -141,7 +147,7 @@ namespace Botwinder.Bot
 			Modules.Add(new LivestreamNotifications());
 			Modules.Add(new Meetings());
 			Modules.Add(new Polls());
-			Modules.Add(new Reddit());
+			Modules.Add(new Verification());
 			Modules.Add(new TimeAtWork());
 			foreach(IModule module in Modules)
 				module.HandleException += (sender, e) => Bot.AddException(e.Exception, e.Data);
@@ -205,8 +211,8 @@ namespace Botwinder.Bot
 				{
 					do{
 						await Task.Delay(TimeSpan.FromSeconds(10f)); //Wait for connection.
-					} while(Reddit.Get() == null);
-					await Reddit.Get().VerifyUserPM(e.User, server);
+					} while(Verification.Get() == null);
+					await Verification.Get().VerifyUserPM(e.User, server);
 				}
 			} catch(Exception exception)
 			{
