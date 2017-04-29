@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Botwinder.Entities;
-
+using Discord;
 using guid = System.UInt64;
 
 namespace Botwinder.Modules
@@ -28,6 +28,7 @@ namespace Botwinder.Modules
 
 		private ConcurrentDictionary<guid, ConcurrentDictionary<guid, Discord.User>> ServerDictionary{ get; set; }
 		private ConcurrentDictionary<guid, ConcurrentDictionary<guid, Discord.User>> ClosedGiveaways{ get; set; }
+		private ConcurrentDictionary<guid, guid> RestrictedGiveaways = new ConcurrentDictionary<guid, guid>();
 
 		private int Count{ get{ return this.ServerDictionary.Count; } }
 		private bool ContainsKey(guid id) => this.ServerDictionary.ContainsKey(id);
@@ -108,6 +109,7 @@ namespace Botwinder.Modules
 			newCommand.OnExecute += async (sender, e) =>{
 				string invalidParameters = string.Format("Invalid parameters. Usage:\n" +
 				                                         "    `{0}{1} start/end` - Start or end a giveaway (you can't re-open it so think twice before closing)\n" +
+				                                         "    `{0}{1} start roleID` - You can limit the giveaway only to people with the optional roleID (or roleMention) parameter. (Use `{0}getRole` to get the ID.)\n" +
 				                                         "    `{0}{1} roll` - Pick a winner at random (you have to end the giveaway first)\n" +
 				                                         "    `{0}g` - Participate in currently active giveaway.",
 					e.Server.ServerConfig.CommandCharacter, e.Command.ID
@@ -137,6 +139,19 @@ namespace Botwinder.Modules
 
 							this[e.Server.ID] = new ConcurrentDictionary<guid, Discord.User>();
 							responseMessage = "New giveaway is open, you can participate by typing `" + e.Server.ServerConfig.CommandCharacter.ToString() + "g` in the chat.";
+
+							guid id;
+							Role role = null;
+							if( e.MessageArgs.Length > 1 && (guid.TryParse(e.MessageArgs[1], out id) || guid.TryParse(e.MessageArgs[1].Trim('<','@','&','>'), out id)) && (role = e.Server.DiscordServer.GetRole(id)) != null )
+							{
+								if( this.RestrictedGiveaways.ContainsKey(e.Server.ID) )
+									this.RestrictedGiveaways[e.Server.ID] = id;
+								else
+									this.RestrictedGiveaways.Add(e.Server.ID, id);
+
+								responseMessage += "\n_(Only members of the `"+ role.Name +"` role can participate.)_";
+							}
+
 							this.LastChanged = DateTime.UtcNow;
 							break;
 						case "close":
@@ -193,6 +208,15 @@ namespace Botwinder.Modules
 				if( !ContainsKey(e.Server.ID) )
 				{
 					await e.Message.Channel.SendMessage("There ain't no giveaway runnin!");
+					return;
+				}
+
+				Role role = null;
+				if( this.RestrictedGiveaways.ContainsKey(e.Server.ID) &&
+				    (role = e.Server.DiscordServer.GetRole(this.RestrictedGiveaways[e.Server.ID])) != null &&
+				    e.Message.User.Roles.FirstOrDefault(r => r.Id == this.RestrictedGiveaways[e.Server.ID]) == null )
+				{
+					await e.Message.Channel.SendMessage("This giveaway is restricted only to people with the `"+ role.Name +"` role.");
 					return;
 				}
 
