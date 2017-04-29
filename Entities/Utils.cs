@@ -2,8 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Discord;
-
+using Nito.AsyncEx;
 using guid = System.UInt64;
 
 namespace Botwinder.Entities
@@ -138,7 +139,8 @@ namespace Botwinder.Entities
 		}
 	}
 
-	public static class ConcurrentDictionaryEx {
+	public static class ConcurrentDictionaryEx
+	{
 		public static bool Remove<TKey, TValue>(
 			this ConcurrentDictionary<TKey, TValue> self, TKey key) {
 			TValue ignored;
@@ -147,6 +149,53 @@ namespace Botwinder.Entities
 		public static bool Add<TKey, TValue>(
 			this ConcurrentDictionary<TKey, TValue> self, TKey key, TValue value) {
 			return self.TryAdd(key, value);
+		}
+	}
+
+	public static class DiscordEx
+	{
+		public static async Task SendMessageSafe(Channel self, string message) => await SendMessageSafe(async m => await self.SendMessage(m), message);
+		public static async Task SendMessageSafe(User self, string message) => await SendMessageSafe(async m => await self.SendMessage(m), message);
+
+		public static async Task SendMessageSafe(Func<string, Task> sendMessage, string message)
+		{
+			string safetyCopy = "";
+			string newChunk = "";
+
+			while( message.Length > GlobalConfig.MessageCharacterLimit )
+			{
+				int split = message.Substring(0, GlobalConfig.MessageCharacterLimit).LastIndexOf('\n');
+				string chunk = "";
+
+				if( split == -1 )
+				{
+					chunk = message;
+					message = "";
+				}
+				else
+				{
+					chunk = message.Substring(0, split);
+					message = message.Substring(split + 1);
+				}
+
+				while( chunk.Length > GlobalConfig.MessageCharacterLimit )
+				{
+					safetyCopy = newChunk;
+					split = chunk.Substring(0, GlobalConfig.MessageCharacterLimit).LastIndexOf(' ');
+					if( split == -1 || (safetyCopy.Length == (newChunk = chunk.Substring(0, split)).Length && safetyCopy == newChunk) )
+					{
+						await sendMessage("I've encountered error trying send a single word longer than " + GlobalConfig.MessageCharacterLimit.ToString() + " characters.");
+						return;
+					}
+
+					await sendMessage(newChunk);
+					chunk = chunk.Substring(split + 1);
+				}
+				await sendMessage(chunk);
+			}
+
+			if( !string.IsNullOrWhiteSpace(message) )
+				await sendMessage(message);
 		}
 	}
 }
