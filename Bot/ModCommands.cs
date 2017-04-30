@@ -1321,8 +1321,8 @@ namespace Botwinder.Bot
 			};
 			commands.Add(newCommand);
 
-// !ping
-			newCommand = new Command("ping");
+// !pingMe
+			newCommand = new Command("pingMe");
 			newCommand.Type = Command.CommandType.ChatOnly;
 			newCommand.SendTyping = false;
 			newCommand.Description = "What's the response time of Botwinder?";

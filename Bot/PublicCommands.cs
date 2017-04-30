@@ -245,6 +245,36 @@ namespace Botwinder.Bot
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("roll"));
 
+// !ping
+			newCommand = new Command("ping");
+			newCommand.Type = Command.CommandType.PmAndChat;
+			newCommand.Description = "A what?";
+			newCommand.OnExecute += async (sender, e) => {
+				string message = "!pong";
+				string prefix = e.Server == null ? client.GlobalConfig.CommandCharacter : e.Server.ServerConfig.CommandCharacter;
+				switch(Utils.Random.Next(0, 8))
+				{
+				case 0: message = "`"+ prefix +"pong`";
+					break;
+				case 1: message = "Umm...";
+					break;
+				case 2: message = "Huh?";
+					break;
+				case 3: message = "`"+ prefix +"wat`";
+					break;
+				case 4: message = "Hmm.";
+					break;
+				case 5: message = "Oh, hello!";
+					break;
+				case 6: message = "=)";
+					break;
+				case 7: message = ":]";
+					break;
+				}
+				await e.Message.Channel.SendMessageSafe(message);
+			};
+			commands.Add(newCommand);
+
 // !wat
 			newCommand = new Command("wat");
 			newCommand.Type = Command.CommandType.PmAndChat;
