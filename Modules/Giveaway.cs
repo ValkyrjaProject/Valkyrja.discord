@@ -66,7 +66,7 @@ namespace Botwinder.Modules
 				newCommand.Type = Command.CommandType.ChatOnly;
 				newCommand.Description = "Participate in currently active giveaway.";
 				newCommand.OnExecute += async (sender, e) => {
-					await e.Message.Channel.SendMessage("Giveaways are currently disabled for technical difficulties. Please be patient, we are working on it.");
+					await e.Message.Channel.SendMessageSafe("Giveaways are currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
 				newCommand = newCommand.CreateCopy("giveaway");
@@ -196,7 +196,7 @@ namespace Botwinder.Modules
 					}
 				}
 
-				await e.Message.Channel.SendMessage(responseMessage);
+				await e.Message.Channel.SendMessageSafe(responseMessage);
 			};
 			commands.Add(newCommand);
 
@@ -207,7 +207,7 @@ namespace Botwinder.Modules
 			newCommand.OnExecute += async (sender, e) =>{
 				if( !ContainsKey(e.Server.ID) )
 				{
-					await e.Message.Channel.SendMessage("There ain't no giveaway runnin!");
+					await e.Message.Channel.SendMessageSafe("There ain't no giveaway runnin!");
 					return;
 				}
 
@@ -216,14 +216,14 @@ namespace Botwinder.Modules
 				    (role = e.Server.DiscordServer.GetRole(this.RestrictedGiveaways[e.Server.ID])) != null &&
 				    e.Message.User.Roles.FirstOrDefault(r => r.Id == this.RestrictedGiveaways[e.Server.ID]) == null )
 				{
-					await e.Message.Channel.SendMessage("This giveaway is restricted only to people with the `"+ role.Name +"` role.");
+					await e.Message.Channel.SendMessageSafe("This giveaway is restricted only to people with the `"+ role.Name +"` role.");
 					return;
 				}
 
 				if( !this[e.Server.ID].ContainsKey(e.Message.User.Id) )
 				{
 					this[e.Server.ID].Add(e.Message.User.Id, e.Message.User);
-					await e.Message.Channel.SendMessage(string.Format("<@{0}> jumped on the train!", e.Message.User.Id));
+					await e.Message.Channel.SendMessageSafe(string.Format("<@{0}> jumped on the train!", e.Message.User.Id));
 					this.LastChanged = DateTime.UtcNow;
 				}
 			};

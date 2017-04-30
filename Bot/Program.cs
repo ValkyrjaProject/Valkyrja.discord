@@ -101,7 +101,7 @@ namespace Botwinder.Bot
 				if( Verification.Get() == null )
 					return;
 				if( !e.Message.RawText.StartsWith(Bot.GlobalConfig.CommandCharacter) && !await Verification.Get().VerifyUserHash(Bot, e.User, e.Message.RawText.Trim()) )
-					await e.Message.Channel.SendMessage("I'm sorry but I do not understand that. I'm just a bot.\n_(If you are trying to verify yourself, then the code was invalid.)_");
+					await e.Message.Channel.SendMessageSafe("I'm sorry but I do not understand that. I'm just a bot.\n_(If you are trying to verify yourself, then the code was invalid.)_");
 			};
 
 			CreateAllModules();
@@ -142,6 +142,7 @@ namespace Botwinder.Bot
 
 		protected static void CreateAllModules()
 		{
+			Modules.Add(new Patchnotes());
 			Modules.Add(new Events());
 			Modules.Add(new Giveaways());
 			Modules.Add(new LivestreamNotifications());
@@ -185,7 +186,7 @@ namespace Botwinder.Bot
 				ModulesUpdateIndex = 0;
 			try
 			{
-				//Bot.GetServer(Bot.GlobalConfig.MainServerID).GetChannel(Bot.GlobalConfig.MainLogChannelID).SendMessage("Running update for " + Modules[ModulesUpdateIndex].ToString());
+				//Bot.GetServer(Bot.GlobalConfig.MainServerID).GetChannel(Bot.GlobalConfig.MainLogChannelID).SendMessageSafe("Running update for " + Modules[ModulesUpdateIndex].ToString());
 				await Modules[ModulesUpdateIndex].Update(Bot);
 			} catch(Exception e)
 			{
@@ -195,7 +196,7 @@ namespace Botwinder.Bot
 
 		protected static async Task Restart(Discord.Channel channel)
 		{
-			await channel.SendMessage("Okay then, see you soon!");
+			await channel.SendMessageSafe("Okay then, see you soon!");
 			await Task.Delay(TimeSpan.FromSeconds(2f));
 			await Task.Delay(TimeSpan.FromSeconds(3f));
 
@@ -232,11 +233,11 @@ namespace Botwinder.Bot
 					if( (new Regex(".*(compile|restart|update).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
 						await Restart(message.Channel);
 					else if( (new Regex(".*you (back|there|awake).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-						await message.Channel.SendMessage("Yes I am!");
+						await message.Channel.SendMessageSafe("Yes I am!");
 					else if( (new Regex(".*get back.*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-						await message.Channel.SendMessage("Simplified Artificial Intelligence has returned!");
+						await message.Channel.SendMessageSafe("Simplified Artificial Intelligence has returned!");
 					else if( (new Regex(".*wake up.*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
-						await message.Channel.SendMessage("I am awake >_>");
+						await message.Channel.SendMessageSafe("I am awake >_>");
 					else if( (new Regex(".*(type|typing).*", RegexOptions.IgnoreCase)).Match(message.RawText).Success )
 					{
 						string path = Path.Combine("data", "typing.gif");

@@ -154,8 +154,8 @@ namespace Botwinder.Entities
 
 	public static class DiscordEx
 	{
-		public static async Task SendMessageSafe(Channel self, string message) => await SendMessageSafe(async m => await self.SendMessage(m), message);
-		public static async Task SendMessageSafe(User self, string message) => await SendMessageSafe(async m => await self.SendMessage(m), message);
+		public static async Task SendMessageSafe(this Channel self, string message) => await SendMessageSafe(async m => await self.SendMessage(m), message);
+		public static async Task SendMessageSafe(this User self, string message) => await SendMessageSafe(async m => await self.SendMessage(m), message);
 
 		public static async Task SendMessageSafe(Func<string, Task> sendMessage, string message)
 		{

@@ -159,7 +159,7 @@ namespace Botwinder.Modules
 					}
 				}
 
-				await e.Message.Channel.SendMessage(responseMessage);
+				await e.Message.Channel.SendMessageSafe(responseMessage);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("job"));

@@ -63,7 +63,7 @@ namespace Botwinder.Modules
 				newCommand.Description = "Participate in currently active giveaway.";
 				newCommand.OnExecute += async (sender, e) =>
 				{
-					await e.Message.Channel.SendMessage(
+					await e.Message.Channel.SendMessageSafe(
 						"Reddit verification is currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
@@ -100,7 +100,7 @@ namespace Botwinder.Modules
 				if( (!e.Server.ServerConfig.VerifyEnabled || e.Server.ServerConfig.VerifyRoleID == 0) &&
 				    !client.IsGlobalAdmin(e.Message.User) )
 				{
-					await e.Message.Channel.SendMessage("Verification is disabled on this server.");
+					await e.Message.Channel.SendMessageSafe("Verification is disabled on this server.");
 					return;
 				}
 
@@ -120,12 +120,12 @@ namespace Botwinder.Modules
 					if( !guid.TryParse(e.MessageArgs[0], out serverID) || (discordServer = client.GetServer(serverID)) == null ||
 					    !guid.TryParse(e.MessageArgs[1], out userID) || (user = discordServer.GetUser(userID)) == null )
 					{
-						await e.Message.Channel.SendMessage(UserNotFound);
+						await e.Message.Channel.SendMessageSafe(UserNotFound);
 						return;
 					}
 
 					await VerifyUser(user, client.GetServerData(serverID), (e.MessageArgs[2] == "force" ? null : e.MessageArgs[2]));
-					await e.Message.Channel.SendMessage(string.Format(VerifyDone, user.Id));
+					await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
 					return;
 				}
 
@@ -141,12 +141,12 @@ namespace Botwinder.Modules
 					if( (e.Message.MentionedUsers.Count() != 1 || (user = e.Message.MentionedUsers.ElementAt(0)) == null) &&
 					    (!guid.TryParse(e.MessageArgs[0], out id) || (user = e.Message.Server.GetUser(id)) == null) )
 					{
-						await e.Message.Channel.SendMessage(UserNotFound);
+						await e.Message.Channel.SendMessageSafe(UserNotFound);
 						return;
 					}
 
 					await VerifyUser(user, server, (e.MessageArgs[1] == "force" ? null : e.MessageArgs[1]));
-					await e.Message.Channel.SendMessage(string.Format(VerifyDone, user.Id));
+					await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
 					return;
 				}
 
@@ -164,14 +164,14 @@ namespace Botwinder.Modules
 
 				if( user == null )
 				{
-					await e.Message.Channel.SendMessage(VerifyError);
+					await e.Message.Channel.SendMessageSafe(VerifyError);
 				}
 				else
 				{
 					if( await VerifyUserPM(user, server) )
-						await e.Message.Channel.SendMessage(string.Format(VerifyDone, user.Id));
+						await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
 					else
-						await e.Message.Channel.SendMessage(string.Format(VerifySent, user.Id));
+						await e.Message.Channel.SendMessageSafe(string.Format(VerifySent, user.Id));
 				}
 			};
 			commands.Add(newCommand);
@@ -195,7 +195,7 @@ namespace Botwinder.Modules
 						this.RedditClient.User.UnreadMessages.Count());
 				}
 
-				await e.Message.Channel.SendMessage(message);
+				await e.Message.Channel.SendMessageSafe(message);
 			};
 			commands.Add(newCommand);
 
@@ -233,7 +233,7 @@ namespace Botwinder.Modules
 					}
 				}
 
-				await e.Message.Channel.SendMessage(message);
+				await e.Message.Channel.SendMessageSafe(message);
 			};
 			commands.Add(newCommand);
 
@@ -259,7 +259,7 @@ namespace Botwinder.Modules
 					message = "Done.";
 				}
 
-				await e.Message.Channel.SendMessage(message);
+				await e.Message.Channel.SendMessageSafe(message);
 			};
 			commands.Add(newCommand);
 
@@ -335,7 +335,7 @@ namespace Botwinder.Modules
 								//await message.ReplyAsync("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
 								//message.Reply("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
 								if( mainChannel != null )
-									await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}",
+									await mainChannel.SendMessageSafe(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}",
 										string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author,
 										string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject,
 										string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body, user == null ? "null" : user.Id.ToString(),
@@ -345,7 +345,7 @@ namespace Botwinder.Modules
 						else
 						{
 							if( mainChannel != null )
-								await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}",
+								await mainChannel.SendMessageSafe(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}",
 									string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author,
 									string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject,
 									string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body));
@@ -447,13 +447,13 @@ namespace Botwinder.Modules
 
 				if( newMessage.Length + message.Length > GlobalConfig.MessageCharacterLimit )
 				{
-					await user.SendMessage(message);
+					await user.SendMessageSafe(message);
 					message = "";
 				}
 				message += newMessage;
 			}
 
-			await user.SendMessage(message);
+			await user.SendMessageSafe(message);
 			return false;
 		}
 
@@ -503,7 +503,7 @@ namespace Botwinder.Modules
 			try
 			{
 				if( !alreadyVerified )
-					await user.SendMessage(string.Format(VerifyDonePM, server.DiscordServer.Name));
+					await user.SendMessageSafe(string.Format(VerifyDonePM, server.DiscordServer.Name));
 			}
 			catch( Exception ){}
 		}

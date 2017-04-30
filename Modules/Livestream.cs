@@ -125,7 +125,7 @@ namespace Botwinder.Modules
 				newCommand.Description = "Add a channel to watch list, to send a short notification message in \"this\" channel, whenever they go live. Supported services are: `twitch`, `hitbox` & `beam` (more will be added soon.) Example: `livestreamAdd twitch RheaAyase` (Use of this command and bot's response will be deleted for your convenience.)";
 				newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator;
 				newCommand.OnExecute += async (sender, e) => {
-					await e.Message.Channel.SendMessage("Livestream notifications are currently disabled for technical difficulties. Please be patient, we are working on it.");
+					await e.Message.Channel.SendMessageSafe("Livestream notifications are currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
 				newCommand = newCommand.CreateCopy("livestreamRemove");
@@ -338,7 +338,7 @@ namespace Botwinder.Modules
 
 				if( channel != null )
 				{
-					await channel.SendMessage(string.Format("**{0} is Live!**\n{1}: {2}\n<{3}>",
+					await channel.SendMessageSafe(string.Format("**{0} is Live!**\n{1}: {2}\n<{3}>",
 						info.DisplayName, info.Game, info.StreamTitle, info.Url
 					));
 				}

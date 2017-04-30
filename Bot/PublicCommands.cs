@@ -40,7 +40,7 @@ namespace Botwinder.Bot
 							newString = (i == 0 ? "`" : i == publicRoles.Length -1 ? " and `" : ", `") + role.Name +"`";
 							if( newString.Length + response.Length > GlobalConfig.MessageCharacterLimit )
 							{
-								await e.Message.Channel.SendMessage(response);
+								await e.Message.Channel.SendMessageSafe(response);
 								response = "";
 							}
 							response += newString;
@@ -48,7 +48,7 @@ namespace Botwinder.Bot
 					}
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("publicroles"));
@@ -93,7 +93,7 @@ namespace Botwinder.Bot
 					if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
 					{
 						string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
-						await logChannel.SendMessage(message);
+						await logChannel.SendMessageSafe(message);
 					}
 				}
 
@@ -148,7 +148,7 @@ namespace Botwinder.Bot
 					if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
 					{
 						string message = string.Format("`{0}`: __{1}__ left _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
-						await logChannel.SendMessage(message);
+						await logChannel.SendMessageSafe(message);
 					}
 				}
 
@@ -171,7 +171,7 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( e.MessageArgs == null || e.MessageArgs.Length == 0 )
 				{
-					await e.Message.Channel.SendMessage("You forgot something!");
+					await e.Message.Channel.SendMessageSafe("You forgot something!");
 					return;
 				}
 
@@ -200,19 +200,19 @@ namespace Botwinder.Bot
 				    (!string.IsNullOrEmpty(quantityString) && !int.TryParse(quantityString, out quantity)) || quantity <= 0 ||
 				    (e.MessageArgs.Length == 3 && ((!gt && !lt && !eq) || !int.TryParse(equalityString.TrimStart('>', '<', '='), out equality) || equality < 1 || equality > dice)) )
 				{
-					await e.Message.Channel.SendMessage("Use one of the following formats: `6` / `3 d20` / `15 d6 >5` _(With spaces.)_");
+					await e.Message.Channel.SendMessageSafe("Use one of the following formats: `6` / `3 d20` / `15 d6 >5` _(With spaces.)_");
 					return;
 				}
 
 				if( quantity > 50 )
 				{
-					await e.Message.Channel.SendMessage("Can you really fit all of those in your hand? o_O");
+					await e.Message.Channel.SendMessageSafe("Can you really fit all of those in your hand? o_O");
 					return;
 				}
 
 				if( dice*quantity > 10000 )
 				{
-					await e.Message.Channel.SendMessage("Could you try throwing a smaller dice please? This is too heavy.");
+					await e.Message.Channel.SendMessageSafe("Could you try throwing a smaller dice please? This is too heavy.");
 					return;
 				}
 
@@ -236,11 +236,11 @@ namespace Botwinder.Bot
 				}
 
 				if( quantity == 1 )
-					await e.Message.Channel.SendMessage(string.Format("<@{0}> rolled {1}.", e.Message.User.Id, total));
+					await e.Message.Channel.SendMessageSafe(string.Format("<@{0}> rolled {1}.", e.Message.User.Id, total));
 				else if( e.MessageArgs.Length == 3 )
-					await e.Message.Channel.SendMessage(string.Format("<@{0}> rolled {1}. (Sum of {2} rolls `{3}`: {4})", e.Message.User.Id, msg, count, equalityString, total));
+					await e.Message.Channel.SendMessageSafe(string.Format("<@{0}> rolled {1}. (Sum of {2} rolls `{3}`: {4})", e.Message.User.Id, msg, count, equalityString, total));
 				else
-					await e.Message.Channel.SendMessage(string.Format("<@{0}> rolled {1}. (Sum: {2})", e.Message.User.Id, msg, total));
+					await e.Message.Channel.SendMessageSafe(string.Format("<@{0}> rolled {1}. (Sum: {2})", e.Message.User.Id, msg, total));
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("roll"));
@@ -250,7 +250,7 @@ namespace Botwinder.Bot
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.Description = "The best command of all time.";
 			newCommand.OnExecute += async (sender, e) =>{
-				await e.Message.Channel.SendMessage("**-wat-**\n<http://destroyallsoftware.com/talks/wat>");
+				await e.Message.Channel.SendMessageSafe("**-wat-**\n<http://destroyallsoftware.com/talks/wat>");
 			};
 			commands.Add(newCommand);
 
@@ -260,7 +260,7 @@ namespace Botwinder.Bot
 			newCommand.Description = "Need help setting up Botwinder?";
 			newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin;
 			newCommand.OnExecute += async (sender, e) => {
-				await e.Message.Channel.SendMessage("**Need help setting up Botwinder?** Comprehensive configuration guide here!\n<https://www.youtube.com/watch?v=BUbMd4dSsE0&list=PLq3HkeraP8n27r0_r2hFRWK_xvcQXqQaI&index=3>");
+				await e.Message.Channel.SendMessageSafe("**Need help setting up Botwinder?** Comprehensive configuration guide here!\n<https://www.youtube.com/watch?v=BUbMd4dSsE0&list=PLq3HkeraP8n27r0_r2hFRWK_xvcQXqQaI&index=3>");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("guides"));
@@ -270,7 +270,7 @@ namespace Botwinder.Bot
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.Description = "New to Discord? Need some help with it? Read a **guide**! <https://www.discordguide.us>";
 			newCommand.OnExecute += async (sender, e) => {
-				await e.Message.Channel.SendMessage("**New to Discord?** Need some help with it? Read a **guide**!\n<https://www.discordguide.us>\nhttps://discord.gg/D6g6wSm\n\n" +
+				await e.Message.Channel.SendMessageSafe("**New to Discord?** Need some help with it? Read a **guide**!\n<https://www.discordguide.us>\nhttps://discord.gg/D6g6wSm\n\n" +
 				                                    "Need help setting up your server and **permissions**? This is how to correctly do just that!\n<http://rhea-ayase.eu/articles/2016-12/Discord-Guide-Server-setup-and-permissions>");
 			};
 			commands.Add(newCommand);
@@ -283,7 +283,7 @@ namespace Botwinder.Bot
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.Description = "Need help setting up your server and **permissions**? Take a look at this guide: <http://rhea-ayase.eu/articles/2016-12/Discord-Guide-Server-setup-and-permissions>";
 			newCommand.OnExecute += async (sender, e) => {
-				await e.Message.Channel.SendMessage("Need help setting up your server and **permissions**? This is how to correctly do just that!\n<http://rhea-ayase.eu/articles/2016-12/Discord-Guide-Server-setup-and-permissions>");
+				await e.Message.Channel.SendMessageSafe("Need help setting up your server and **permissions**? This is how to correctly do just that!\n<http://rhea-ayase.eu/articles/2016-12/Discord-Guide-Server-setup-and-permissions>");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("discordpermissions"));

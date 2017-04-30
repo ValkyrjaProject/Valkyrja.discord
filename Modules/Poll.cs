@@ -213,7 +213,7 @@ namespace Botwinder.Modules
 				newCommand.Type = Command.CommandType.ChatOnly;
 				newCommand.Description = "Vote on a poll, created and managed by the `poll` command. Use without parameters to display the poll title and options, or vote using `vote option`.";
 				newCommand.OnExecute += async (sender, e) => {
-					await e.Message.Channel.SendMessage("Polls are currently disabled for technical difficulties. Please be patient, we are working on it.");
+					await e.Message.Channel.SendMessageSafe("Polls are currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
 				newCommand = newCommand.CreateCopy("poll");
@@ -344,7 +344,7 @@ namespace Botwinder.Modules
 							string newString = "\n" + option.Key + ": " + option.Value.ToString();
 							if( newString.Length + responseMessage.Length > GlobalConfig.MessageCharacterLimit - 100 )
 							{
-								await e.Message.Channel.SendMessage(responseMessage + "\n```");
+								await e.Message.Channel.SendMessageSafe(responseMessage + "\n```");
 								responseMessage = "```http";
 							}
 							responseMessage += newString;
@@ -387,7 +387,7 @@ namespace Botwinder.Modules
 
 				if( save )
 					SaveAsync();
-				await e.Message.Channel.SendMessage(responseMessage);
+				await e.Message.Channel.SendMessageSafe(responseMessage);
 			};
 			commands.Add(newCommand);
 
@@ -399,7 +399,7 @@ namespace Botwinder.Modules
 				Poll currentPoll = ContainsKey(e.Server.ID) ? this[e.Server.ID] : null;
 				if( currentPoll == null )
 				{
-					await e.Message.Channel.SendMessage("There is nothing to vote on!");
+					await e.Message.Channel.SendMessageSafe("There is nothing to vote on!");
 					return;
 				}
 
@@ -416,7 +416,7 @@ namespace Botwinder.Modules
 							string newString = "\n" + option.Key + ": " + option.Value.ToString();
 							if( newString.Length + responseMessage.Length > GlobalConfig.MessageCharacterLimit - 100 )
 							{
-								await e.Message.Channel.SendMessage(responseMessage + "\n```");
+								await e.Message.Channel.SendMessageSafe(responseMessage + "\n```");
 								responseMessage = "```http";
 							}
 							responseMessage += newString;
@@ -424,18 +424,18 @@ namespace Botwinder.Modules
 						responseMessage += "\n```";
 					}
 
-					await e.Message.Channel.SendMessage(responseMessage);
+					await e.Message.Channel.SendMessageSafe(responseMessage);
 				}
 				else
 				{
 					ErrorCode result = currentPoll.AddVote(e.Message.User, e.MessageArgs[0]);
 					if( result == ErrorCode.Success )
-						await e.Message.Channel.SendMessage(string.Format("<@{0}> has cast_ed_ a vote!", e.Message.User.Id));
+						await e.Message.Channel.SendMessageSafe(string.Format("<@{0}> has cast_ed_ a vote!", e.Message.User.Id));
 					else if( result == ErrorCode.AlreadyVoted )
-						await e.Message.Channel.SendMessage(string.Format("Uhm, I'm afraid that I can't let you vote twice <@{0}>! ..and so I have changed your previous vote instead.", e.Message.User.Id));
+						await e.Message.Channel.SendMessageSafe(string.Format("Uhm, I'm afraid that I can't let you vote twice <@{0}>! ..and so I have changed your previous vote instead.", e.Message.User.Id));
 					else
 					{
-						await e.Message.Channel.SendMessage("I've no idea what are you trying to tell me... :/");
+						await e.Message.Channel.SendMessageSafe("I've no idea what are you trying to tell me... :/");
 						return;
 					}
 

@@ -28,17 +28,21 @@ namespace Botwinder.Modules
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.Description = "Subscribe to patchnotes and maintenance notifications (you will be PMed these)";
 			newCommand.OnExecute += async (sender, e) =>{
-				if( !this.Data.Subscribers.Contains(e.Message.User.Id) )
+				if( this.Data.Subscribers == null || !this.Data.Subscribers.Contains(e.Message.User.Id) )
 				{
 					lock(this.Lock)
 					{
-						Array.Resize(ref this.Data.Subscribers, this.Data.Subscribers.Length + 1);
+						if( this.Data.Subscribers == null )
+							this.Data.Subscribers = new guid[1];
+						else
+							Array.Resize(ref this.Data.Subscribers, this.Data.Subscribers.Length + 1);
+
 						this.Data.Subscribers[this.Data.Subscribers.Length - 1] = e.Message.User.Id;
 					}
 				}
 
 				SaveAsync();
-				await e.Message.Channel.SendMessage("I'll PM you with new features and maintenance notifications!");
+				await e.Message.Channel.SendMessageSafe("I'll PM you with new features and maintenance notifications!");
 			};
 			commands.Add(newCommand);
 
@@ -47,7 +51,7 @@ namespace Botwinder.Modules
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.Description = "Unsubscribe from the patchnotes and maintenance notifications.";
 			newCommand.OnExecute += async (sender, e) =>{
-				if( this.Data.Subscribers.Contains(e.Message.User.Id) )
+				if( this.Data.Subscribers != null && this.Data.Subscribers.Contains(e.Message.User.Id) )
 				{
 					lock(this.Lock)
 					{
@@ -58,7 +62,7 @@ namespace Botwinder.Modules
 				}
 
 				SaveAsync();
-				await e.Message.Channel.SendMessage("Your loss!");
+				await e.Message.Channel.SendMessageSafe("Your loss!");
 			};
 			commands.Add(newCommand);
 
@@ -68,7 +72,7 @@ namespace Botwinder.Modules
 			newCommand.IsCoreCommand = true;
 			newCommand.Description = "See what new tricks can I do!";
 			newCommand.OnExecute += async (sender, e) => {
-				await e.Message.Channel.SendMessage(GetPatchnotes());
+				await e.Message.Channel.SendMessageSafe(GetPatchnotes());
 			};
 			commands.Add(newCommand);
 
@@ -78,6 +82,12 @@ namespace Botwinder.Modules
 			newCommand.Description = "PM the Patchnotes to all the subscribed users.";
 			newCommand.RequiredPermissions = Command.PermissionType.OwnerOnly;
 			newCommand.OnExecute += async (sender, e) => {
+				if( this.Data.Subscribers == null || this.Data.Subscribers.Length == 0 )
+				{
+					await e.Message.Channel.SendMessage("Sorry, not enough subscribers to PM X_X");
+					return;
+				}
+
 				string message = e.Command.ID == "sendPatchnotes" ? GetPatchnotes() : e.TrimmedMessage;
 				lock(this.Lock)
 				{
@@ -91,7 +101,7 @@ namespace Botwinder.Modules
 
 							ulong id1 = id;
 							if( servers.Any(s => (user = s.GetUser(id1)) != null) )
-								user.SendMessage(message).Wait();
+								user.SendMessageSafe(message).Wait();
 						} catch(Exception exception)
 						{
 							client.LogException(exception, e, "User ID: " + id.ToString());
@@ -99,7 +109,7 @@ namespace Botwinder.Modules
 					}
 				}
 
-				await e.Message.Channel.SendMessage(message);
+				await e.Message.Channel.SendMessageSafe(message);
 			};
 			commands.Add(newCommand);
 			newCommand = newCommand.CreateCopy("pmSubscribed");

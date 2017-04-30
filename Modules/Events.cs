@@ -113,7 +113,7 @@ namespace Botwinder.Modules
 				newCommand.Type = Command.CommandType.ChatOnly;
 				newCommand.Description = "A system to help you run the best events - use the command to see more details.";
 				newCommand.OnExecute += async (sender, e) => {
-					await e.Message.Channel.SendMessage("Events are currently disabled for technical difficulties. Please be patient, we are working on it.");
+					await e.Message.Channel.SendMessageSafe("Events are currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
 				commands.Add(newCommand.CreateAlias("events"));
@@ -248,7 +248,7 @@ namespace Botwinder.Modules
 
 								if( newLine.Length + responseMessage.Length >= GlobalConfig.MessageCharacterLimit )
 								{
-									await e.Message.Channel.SendMessage(responseMessage);
+									await e.Message.Channel.SendMessageSafe(responseMessage);
 									responseMessage = "";
 								}
 								responseMessage += newLine;
@@ -281,7 +281,7 @@ namespace Botwinder.Modules
 
 								if( newLine.Length + responseMessage.Length >= GlobalConfig.MessageCharacterLimit )
 								{
-									await e.Message.Channel.SendMessage(responseMessage);
+									await e.Message.Channel.SendMessageSafe(responseMessage);
 									responseMessage = "";
 								}
 								responseMessage += newLine;
@@ -383,7 +383,7 @@ namespace Botwinder.Modules
 
 				if( save )
 					SaveAsync();
-				await e.Message.Channel.SendMessage(responseMessage);
+				await e.Message.Channel.SendMessageSafe(responseMessage);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("events"));
