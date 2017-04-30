@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="JsonModules.cs" />
     <Compile Include="IModule.cs" />
+    <Compile Include="Patchnotes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Livestream.cs" />
     <Compile Include="Verification.cs" />
