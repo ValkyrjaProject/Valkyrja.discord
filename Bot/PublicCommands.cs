@@ -259,7 +259,7 @@ namespace Botwinder.Bot
 				else
 				{
 					string prefix = e.Server == null ? client.GlobalConfig.CommandCharacter : e.Server.ServerConfig.CommandCharacter;
-					switch(Utils.Random.Next(0, 8))
+					switch(Utils.Random.Next(0, 9))
 					{
 					case 0:
 						message = "`" + prefix + "pong`";
@@ -284,6 +284,9 @@ namespace Botwinder.Bot
 						break;
 					case 7:
 						message = ":]";
+						break;
+					case 8:
+						message = "`" + prefix + "bunneh`";
 						break;
 					}
 				}
