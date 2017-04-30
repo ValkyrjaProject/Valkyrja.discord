@@ -236,14 +236,18 @@ namespace Botwinder.Modules
 		public override async Task Update<TUser>(IBotwinderClient<TUser> client)
 #pragma warning restore 1998
 		{
-			if( !client.GlobalConfig.GiveawaysEnabled )
+			if( !client.GlobalConfig.GiveawaysEnabled || this.UpdateInProgress )
 				return;
+
+			this.UpdateInProgress = true;
 
 			if( this.LastSaved < this.LastChanged )
 			{
 				this.LastSaved = DateTime.UtcNow;
 				SaveAsync();
 			}
+
+			this.UpdateInProgress = false;
 		}
 
 		protected override void Save()

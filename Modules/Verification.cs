@@ -279,17 +279,24 @@ namespace Botwinder.Modules
 			try
 			{
 				if( this.RedditClient == null || this.RedditClient.User == null || this.RedditClient.User.UnreadMessages == null )
+				{
+					this.UpdateInProgress = false;
 					return;
+				}
 
 				Discord.Server mainServer = client.GetServer(client.GlobalConfig.MainServerID);
 				Discord.Channel mainChannel = null;
 				if( mainServer != null )
 					mainChannel = mainServer.GetChannel(client.GlobalConfig.MainLogChannelID);
 
+				int i = 0;
 				RedditSharp.Things.PrivateMessage message = null;
 				List<RedditSharp.Things.Thing> list = this.RedditClient.User.UnreadMessages.ToList();
 				foreach( RedditSharp.Things.Thing thing in list )
 				{
+					if( ++i > 99 )
+						break;
+
 					try
 					{
 						message = thing as RedditSharp.Things.PrivateMessage;
