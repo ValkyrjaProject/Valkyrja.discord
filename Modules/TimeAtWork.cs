@@ -13,6 +13,8 @@ namespace Botwinder.Modules
 {
 	public class TimeAtWork: IModule
 	{
+		public bool UpdateInProgress{ get; set; } = false;
+
 		private ConcurrentDictionary<guid, UserTimeAtWork> TimeAtWorkCache = new ConcurrentDictionary<guid, UserTimeAtWork>();
 
 

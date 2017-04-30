@@ -13,6 +13,8 @@ namespace Botwinder.Modules
 {
 	public class Meetings: IModule
 	{
+		public bool UpdateInProgress{ get; set; } = false;
+
 		private ConcurrentDictionary<guid, Meeting> MeetingsCache = new ConcurrentDictionary<guid, Meeting>();
 
 

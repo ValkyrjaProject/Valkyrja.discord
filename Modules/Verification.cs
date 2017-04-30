@@ -15,6 +15,8 @@ namespace Botwinder.Modules
 {
 	public class Verification : IModule
 	{
+		public bool UpdateInProgress{ get; set; } = false;
+
 		protected static Verification Instance = null;
 
 		public static Verification Get()
@@ -269,8 +271,10 @@ namespace Botwinder.Modules
 
 		public async Task Update<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
 		{
-			if( !client.GlobalConfig.RedditEnabled )
+			if( !client.GlobalConfig.RedditEnabled || this.UpdateInProgress )
 				return;
+
+			this.UpdateInProgress = true;
 
 			try
 			{
@@ -371,6 +375,8 @@ namespace Botwinder.Modules
 				else
 					throw;
 			}
+
+			this.UpdateInProgress = false;
 		}
 
 		//Returns true if the user is already verified.

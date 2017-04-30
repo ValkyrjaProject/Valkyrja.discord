@@ -291,8 +291,10 @@ namespace Botwinder.Modules
 
 		public override async Task Update<TUser>(IBotwinderClient<TUser> client)
 		{
-			if( !client.GlobalConfig.LivestreamEnabled || this.ChannelDictionary == null || !this.ChannelDictionary.Any() )
+			if( !client.GlobalConfig.LivestreamEnabled || this.ChannelDictionary == null || !this.ChannelDictionary.Any() || this.UpdateInProgress )
 				return;
+
+			this.UpdateInProgress = true;
 
 			foreach(KeyValuePair<string, LivestreamChannel> pair in this.ChannelDictionary)
 			{
@@ -328,6 +330,7 @@ namespace Botwinder.Modules
 				}
 			}
 
+			this.UpdateInProgress = false;
 		}
 
 		private async Task OnStarted<TUser>(IBotwinderClient<TUser> client, StreamInfo info) where TUser: UserData, new()

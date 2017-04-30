@@ -13,6 +13,7 @@ namespace Botwinder.Modules
 	public abstract class JsonModule<T>: IModule where T: new()
 	{
 		protected T Data{ get; set; }
+		public bool UpdateInProgress{ get; set; } = false;
 
 
 		protected abstract string Filename{ get; }
