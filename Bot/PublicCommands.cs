@@ -254,7 +254,7 @@ namespace Botwinder.Bot
 				if( client.IsGlobalAdmin(e.Message.User) )
 				{
 					TimeSpan time = DateTime.UtcNow - new DateTime((long)(((e.Message.Id / 4194304) + 1420070400000) * 10000 + 621355968000000000));
-					message = "`"+ time.TotalMilliseconds +"`ms";
+					message = "`"+ time.TotalMilliseconds.ToString("#00") +"`ms";
 				}
 				else
 				{
