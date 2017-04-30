@@ -251,25 +251,41 @@ namespace Botwinder.Bot
 			newCommand.Description = "A what?";
 			newCommand.OnExecute += async (sender, e) => {
 				string message = "!pong";
-				string prefix = e.Server == null ? client.GlobalConfig.CommandCharacter : e.Server.ServerConfig.CommandCharacter;
-				switch(Utils.Random.Next(0, 8))
+				if( client.IsGlobalAdmin(e.Message.User) )
 				{
-				case 0: message = "`"+ prefix +"pong`";
-					break;
-				case 1: message = "Umm...";
-					break;
-				case 2: message = "Huh?";
-					break;
-				case 3: message = "`"+ prefix +"wat`";
-					break;
-				case 4: message = "Hmm.";
-					break;
-				case 5: message = "Oh, hello!";
-					break;
-				case 6: message = "=)";
-					break;
-				case 7: message = ":]";
-					break;
+					TimeSpan time = DateTime.UtcNow - new DateTime((long)(((e.Message.Id / 4194304) + 1420070400000) * 10000 + 621355968000000000));
+					message = "`"+ time.TotalMilliseconds +"`ms";
+				}
+				else
+				{
+					string prefix = e.Server == null ? client.GlobalConfig.CommandCharacter : e.Server.ServerConfig.CommandCharacter;
+					switch(Utils.Random.Next(0, 8))
+					{
+					case 0:
+						message = "`" + prefix + "pong`";
+						break;
+					case 1:
+						message = "Umm...";
+						break;
+					case 2:
+						message = "Huh?";
+						break;
+					case 3:
+						message = "`" + prefix + "wat`";
+						break;
+					case 4:
+						message = "Hmm.";
+						break;
+					case 5:
+						message = "Oh, hello!";
+						break;
+					case 6:
+						message = "=)";
+						break;
+					case 7:
+						message = ":]";
+						break;
+					}
 				}
 				await e.Message.Channel.SendMessageSafe(message);
 			};
