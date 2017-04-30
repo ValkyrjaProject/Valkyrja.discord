@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
@@ -12,12 +13,12 @@ namespace Botwinder.Entities
 		DateTime TimeStarted{ get; set; }
 		GlobalConfig GlobalConfig{ get; set; }
 		DiscordClient[] Clients{ get; set; }
-		Dictionary<guid, Server<TUser>> Servers{ get; set; }
+		ConcurrentDictionary<guid, Server<TUser>> Servers{ get; set; }
 		Object ServersLock{ get; set; }
 		List<Operation> CurrentOperations{ get; set; }
 		int TotalOperationsSinceStart{ get; set; }
 
-		Dictionary<guid, List<guid>> ClearedMessageIDs{ get; set; }
+		ConcurrentDictionary<guid, List<guid>> ClearedMessageIDs{ get; set; }
 
 
 		Server GetServer(guid id);
