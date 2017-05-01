@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace Botwinder.Entities
 		[NonSerialized]
 		private Object _Lock = new Object();
 		[NonSerialized]
-		protected Dictionary<guid, TUser> _Dictionary = new Dictionary<guid, TUser>();
+		protected ConcurrentDictionary<guid, TUser> _Dictionary = new ConcurrentDictionary<guid, TUser>();
 
 
 		public TUser[] _UserData = null;
@@ -75,7 +76,7 @@ namespace Botwinder.Entities
 			UserDatabase<TUser> newDatabase = JsonConvert.DeserializeObject<UserDatabase<TUser>>(File.ReadAllText(path));
 			newDatabase.Folder = folder;
 
-			newDatabase._Dictionary = new Dictionary<guid, TUser>();
+			newDatabase._Dictionary = new ConcurrentDictionary<guid, TUser>();
 			foreach(TUser userData in newDatabase._UserData)
 			{
 				newDatabase._Dictionary.Add(userData.ID, userData);
@@ -182,16 +183,9 @@ namespace Botwinder.Entities
 			if( del == null )
 				return;
 
-			TUser lastUser = null;
-			TUser currentUser = null;
-			for(int i = 0; i < this._Dictionary.Values.Count; i++)
+			foreach(KeyValuePair<guid, TUser> currentUser in this._Dictionary)
 			{
-				currentUser = this._Dictionary.Values.ElementAt(i);
-				if( lastUser != null && lastUser.ID == currentUser.ID )
-					continue;
-
-				lastUser = currentUser;
-				await del(currentUser);
+				await del(currentUser.Value);
 			}
 		}
 	}
