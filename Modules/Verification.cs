@@ -414,7 +414,10 @@ namespace Botwinder.Modules
 					this.HashedValues.Add(hash, new HashedValue(user.Id, server.ID));
 
 				verifyPm = "In order to get verified, you must reply to me with a hidden code within the below rules. " +
-				           "_(Just the code by itself, do not add anything extra. Read the rules and you will find the code.)_";
+				           "Just the code by itself, do not add anything extra. Read the rules and you will find the code.\n" +
+				           "_(Beware that this will expire in a few hours, " +
+				           "if it does simply run the `verify` command in the server chat, " +
+				           "and re-send the code that you already found - it won't change.)_";
 
 				string[] lines = server.ServerConfig.VerifyPM.Split('\n');
 				string[] words = null;
