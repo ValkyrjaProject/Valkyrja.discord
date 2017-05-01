@@ -424,7 +424,7 @@ namespace Botwinder.Modules
 				Task t = Task.Run(() =>{
 					while( (words = lines[(chunkNum = Utils.Random.Next(lines.Length / 2, lines.Length))].Split(' ')).Length < 10 );
 				});
-				if( !t.Wait(300) || verifyPm.Length + server.ServerConfig.VerifyPM.Length + hash.Length + 100 >= GlobalConfig.MessageCharacterLimit )
+				if( !t.Wait(300) )
 				{
 					verifyPm = "```diff\n- Error!\n\n  " +
 					           "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
@@ -452,7 +452,7 @@ namespace Botwinder.Modules
 
 			if( server.ServerConfig.VerifyUseReddit )
 			{
-				string newMessage = string.Format(
+				message += string.Format(
 					"The only requirement is to have registered Discord account with valid email address, otherwise you may lose this status.\n" +
 					"In order to complete the verification, please send me this message on Reddit _(Do not change anything, just click the link and hit send.)_\n" +
 					"https://www.reddit.com/message/compose/?to=Botwinder&subject=DiscordVerification&message={0}%20{1}" +
@@ -460,13 +460,6 @@ namespace Botwinder.Modules
 					"If you are on mobile, you have to 1. click the link, 2. click reddit menu, 3. click \"Desktop Site\", 4. hit \"send.\")_" +
 					"\n\nCheers! :smiley:",
 					user.Server.Id, user.Id);
-
-				if( newMessage.Length + message.Length > GlobalConfig.MessageCharacterLimit )
-				{
-					await user.SendMessageSafe(message);
-					message = "";
-				}
-				message += newMessage;
 			}
 
 			await user.SendMessageSafe(message);
