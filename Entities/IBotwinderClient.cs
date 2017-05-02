@@ -33,5 +33,6 @@ namespace Botwinder.Entities
 		Task UnBan(guid userID, Server<TUser> server);
 		Task<bool> MuteUser(Server<TUser> server, User user, User mutedBy = null, bool unmuteAfterDelay = false);
 		Task<bool> UnmuteUser(Server<TUser> server, User user, User unmutedBy = null, bool dontChangeConfig = false);
+		Task Ping(Message message, Server<TUser> server);
 	}
 }
