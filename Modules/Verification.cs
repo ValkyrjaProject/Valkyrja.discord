@@ -421,25 +421,34 @@ namespace Botwinder.Modules
 
 				string[] lines = server.ServerConfig.VerifyPM.Split('\n');
 				string[] words = null;
-				Task t = Task.Run(() =>{
-					while( (words = lines[(chunkNum = Utils.Random.Next(lines.Length / 2, lines.Length))].Split(' ')).Length < 10 );
-				});
-				if( !t.Wait(300) )
+				bool found = false;
+				for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); i >= lines.Length / 2; i-- )
+				{
+					if( i <= lines.Length / 2 )
+					{
+						i = lines.Length - 1;
+						continue;
+					}
+					if( (words = lines[i].Split(' ')).Length > 10 )
+					{
+						int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
+						lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, " the secret is: " + hash );
+
+						hashBuilder = new StringBuilder(lines.Length+1);
+						hashBuilder.AppendLine(verifyPm).AppendLine("");
+						for(int j = 0; j < lines.Length; j++)
+							hashBuilder.AppendLine(lines[j]);
+						verifyPm = hashBuilder.ToString();
+						found = true;
+						break;
+					}
+				}
+
+				if( !found )
 				{
 					verifyPm = "```diff\n- Error!\n\n  " +
-					           "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
-					           "(It may be either too short, or too long. The algorithm is looking for lines with at least 10 words.)```";
-				}
-				else
-				{
-					int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
-					lines[chunkNum] = lines[chunkNum].Insert(lines[chunkNum].IndexOf(words[space]) - 1, " the secret is: " + hash );
-
-					hashBuilder = new StringBuilder(lines.Length+1);
-					hashBuilder.AppendLine(verifyPm).AppendLine("");
-					for(int i = 0; i < lines.Length; i++)
-						hashBuilder.AppendLine(lines[i]);
-					verifyPm = hashBuilder.ToString();
+							   "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
+							   "(It may be either too short, or too long. The algorithm is looking for lines with at least 10 words.)```";
 				}
 			}
 
