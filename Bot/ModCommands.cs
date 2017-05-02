@@ -1121,6 +1121,127 @@ namespace Botwinder.Bot
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("clearlinks"));
 
+// !forceNuke
+			newCommand = new Command("forceNuke");
+			newCommand.Type = Command.CommandType.ChatOnly;
+			newCommand.Description = "Nuke the whole channel.";
+			newCommand.RequiredPermissions = Command.PermissionType.OwnerOnly;
+			newCommand.OnExecute += async (sender, e) =>{
+				Operation op = null;
+				try
+				{
+					if( !e.Message.Server.CurrentUser.ServerPermissions.ManageMessages )
+					{
+						await e.Message.Channel.SendMessageSafe("I don't have `ManageMessages` permission >_<");
+						return;
+					}
+
+					int n = 0;
+					Message msg = null;
+
+					n = int.MaxValue - 1;
+					msg = await e.Message.Channel.SendMessage("Nuking the channel, I'll tell you when I'm done (large channels may take up to several hours...)");
+
+					guid lastRemoved = e.Message.Id;
+
+					if( n > GlobalConfig.LargeOperationThreshold )
+					{
+						op = Operation.Create<TUser>(client, e);
+						if( await op.Await(client, async () => await msg.Edit(msg.RawText + string.Format("\n"+ GlobalConfig.OperationQueuedText, client.CurrentOperations.Count, e.Command.ID))) )
+						{
+							await msg.Edit("This operation was canceled. (Either manually or it is a duplicate of already queued up command. Be patient please.)");
+							return;
+						}
+						op.CurrentState = Operation.State.Running;
+					}
+
+					int cyclesToYield = 5;
+					int exceptions = 0;
+					while( n > 0 )
+					{
+						if( op != null && await op.AwaitConnection(client) )
+						{
+							await msg.Edit("This operation was canceled.");
+							return;
+						}
+
+						Message[] messages = null;
+
+						try
+						{
+							messages = await e.Message.Channel.DownloadMessages(Math.Min(100, n), lastRemoved, useCache: false);
+						} catch( Exception exception )
+						{
+							client.LogException(exception, e);
+							lastRemoved = 0;
+							break;
+						}
+
+						if( messages == null || messages.Length == 0 )
+						{
+							lastRemoved = e.Message.Id;
+							break;
+						}
+
+						if( !client.ClearedMessageIDs.ContainsKey(e.Server.ID) )
+							 client.ClearedMessageIDs.Add(e.Server.ID, new List<guid>());
+
+						lastRemoved = messages.Last().Id;
+						if( messages.Length > n )
+							messages = messages.Take(n).ToArray();
+						client.ClearedMessageIDs[e.Server.ID].AddRange(messages.Select(m => m.Id));
+
+						try
+						{
+							foreach( Message message in messages )
+							{
+								if( message.Deleted )
+									continue;
+								await message.Delete();
+							}
+						} catch( Exception exception )
+						{
+							if( ++exceptions > 10 || exception.Message.Contains("50034") )
+								break;
+
+							//Continue if it this fails.
+						}
+
+						n -= messages.Length;
+						if( messages.Length < 100 ) //this was the last pull
+							n = 0;
+
+						if( --cyclesToYield <= 0 )
+						{
+							cyclesToYield = 5;
+							await Task.Yield(); //Take a break, do other things!
+						}
+					}
+
+					if( lastRemoved == 0 )
+						await msg.Edit("There was an error while downloading messages, you can try again but if it doesn't work, then it's a bug - please tell Rhea :<");
+					else
+					{
+						if( !e.Message.Deleted )
+							await e.Message.Delete();
+
+						await msg.Edit("~~" + msg.RawText + "~~\n\nDone! _(This message will self-destruct in 10 seconds.)_");
+						await Task.Delay(TimeSpan.FromSeconds(10f));
+						await msg.Edit("BOOM!!");
+						await Task.Delay(TimeSpan.FromSeconds(2f));
+						await msg.Delete();
+					}
+				} catch( Exception exception ) when( exception.GetType() != typeof(Discord.Net.HttpException) )
+				{
+					client.LogException(exception, e);
+				}
+
+				if( op != null )
+					op.Finalise(client);
+				op = null;
+			};
+			commands.Add(newCommand);
+
 // !memberRoles
 			newCommand = new Command("memberRoles");
 			newCommand.Type = Command.CommandType.ChatOnly;
