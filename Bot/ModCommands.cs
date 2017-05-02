@@ -717,6 +717,9 @@ namespace Botwinder.Bot
 					{
 						TUser userData = (e.Server as Server<TUser>).UserDatabase.GetOrAddUser(foundUser);
 						string whoisString = userData.GetWhoisString(foundUser);
+						if( e.Server.ServerConfig.IgnoreEveryone )
+							whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 						while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 						{
 							int splitIndex = GlobalConfig.MessageCharacterLimit;
@@ -750,6 +753,9 @@ namespace Botwinder.Bot
 				{
 					TUser userData = (e.Server as Server<TUser>).UserDatabase.GetOrAddUser(user);
 					string whoisString = userData.GetWhoisString(user.Server.Id == e.Server.ID ? user : null);
+					if( e.Server.ServerConfig.IgnoreEveryone )
+						whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 					while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 					{
 						await e.Message.Channel.SendMessageSafe(whoisString.Substring(0, GlobalConfig.MessageCharacterLimit));
@@ -779,6 +785,9 @@ namespace Botwinder.Bot
 				{
 					User user = e.Message.Server.GetUser(userData.ID);
 					string whoisString = userData.GetWhoisString(user);
+					if( e.Server.ServerConfig.IgnoreEveryone )
+						whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 					while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 					{
 						int splitIndex = GlobalConfig.MessageCharacterLimit;
@@ -806,6 +815,9 @@ namespace Botwinder.Bot
 					{
 						User user = e.Message.Server.GetUser(foundUserData.ID);
 						string whoisString = foundUserData.GetWhoisString(user);
+						if( e.Server.ServerConfig.IgnoreEveryone )
+							whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 						while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 						{
 							await e.Message.Channel.SendMessageSafe(whoisString.Substring(0, GlobalConfig.MessageCharacterLimit));
@@ -918,6 +930,9 @@ namespace Botwinder.Bot
 					if( userData.WarningCount > 0 )
 					{
 						string newString = "\n" + userData.GetWhoisString();
+						if( e.Server.ServerConfig.IgnoreEveryone )
+							newString = newString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 						if( newString.Length + response.Length > GlobalConfig.MessageCharacterLimit )
 						{
 							await e.Message.Channel.SendMessageSafe(response);
