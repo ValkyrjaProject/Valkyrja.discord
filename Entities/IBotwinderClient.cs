@@ -17,6 +17,7 @@ namespace Botwinder.Entities
 		Object ServersLock{ get; set; }
 		List<Operation> CurrentOperations{ get; set; }
 		int TotalOperationsSinceStart{ get; set; }
+		Object OperationsLock{ get; set; }
 
 		ConcurrentDictionary<guid, List<guid>> ClearedMessageIDs{ get; set; }
 

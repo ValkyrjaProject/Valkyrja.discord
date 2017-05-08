@@ -1032,6 +1032,13 @@ namespace Botwinder.Bot
 					int cyclesToYield = 5;
 					int exceptions = 0;
 					bool reachedTwoWeeks = false;
+					Func<Message, bool> isWithinTwoWeeks = (Message m) =>{
+						if( DateTime.UtcNow - (new DateTime((long)(((m.Id / 4194304) + 1420070400000) * 10000 + 621355968000000000))) < TimeSpan.FromDays(13.9f) )
+							return true;
+						reachedTwoWeeks = true;
+						return false;
+					};
+
 					while( n > 0 )
 					{
 						if( op != null && await op.AwaitConnection(client) )
@@ -1053,12 +1060,6 @@ namespace Botwinder.Bot
 						}
 
 						List<guid> ids = null;
-						Func<Message, bool> isWithinTwoWeeks = (Message m) =>{
-							if( DateTime.UtcNow - (new DateTime((long)(((m.Id / 4194304) + 1420070400000) * 10000 + 621355968000000000))) < TimeSpan.FromDays(13.9f) )
-								return true;
-							reachedTwoWeeks = true;
-							return false;
-						};
 						if( messages == null || messages.Length == 0 ||
 						    ( clearLinks && userCount == 0 && (ids = messages.TakeWhile(m => isWithinTwoWeeks(m)).Where(m => (m.Attachments != null && m.Attachments.Length > 0) || (m.Embeds != null && m.Embeds.Length > 0)).Select(m => m.Id).ToList()).Count == 0) ||
 						    (!clearLinks && userCount == 0 && (ids = messages.TakeWhile(m => isWithinTwoWeeks(m)).Select(m => m.Id).ToList()).Count == 0) ||

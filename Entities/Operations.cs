@@ -37,7 +37,8 @@ namespace Botwinder.Entities
 		public static Operation Create<TUser>(IBotwinderClient<TUser> sender, CommandArguments e, bool isLarge = false) where TUser : UserData, new()
 		{
 			Operation op = new Operation(e, GC.GetTotalMemory(false) / 1000000f, isLarge);
-			sender.CurrentOperations.Add(op);
+			lock( sender.OperationsLock )
+				sender.CurrentOperations.Add(op);
 			return op;
 		}
 
@@ -46,25 +47,42 @@ namespace Botwinder.Entities
 		public async Task<bool> Await<TUser>(IBotwinderClient<TUser> sender, Func<Task> OnAwaitStarted) where TUser : UserData, new()
 		{
 			sender.TotalOperationsSinceStart++;
-			Operation alreadyInQueue = sender.CurrentOperations.FirstOrDefault(o => o.CommandArgs.Command.ID == this.CommandArgs.Command.ID && o.CommandArgs.Message.Channel.Id == this.CommandArgs.Message.Channel.Id && o != this);
+
+			Operation alreadyInQueue = null;
+			lock( sender.OperationsLock )
+				alreadyInQueue = sender.CurrentOperations.FirstOrDefault(o => o.CommandArgs.Command.ID == this.CommandArgs.Command.ID && o.CommandArgs.Message.Channel.Id == this.CommandArgs.Message.Channel.Id && o != this);
+
 			if( alreadyInQueue != null )
 			{
-				sender.CurrentOperations.Remove(this);
-				this.CurrentState = State.Canceled;
+				lock( sender.OperationsLock )
+				{
+					sender.CurrentOperations.Remove(this);
+					this.CurrentState = State.Canceled;
+				}
 				return true;
 			}
 
 			if( sender.GlobalConfig.ContributorsIgnoreOperationsQueue && (sender.IsContributor(this.CommandArgs.Message.User) || sender.IsContributor(this.CommandArgs.Message.Server.Owner)) )
 			{
-				sender.CurrentOperations.Remove(this);
-				sender.CurrentOperations.Insert(0, this);
+				lock( sender.OperationsLock )
+				{
+					sender.CurrentOperations.Remove(this);
+					sender.CurrentOperations.Insert(0, this);
+				}
 			}
 			else
 			{
 				int index = 0;
-				while(this.CurrentState != State.Canceled && !((index = sender.CurrentOperations.IndexOf(this)) < sender.GlobalConfig.MaximumConcurrentOperations ||
-					(index < sender.GlobalConfig.MaximumConcurrentOperations + sender.GlobalConfig.ExtraSmallOperations &&
-					 !this.IsLarge && !sender.CurrentOperations.Take(index).Any(op => op.IsLarge))) )
+
+				Func<bool> shouldAwait = () =>
+				{
+					lock( sender.OperationsLock )
+						return !((index = sender.CurrentOperations.IndexOf(this)) < sender.GlobalConfig.MaximumConcurrentOperations ||
+						         (index < sender.GlobalConfig.MaximumConcurrentOperations + sender.GlobalConfig.ExtraSmallOperations &&
+						          !this.IsLarge && !sender.CurrentOperations.Take(index).Any(op => op.IsLarge)));
+				};
+
+				while(this.CurrentState != State.Canceled && shouldAwait() )
 				{
 					if( this.CurrentState == State.Ready )
 					{
@@ -100,14 +118,16 @@ namespace Botwinder.Entities
 		public void Cancel<TUser>(IBotwinderClient<TUser> sender) where TUser : UserData, new()
 		{
 			this.CurrentState = State.Canceled;
-			sender.CurrentOperations.Remove(this);
+			lock( sender.OperationsLock )
+				sender.CurrentOperations.Remove(this);
 		}
 
 		/// <summary> Gracefully finalise this operation and remove it from the list. </summary>
 		public void Finalise<TUser>(IBotwinderClient<TUser> sender) where TUser : UserData, new()
 		{
 			this.CurrentState = State.Finished;
-			sender.CurrentOperations.Remove(this);
+			lock( sender.OperationsLock )
+				sender.CurrentOperations.Remove(this);
 		}
 	}
 }
