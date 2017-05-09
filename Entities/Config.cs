@@ -67,7 +67,8 @@ namespace Botwinder.Entities
 		public int MaximumConcurrentOperations = 1;
 		public int ExtraSmallOperations = 1;
 		public bool ContributorsIgnoreOperationsQueue = true;
-		public float MaintenanceMemoryMultiplier = 1.2f;
+		public int MaintenanceMemoryThreshold = 2000;
+		public int MaintenanceThreadThreshold = 50;
 		public float MaintenanceDisconnectThreshold = 4;
 		public string AboutYourBot = "See http://botwinder.info for full list of features, where you can also configure them for your server, or invite me to your server.";
 		public string[] AntispamIgnoredWords = null;
