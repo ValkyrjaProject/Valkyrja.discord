@@ -70,7 +70,7 @@ namespace Botwinder.Modules
 			newCommand = new Command("patchnotes");
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.IsCoreCommand = true;
-			newCommand.Description = "See what new tricks can I do!";
+			newCommand.Description = "See what new tricks I can do!";
 			newCommand.OnExecute += async (sender, e) => {
 				await e.Message.Channel.SendMessageSafe(GetPatchnotes());
 			};
