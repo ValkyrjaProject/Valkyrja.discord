@@ -250,7 +250,7 @@ namespace Botwinder.Bot
 			newCommand.Type = Command.CommandType.PmAndChat;
 			newCommand.Description = "A what?";
 			newCommand.OnExecute += async (sender, e) =>{
-				await client.Ping(e.Message, e.Server as Server<TUser>);
+				await client.Ping(e.Message, e.IsPm ? null : e.Server as Server<TUser>);
 			};
 			commands.Add(newCommand);
 
