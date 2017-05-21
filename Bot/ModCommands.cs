@@ -1458,10 +1458,10 @@ namespace Botwinder.Bot
 			};
 			commands.Add(newCommand);
 
-// !temporaryChannel
-			newCommand = new Command("createTemporaryChannel");
+// !tempChannel
+			newCommand = new Command("tempChannel");
 			newCommand.Type = Command.CommandType.ChatOnly;
-			newCommand.Description = "Creates a temporary voice channel and moves the sender to it. The user has to be in the voice-chat. The channel will be destroyed when it becomes empty.";
+			newCommand.Description = "Creates a temporary voice channel. This channel will be destroyed when it becomes empty, with grace period of three minutes since it's creation.";
 			newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator | Command.PermissionType.SubModerator;
 			newCommand.OnExecute += async (sender, e) =>{
 				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
@@ -1481,7 +1481,7 @@ namespace Botwinder.Bot
 				e.Server.ServerConfig.TemporaryChannels[channelIndex] = e.Message.Channel.Id;
 				e.Server.ServerConfig.SaveAsync();
 
-				await e.Message.Channel.SendMessage("Temporary channel `"+ e.TrimmedMessage +"` created, it will be destroyed when it's left empty for a short while.");
+				await e.Message.Channel.SendMessage("Here you go! <3\n_(Temporary channel `"+ e.TrimmedMessage +"` was created.)_");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("tc"));
