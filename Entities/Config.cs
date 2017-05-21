@@ -281,6 +281,7 @@ namespace Botwinder.Entities
 
 		public guid[] MutedUsers;
 		public guid[] MutedChannels;
+		public guid[] TemporaryChannels;
 
 		private Object _Lock = new Object();
 		private string Folder = "";
