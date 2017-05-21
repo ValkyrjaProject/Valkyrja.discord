@@ -16,7 +16,7 @@ namespace Botwinder.Modules
 			public guid[] Subscribers;
 		}
 
-		protected override string Filename => "Patchnotes.json";
+		protected override string Filename => "patchnotes.json";
 
 		public override List<Command> Init<TUser>(IBotwinderClient<TUser> client)
 		{
