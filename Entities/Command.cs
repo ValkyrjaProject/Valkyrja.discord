@@ -207,7 +207,7 @@ namespace Botwinder.Entities
 
 			//Custom Command Permission Overrides
 			int requiredPermissions = this.RequiredPermissions;
-			if( this.RequiredPermissions != PermissionType.OwnerOnly && commandOptions != null && commandOptions.PermissionOverrides != CommandConfig.PermissionOverrides.None )
+			if( this.RequiredPermissions != PermissionType.OwnerOnly && commandOptions != null && commandOptions.PermissionOverrides != CommandConfig.PermissionOverrides.Default )
 			{
 				switch(commandOptions.PermissionOverrides)
 				{
