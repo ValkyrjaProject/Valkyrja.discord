@@ -13,6 +13,7 @@ namespace Botwinder.Modules
 	public abstract class JsonModule<T>: IModule where T: new()
 	{
 		protected T Data{ get; set; }
+		public bool UpdateInProgress{ get; set; } = false;
 
 
 		protected abstract string Filename{ get; }
@@ -51,10 +52,9 @@ namespace Botwinder.Modules
 			if( !Directory.Exists(this.Folder) )
 				Directory.CreateDirectory(this.Folder);
 
-			string json = JsonConvert.SerializeObject(this.Data, Formatting.Indented);
-
 			lock(this.Lock)
 			{
+				string json = JsonConvert.SerializeObject(this.Data, Formatting.Indented);
 				File.WriteAllText(path, json);
 			}
 		}

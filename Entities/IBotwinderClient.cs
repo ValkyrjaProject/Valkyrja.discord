@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
@@ -12,12 +13,14 @@ namespace Botwinder.Entities
 		DateTime TimeStarted{ get; set; }
 		GlobalConfig GlobalConfig{ get; set; }
 		DiscordClient[] Clients{ get; set; }
-		Dictionary<guid, Server<TUser>> Servers{ get; set; }
+		ConcurrentDictionary<guid, Server<TUser>> Servers{ get; set; }
 		Object ServersLock{ get; set; }
 		List<Operation> CurrentOperations{ get; set; }
 		int TotalOperationsSinceStart{ get; set; }
+		Object OperationsLock{ get; set; }
 
-		Dictionary<guid, List<guid>> ClearedMessageIDs{ get; set; }
+		ConcurrentDictionary<guid, Channel> TemporaryChannels{ get; set; }
+		ConcurrentDictionary<guid, List<guid>> ClearedMessageIDs{ get; set; }
 
 
 		Server GetServer(guid id);
@@ -32,5 +35,6 @@ namespace Botwinder.Entities
 		Task UnBan(guid userID, Server<TUser> server);
 		Task<bool> MuteUser(Server<TUser> server, User user, User mutedBy = null, bool unmuteAfterDelay = false);
 		Task<bool> UnmuteUser(Server<TUser> server, User user, User unmutedBy = null, bool dontChangeConfig = false);
+		Task Ping(Message message, Server<TUser> server);
 	}
 }

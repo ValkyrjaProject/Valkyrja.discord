@@ -27,7 +27,7 @@ namespace Botwinder.Entities
 		public string BotToken = "";
 		public guid[] UserIds = { 140307918200242176, 278834060053446666 };
 
-		public bool RedditEnabled = true;
+		public bool RedditEnabled = true; //This boolean does not work because I borked it when I implemented the new generic verification system.
 		public string RedditUsername = "";
 		public string RedditPassword = "";
 		public string RedditClientId = "";
@@ -67,7 +67,10 @@ namespace Botwinder.Entities
 		public int MaximumConcurrentOperations = 1;
 		public int ExtraSmallOperations = 1;
 		public bool ContributorsIgnoreOperationsQueue = true;
-		public float MaintenanceMemoryMultiplier = 1.2f;
+		public int MaintenanceMemoryThreshold = 2000;
+		public int MaintenanceThreadThreshold = 50;
+		public int MaintenanceConfigReloadsThreshold = 100;
+		public int MaintenanceOperationsThreshold = 200;
 		public float MaintenanceDisconnectThreshold = 4;
 		public string AboutYourBot = "See http://botwinder.info for full list of features, where you can also configure them for your server, or invite me to your server.";
 		public string[] AntispamIgnoredWords = null;
@@ -261,6 +264,7 @@ namespace Botwinder.Entities
 		public guid VerifyRoleID{ get; set; }
 		public int VerifyKarma{ get; set; }
 		public string VerifyPM{ get; set; }
+		public bool VerifyUseReddit{ get; set; } //Default to false for new servers.
 
 		public bool RemovePromote{ get; set; }
 		public bool RemoveJoin{ get; set; }
@@ -277,6 +281,7 @@ namespace Botwinder.Entities
 
 		public guid[] MutedUsers;
 		public guid[] MutedChannels;
+		public guid[] TemporaryChannels;
 
 		private Object _Lock = new Object();
 		private string Folder = "";
@@ -360,7 +365,17 @@ namespace Botwinder.Entities
 			this.VerifyOnWelcome = false;
 			this.VerifyRoleID = 0;
 			this.VerifyKarma = 3;
-			this.VerifyPM = "Benefits of verifying are:\n**1.** Verified accounts can embed links and images.\n**2.** Ability to use voice activation instead of being forced to use push to talk.\n**3.** It will allow us to throw you a message off-discord if something happens, and it serves as a protection against bots, spammers and trolls.";
+			this.VerifyPM = "**1.** Be respectful to others, do not start huge drama and arguments.\n" +
+			                "**2.** Hate speech, \"doxxing,\" or leaking personal information will not be tolerated. Free speech isn't free of consequences.\n" +
+			                "**3.** Sexual harassment, even slightly suggesting anything gender biased is inappropriate. Yes, suggesting that women should be in the kitchen is sexual harassment. And we are not a dating service either.\n" +
+			                "**4.** Homophobic language or racial slurs are immature and you should not use them.\n" +
+			                "**5.** Do not post explicitly sexual, gore or otherwise disturbing content. This includes jokes and meme that have somewhat racist background.\n" +
+			                "**6.** Do not break the application (e.g. spamming the text that goes vertical, or having a name \"everyone\", etc...) and don't spam excessively (walls of emotes, etc...)\n" +
+			                "**7.** Avoid sensitive topics, such as politics or religion.\n" +
+			                "**8.** Respect authority, and do not troll moderators on duty. Do not impersonate Admins or Mods, or anyone else.\n" +
+			                "**9.** Don't join just to advertise your stuff, it's rude. If you have something worthy, get in touch with us, and we can maybe give you a place in the news channel. This includes discord invite links, which will be automatically removed - get in touch with the Mods.\n" +
+			                "**10.** Use common sense together with everything above.";
+			this.VerifyUseReddit = false;
 
 			this.RemovePromote = false;
 			this.RemoveJoin = false;

@@ -15,6 +15,7 @@ namespace Botwinder.Modules
 
 		/// <summary> Main Update loop for this module. Do whatever you want. </summary>
 		Task Update<TUser>(IBotwinderClient<TUser> client) where TUser: UserData, new();
+		bool UpdateInProgress{ get; set; }
 
 		//TODO OnMessageReceived //e.g. Cookies!
 

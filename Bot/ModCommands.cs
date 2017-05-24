@@ -58,7 +58,7 @@ namespace Botwinder.Bot
 				int minutes = uptime.Minutes;
 				int seconds = uptime.Seconds;
 
-				await e.Message.Channel.SendMessage(string.Format("Server name: `{0}`\nServer ID: `{1}`\nOwner: `{2}`\nOwner ID: `{3}`\nMembers Online: `{4}`\nMembers Total: `{5}`\nBotwinder Status: <http://status.botwinder.info>",
+				await e.Message.Channel.SendMessageSafe(string.Format("Server name: `{0}`\nServer ID: `{1}`\nOwner: `{2}`\nOwner ID: `{3}`\nMembers Online: `{4}`\nMembers Total: `{5}`\nBotwinder Status: <http://status.botwinder.info>",
 					e.Message.Server.Name, e.Message.Server.Id, e.Message.Server.Owner.Name, e.Message.Server.Owner.Id, onlineMemberCount, memberCount ));
 			};
 			commands.Add(newCommand);
@@ -74,7 +74,7 @@ namespace Botwinder.Bot
 				List<Role> roles = null;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || (!guid.TryParse(e.TrimmedMessage, out id) && (roles = e.Message.Server.Roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower())).ToList()).Count() == 0) )
 				{
-					await e.Message.Channel.SendMessage("Role not found.");
+					await e.Message.Channel.SendMessageSafe("Role not found.");
 					return;
 				}
 				else if( id != 0 && (roleFromId = e.Message.Server.GetRole(id)) != null )
@@ -93,14 +93,14 @@ namespace Botwinder.Bot
 						newString = (useMention ? "\n  <@" + user.Id + "> | `" + user.Id + "`" : "\n  " + user.Name + " | `" + user.Id + "`");
 						if( newString.Length + response.Length > GlobalConfig.MessageCharacterLimit )
 						{
-							await e.Message.Channel.SendMessage(response);
+							await e.Message.Channel.SendMessageSafe(response);
 							response = "";
 						}
 
 						response += newString;
 					}
 
-					await e.Message.Channel.SendMessage(response);
+					await e.Message.Channel.SendMessageSafe(response);
 				}
 			};
 			commands.Add(newCommand);
@@ -120,12 +120,12 @@ namespace Botwinder.Bot
 				Role role = e.Server.DiscordServer.GetRole(e.Server.ServerConfig.RoleIDOperator);
 				if( role == null )
 				{
-					await e.Message.Channel.SendMessage(string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.ServerConfig.CommandCharacter));
+					await e.Message.Channel.SendMessageSafe(string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.ServerConfig.CommandCharacter));
 					return;
 				}
 				if( !e.Message.Server.CurrentUser.ServerPermissions.ManageRoles )
 				{
-					await e.Message.Channel.SendMessage("I don't have `ManageRoles` permission.");
+					await e.Message.Channel.SendMessageSafe("I don't have `ManageRoles` permission.");
 					return;
 				}
 
@@ -153,7 +153,7 @@ namespace Botwinder.Bot
 							response = GlobalConfig.DisplayError500 ? "Discord server may have had a derp there, please try again if it didn't work!" : "";
 					}
 				}
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -165,14 +165,14 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( !e.Message.Server.CurrentUser.ServerPermissions.KickMembers )
 				{
-					await e.Message.Channel.SendMessage("I don't have necessary permissions.");
+					await e.Message.Channel.SendMessageSafe("I don't have necessary permissions.");
 					return;
 				}
 
 				Role role = e.Server.DiscordServer.GetRole(e.Server.ServerConfig.RoleIDOperator);
 				if( role != null && !e.Message.User.HasRole(role) && !client.IsGlobalAdmin(e.Message.User) )
 				{
-					await e.Message.Channel.SendMessage(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
+					await e.Message.Channel.SendMessageSafe(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
 					return;
 				}
 
@@ -181,7 +181,7 @@ namespace Botwinder.Bot
 
 				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
-					await e.Message.Channel.SendMessage("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					return;
 				}
 
@@ -190,7 +190,7 @@ namespace Botwinder.Bot
 					guid idToKick;
 					if( !guid.TryParse(e.MessageArgs[0], out idToKick) || (userToKick = e.Message.Server.GetUser(idToKick)) == null )
 					{
-						await e.Message.Channel.SendMessage("Invalid arguments. (Are you sure that the target is on this server?)\n" + e.Command.Description);
+						await e.Message.Channel.SendMessageSafe("Invalid arguments. (Are you sure that the target is on this server?)\n" + e.Command.Description);
 						return;
 					}
 				}
@@ -201,7 +201,7 @@ namespace Botwinder.Bot
 
 				if( client.GlobalConfig.UserIds.Contains(userToKick.Id) || client.GlobalConfig.OwnerIDs.Contains(userToKick.Id) || userToKick.Id == GlobalConfig.Rhea )
 				{
-					await e.Message.Channel.SendMessage("I don't think so...");
+					await e.Message.Channel.SendMessageSafe("I don't think so...");
 					return;
 				}
 
@@ -218,7 +218,7 @@ namespace Botwinder.Bot
 					try
 					{
 						client.UserBanned(userToKick, server.DiscordServer, DateTimeOffset.MinValue, reason, true, e.Message.User);
-						await userToKick.SendMessage(string.Format("Hello!\nI regret to inform you, that you have been **kicked out of the {0} server** for the following reason:\n{1}\n\n_(You can rejoin the server in a few minutes.)_", server.Name, reason));
+						await userToKick.SendMessageSafe(string.Format("Hello!\nI regret to inform you, that you have been **kicked out of the {0} server** for the following reason:\n{1}\n\n_(You can rejoin the server in a few minutes.)_", server.Name, reason));
 						await Task.Delay(500);
 						await userToKick.Kick();
 						server.UserDatabase.AddWarning(userToKick, "Kicked: "+reason);
@@ -240,7 +240,7 @@ namespace Botwinder.Bot
 					}
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -252,20 +252,20 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( !e.Message.Server.CurrentUser.ServerPermissions.BanMembers )
 				{
-					await e.Message.Channel.SendMessage("I don't have necessary permissions.");
+					await e.Message.Channel.SendMessageSafe("I don't have necessary permissions.");
 					return;
 				}
 
 				Role role = e.Server.DiscordServer.GetRole(e.Server.ServerConfig.RoleIDOperator);
 				if( role != null && !e.Message.User.HasRole(role) && !client.IsGlobalAdmin(e.Message.User) )
 				{
-					await e.Message.Channel.SendMessage(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
+					await e.Message.Channel.SendMessageSafe(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
 					return;
 				}
 
 				if( e.MessageArgs == null || e.MessageArgs.Length < 3 )
 				{
-					await e.Message.Channel.SendMessage("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					return;
 				}
 
@@ -277,7 +277,7 @@ namespace Botwinder.Bot
 
 				if( !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[1], out banDurationHours) )
 				{
-					await e.Message.Channel.SendMessage("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					return;
 				}
 
@@ -290,7 +290,7 @@ namespace Botwinder.Bot
 				{
 					if( !guid.TryParse(e.MessageArgs[0], out idToBan) )
 					{
-						await e.Message.Channel.SendMessage("Invalid arguments.\n" + e.Command.Description);
+						await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 						return;
 					}
 				}
@@ -301,7 +301,7 @@ namespace Botwinder.Bot
 
 				if( client.GlobalConfig.UserIds.Contains(idToBan) || client.GlobalConfig.OwnerIDs.Contains(idToBan) || idToBan == GlobalConfig.Rhea )
 				{
-					await e.Message.Channel.SendMessage("I don't think so...");
+					await e.Message.Channel.SendMessageSafe("I don't think so...");
 					return;
 				}
 
@@ -331,7 +331,7 @@ namespace Botwinder.Bot
 					}
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 				if( !response.Contains("permissions") && !response.Contains("error") && !response.Contains("derp") )
 				{
 					try
@@ -364,18 +364,18 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( !e.Message.Server.CurrentUser.ServerPermissions.BanMembers )
 				{
-					await e.Message.Channel.SendMessage("I don't have necessary permissions.");
+					await e.Message.Channel.SendMessageSafe("I don't have necessary permissions.");
 					return;
 				}
 
 				if( string.IsNullOrWhiteSpace(e.Server.ServerConfig.QuickbanReason) )
 				{
-					await e.Message.Channel.SendMessage("I'm really sorry, buuut Quickban feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>");
+					await e.Message.Channel.SendMessageSafe("I'm really sorry, buuut Quickban feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>");
 					return;
 				}
 				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessage("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					return;
 				}
 
@@ -389,7 +389,7 @@ namespace Botwinder.Bot
 						guid idToBan = 0;
 						if( !guid.TryParse(e.MessageArgs[i], out idToBan) )
 						{
-							await e.Message.Channel.SendMessage("Invalid arguments, the parameter at the `"+ i +"` index is not a valid UserID\n" + e.Command.Description);
+							await e.Message.Channel.SendMessageSafe("Invalid arguments, the parameter at the `"+ i +"` index is not a valid UserID\n" + e.Command.Description);
 							return;
 						}
 
@@ -427,7 +427,7 @@ namespace Botwinder.Bot
 					}
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 				if( !response.Contains("permissions") && !response.Contains("error") && !response.Contains("derp") )
 				{
 					try
@@ -452,7 +452,7 @@ namespace Botwinder.Bot
 				guid id;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessage("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					return;
 				}
 
@@ -460,7 +460,7 @@ namespace Botwinder.Bot
 				{
 					if( !guid.TryParse(e.TrimmedMessage, out id) )
 					{
-						await e.Message.Channel.SendMessage("Invalid arguments.\n" + e.Command.Description);
+						await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 						return;
 					}
 				}
@@ -491,7 +491,7 @@ namespace Botwinder.Bot
 					}
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -503,14 +503,14 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( !e.Message.Server.CurrentUser.ServerPermissions.ManageChannels && !e.Message.Server.CurrentUser.ServerPermissions.Administrator )
 				{
-					await e.Message.Channel.SendMessage("I don't have `ManageChannels` permission >_<");
+					await e.Message.Channel.SendMessageSafe("I don't have `ManageChannels` permission >_<");
 					return;
 				}
 
 				Role opRole = e.Server.DiscordServer.GetRole(e.Server.ServerConfig.RoleIDOperator);
 				if( opRole != null && !e.Message.User.HasRole(opRole) && !client.IsGlobalAdmin(e.Message.User) )
 				{
-					await e.Message.Channel.SendMessage(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
+					await e.Message.Channel.SendMessageSafe(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
 					return;
 				}
 
@@ -548,13 +548,13 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( !e.Message.Server.CurrentUser.ServerPermissions.ManageChannels && !e.Message.Server.CurrentUser.ServerPermissions.Administrator )
 				{
-					await e.Message.Channel.SendMessage("I don't have `ManageChannels` permission >_<");
+					await e.Message.Channel.SendMessageSafe("I don't have `ManageChannels` permission >_<");
 					return;
 				}
 
 				if( e.Server.ServerConfig.MutedChannels == null || e.Server.ServerConfig.MutedChannels.Length == 0 || !e.Server.ServerConfig.MutedChannels.Contains(e.Message.Channel.Id) )
 				{
-					await e.Message.Channel.SendMessage("Nothing muted here, at least not by me anyway... Check your channel permissions, if your minions can't talk. x_x");
+					await e.Message.Channel.SendMessageSafe("Nothing muted here, at least not by me anyway... Check your channel permissions, if your minions can't talk. x_x");
 					return;
 				}
 
@@ -565,7 +565,7 @@ namespace Botwinder.Bot
 				Role role = e.Message.Server.GetRole(e.Message.Server.Id);
 				await e.Message.Channel.AddPermissionsRule(role, new ChannelPermissionOverrides(basePerms: e.Message.Channel.GetPermissionsRule(role), sendMessages: PermValue.Inherit));
 
-				await e.Message.Channel.SendMessage("_\\*Presses `F` to pay respects, as the silence ends.*_");
+				await e.Message.Channel.SendMessageSafe("_\\*Presses `F` to pay respects, as the silence ends.*_");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("unmutechannel"));
@@ -579,24 +579,24 @@ namespace Botwinder.Bot
 				Role role = e.Message.Server.GetRole(e.Server.ServerConfig.MuteRole);
 				if( !e.Message.Server.CurrentUser.ServerPermissions.ManageRoles )
 				{
-					await e.Message.Channel.SendMessage("I don't have `ManageRoles` permission >_<");
+					await e.Message.Channel.SendMessageSafe("I don't have `ManageRoles` permission >_<");
 					return;
 				}
 				if( role == null )
 				{
-					await e.Message.Channel.SendMessage("This command has to be configured at <http://botwinder.info/config>!");
+					await e.Message.Channel.SendMessageSafe("This command has to be configured at <http://botwinder.info/config>!");
 					return;
 				}
 				if( !e.Message.MentionedUsers.Any() )
 				{
-					await e.Message.Channel.SendMessage("And who would you like me to ~~kill~~ _silence_?");
+					await e.Message.Channel.SendMessageSafe("And who would you like me to ~~kill~~ _silence_?");
 					return;
 				}
 
 				Role opRole = e.Server.DiscordServer.GetRole(e.Server.ServerConfig.RoleIDOperator);
 				if( opRole != null && !e.Message.User.HasRole(opRole) && !client.IsGlobalAdmin(e.Message.User) )
 				{
-					await e.Message.Channel.SendMessage(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
+					await e.Message.Channel.SendMessageSafe(string.Format("`{0}op`?", e.Server.ServerConfig.CommandCharacter));
 					return;
 				}
 
@@ -654,14 +654,14 @@ namespace Botwinder.Bot
 
 						Channel ignoreChannel = e.Server.DiscordServer.GetChannel(e.Server.ServerConfig.MuteIgnoreChannel);
 						if( ignoreChannel != null )
-							await ignoreChannel.SendMessage("Welcome to the afterlife, " + userNames + ".");
+							await ignoreChannel.SendMessageSafe("Welcome to the afterlife, " + userNames + ".");
 					}
 					else
 					{
 						response = "I can not mute Admins, Moderators, or people who are already _technically_ muted.\n_(If you failed to mute them the first time due to permissions, you still have to unmute them before trying to mute them again.)_";
 					}
 
-					await e.Message.Channel.SendMessage(response);
+					await e.Message.Channel.SendMessageSafe(response);
 					response = null;
 
 					await Task.Delay(TimeSpan.FromMinutes(e.Server.ServerConfig.MuteDuration));
@@ -681,7 +681,7 @@ namespace Botwinder.Bot
 					}
 				}
 				if( !string.IsNullOrWhiteSpace(response) )
-					await e.Message.Channel.SendMessage(response);
+					await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -694,12 +694,12 @@ namespace Botwinder.Bot
 				Role role = e.Message.Server.GetRole(e.Server.ServerConfig.MuteRole);
 				if( !e.Message.Server.CurrentUser.ServerPermissions.ManageRoles )
 				{
-					await e.Message.Channel.SendMessage("I don't have `ManageRoles` permission >_<");
+					await e.Message.Channel.SendMessageSafe("I don't have `ManageRoles` permission >_<");
 					return;
 				}
 				if( role == null )
 				{
-					await e.Message.Channel.SendMessage("This command has to be configured at <http://botwinder.info/config>.");
+					await e.Message.Channel.SendMessageSafe("This command has to be configured at <http://botwinder.info/config>.");
 					return;
 				}
 
@@ -708,7 +708,7 @@ namespace Botwinder.Bot
 					await client.UnmuteUser(e.Server as Server<TUser>, user, e.Message.User);
 				}
 				string userNames = Utils.GetUserMentions(e.Message.MentionedUsers.Select(u => u.Id).ToList());
-				await e.Message.Channel.SendMessage(userNames+" speak!");
+				await e.Message.Channel.SendMessageSafe(userNames+" speak!");
 			};
 			commands.Add(newCommand);
 
@@ -720,7 +720,7 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessage("Who are you looking for?");
+					await e.Message.Channel.SendMessageSafe("Who are you looking for?");
 					return;
 				}
 
@@ -734,14 +734,17 @@ namespace Botwinder.Bot
 					{
 						TUser userData = (e.Server as Server<TUser>).UserDatabase.GetOrAddUser(foundUser);
 						string whoisString = userData.GetWhoisString(foundUser);
+						if( e.Server.ServerConfig.IgnoreEveryone )
+							whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 						while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 						{
 							int splitIndex = GlobalConfig.MessageCharacterLimit;
 							while(whoisString[--splitIndex] != ' ');
-							await e.Message.Channel.SendMessage(whoisString.Substring(0, splitIndex));
+							await e.Message.Channel.SendMessageSafe(whoisString.Substring(0, splitIndex));
 							whoisString = whoisString.Substring(splitIndex);
 						}
-						await e.Message.Channel.SendMessage(whoisString);
+						await e.Message.Channel.SendMessageSafe(whoisString);
 						return;
 					}
 
@@ -753,12 +756,12 @@ namespace Botwinder.Bot
 
 					if( foundUsers == null || foundUsers.Count == 0 )
 					{
-						await e.Message.Channel.SendMessage("I couldn't find them on this server, try using `!find` to search the whole database :)");
+						await e.Message.Channel.SendMessageSafe("I couldn't find them on this server, try using `!find` to search the whole database :)");
 						return;
 					}
 					if( foundUsers.Count > GlobalConfig.WhoisCommandLimit )
 					{
-						await e.Message.Channel.SendMessage("Be more specific please, I found way too many!");
+						await e.Message.Channel.SendMessageSafe("Be more specific please, I found way too many!");
 						return;
 					}
 				}
@@ -767,12 +770,15 @@ namespace Botwinder.Bot
 				{
 					TUser userData = (e.Server as Server<TUser>).UserDatabase.GetOrAddUser(user);
 					string whoisString = userData.GetWhoisString(user.Server.Id == e.Server.ID ? user : null);
+					if( e.Server.ServerConfig.IgnoreEveryone )
+						whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 					while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 					{
-						await e.Message.Channel.SendMessage(whoisString.Substring(0, GlobalConfig.MessageCharacterLimit));
+						await e.Message.Channel.SendMessageSafe(whoisString.Substring(0, GlobalConfig.MessageCharacterLimit));
 						whoisString = whoisString.Substring(GlobalConfig.MessageCharacterLimit);
 					}
-					await e.Message.Channel.SendMessage(whoisString);
+					await e.Message.Channel.SendMessageSafe(whoisString);
 				}
 			};
 			commands.Add(newCommand);
@@ -785,7 +791,7 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessage("Who are you looking for?");
+					await e.Message.Channel.SendMessageSafe("Who are you looking for?");
 					return;
 				}
 
@@ -796,26 +802,29 @@ namespace Botwinder.Bot
 				{
 					User user = e.Message.Server.GetUser(userData.ID);
 					string whoisString = userData.GetWhoisString(user);
+					if( e.Server.ServerConfig.IgnoreEveryone )
+						whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 					while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 					{
 						int splitIndex = GlobalConfig.MessageCharacterLimit;
 						while(whoisString[--splitIndex] != ' ');
-						await e.Message.Channel.SendMessage(whoisString.Substring(0, splitIndex));
+						await e.Message.Channel.SendMessageSafe(whoisString.Substring(0, splitIndex));
 						whoisString = whoisString.Substring(splitIndex);
 					}
-					await e.Message.Channel.SendMessage(whoisString);
+					await e.Message.Channel.SendMessageSafe(whoisString);
 				}
 				else
 				{
 					List<TUser> foundUsers = database.FindAll(e.TrimmedMessage);
 					if( foundUsers == null || foundUsers.Count == 0 )
 					{
-						await e.Message.Channel.SendMessage("I'm sorry but I couldn't find them :(");
+						await e.Message.Channel.SendMessageSafe("I'm sorry but I couldn't find them :(");
 						return;
 					}
 					if( foundUsers.Count > GlobalConfig.WhoisCommandLimit )
 					{
-						await e.Message.Channel.SendMessage("Be more specific please, I found way too many!");
+						await e.Message.Channel.SendMessageSafe("Be more specific please, I found way too many!");
 						return;
 					}
 
@@ -823,12 +832,15 @@ namespace Botwinder.Bot
 					{
 						User user = e.Message.Server.GetUser(foundUserData.ID);
 						string whoisString = foundUserData.GetWhoisString(user);
+						if( e.Server.ServerConfig.IgnoreEveryone )
+							whoisString = whoisString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 						while( whoisString.Length > GlobalConfig.MessageCharacterLimit )
 						{
-							await e.Message.Channel.SendMessage(whoisString.Substring(0, GlobalConfig.MessageCharacterLimit));
+							await e.Message.Channel.SendMessageSafe(whoisString.Substring(0, GlobalConfig.MessageCharacterLimit));
 							whoisString = whoisString.Substring(GlobalConfig.MessageCharacterLimit);
 						}
-						await e.Message.Channel.SendMessage(whoisString);
+						await e.Message.Channel.SendMessageSafe(whoisString);
 					}
 				}
 
@@ -843,7 +855,7 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessage("You're missing something x_X");
+					await e.Message.Channel.SendMessageSafe("You're missing something x_X");
 					return;
 				}
 
@@ -851,7 +863,7 @@ namespace Botwinder.Bot
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await e.Message.Channel.SendMessage("I couldn't find them :(");
+					await e.Message.Channel.SendMessageSafe("I couldn't find them :(");
 					return;
 				}
 
@@ -869,12 +881,12 @@ namespace Botwinder.Bot
 					{
 						User user = e.Server.DiscordServer.GetUser(userData.ID);
 						if( user != null )
-							await user.SendMessage(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
+							await user.SendMessageSafe(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
 								e.Server.DiscordServer.Name, warning));
 					}
 				}
 				(e.Server as Server<TUser>).UserDatabase.SaveAsync();
-				await e.Message.Channel.SendMessage("It has been done!");
+				await e.Message.Channel.SendMessageSafe("It has been done!");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("addwarning"));
@@ -892,7 +904,7 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessage("You're missing something x_X");
+					await e.Message.Channel.SendMessageSafe("You're missing something x_X");
 					return;
 				}
 
@@ -900,7 +912,7 @@ namespace Botwinder.Bot
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await e.Message.Channel.SendMessage("I couldn't find them :(");
+					await e.Message.Channel.SendMessageSafe("I couldn't find them :(");
 					return;
 				}
 
@@ -913,7 +925,7 @@ namespace Botwinder.Bot
 				}
 
 				(e.Server as Server<TUser>).UserDatabase.SaveAsync();
-				await e.Message.Channel.SendMessage("It has been done!");
+				await e.Message.Channel.SendMessageSafe("It has been done!");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("removewarning"));
@@ -935,16 +947,19 @@ namespace Botwinder.Bot
 					if( userData.WarningCount > 0 )
 					{
 						string newString = "\n" + userData.GetWhoisString();
+						if( e.Server.ServerConfig.IgnoreEveryone )
+							newString = newString.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 						if( newString.Length + response.Length > GlobalConfig.MessageCharacterLimit )
 						{
-							await e.Message.Channel.SendMessage(response);
+							await e.Message.Channel.SendMessageSafe(response);
 							response = "";
 
 							while( newString.Length > GlobalConfig.MessageCharacterLimit )
 							{
 								int splitIndex = GlobalConfig.MessageCharacterLimit;
 								while(newString[--splitIndex] != ' ');
-								await e.Message.Channel.SendMessage(newString.Substring(0, splitIndex));
+								await e.Message.Channel.SendMessageSafe(newString.Substring(0, splitIndex));
 								newString = newString.Substring(splitIndex);
 							}
 						}
@@ -952,7 +967,7 @@ namespace Botwinder.Bot
 					}
 				});
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("naughtylist"));
@@ -968,7 +983,7 @@ namespace Botwinder.Bot
 				{
 					if( !e.Message.Server.CurrentUser.ServerPermissions.ManageMessages )
 					{
-						await e.Message.Channel.SendMessage("I don't have `ManageMessages` permission >_<");
+						await e.Message.Channel.SendMessageSafe("I don't have `ManageMessages` permission >_<");
 						return;
 					}
 
@@ -983,7 +998,7 @@ namespace Botwinder.Bot
 						guid id = 0;
 						if( !guid.TryParse((e.Command.ID == "nuke" ? e.MessageArgs[0] : e.MessageArgs[1]).TrimStart('<', '@', '!').TrimEnd('>'), out id) )
 						{
-							await e.Message.Channel.SendMessage("I can see that you're trying to use more parameters, but I did not find any IDs or mentions.");
+							await e.Message.Channel.SendMessageSafe("I can see that you're trying to use more parameters, but I did not find any IDs or mentions.");
 							return;
 						}
 
@@ -993,7 +1008,7 @@ namespace Botwinder.Bot
 					bool clearLinks = e.Command.ID.ToLower() == "clearlinks";
 					if( clearLinks && users.Any() )
 					{
-						await e.Message.Channel.SendMessage("`"+ e.Server.ServerConfig.CommandCharacter +"clearLinks` does not take `@user` mentions as parameter.");
+						await e.Message.Channel.SendMessageSafe("`"+ e.Server.ServerConfig.CommandCharacter +"clearLinks` does not take `@user` mentions as parameter.");
 						return;
 					}
 
@@ -1007,7 +1022,7 @@ namespace Botwinder.Bot
 					}
 					else if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[0], out n) )
 					{
-						await e.Message.Channel.SendMessage("Please tell me how many messages should I delete!");
+						await e.Message.Channel.SendMessageSafe("Please tell me how many messages should I delete!");
 						return;
 					}
 					else if( users.Count > 0 )
@@ -1034,6 +1049,13 @@ namespace Botwinder.Bot
 					int cyclesToYield = 5;
 					int exceptions = 0;
 					bool reachedTwoWeeks = false;
+					Func<Message, bool> isWithinTwoWeeks = (Message m) =>{
+						if( DateTime.UtcNow - (new DateTime((long)(((m.Id / 4194304) + 1420070400000) * 10000 + 621355968000000000))) < TimeSpan.FromDays(13.9f) )
+							return true;
+						reachedTwoWeeks = true;
+						return false;
+					};
+
 					while( n > 0 )
 					{
 						if( op != null && await op.AwaitConnection(client) )
@@ -1055,12 +1077,6 @@ namespace Botwinder.Bot
 						}
 
 						List<guid> ids = null;
-						Func<Message, bool> isWithinTwoWeeks = (Message m) =>{
-							if( DateTime.UtcNow - (new DateTime((long)(((m.Id / 4194304) + 1420070400000) * 10000 + 621355968000000000))) < TimeSpan.FromDays(13.9f) )
-								return true;
-							reachedTwoWeeks = true;
-							return false;
-						};
 						if( messages == null || messages.Length == 0 ||
 						    ( clearLinks && userCount == 0 && (ids = messages.TakeWhile(m => isWithinTwoWeeks(m)).Where(m => (m.Attachments != null && m.Attachments.Length > 0) || (m.Embeds != null && m.Embeds.Length > 0)).Select(m => m.Id).ToList()).Count == 0) ||
 						    (!clearLinks && userCount == 0 && (ids = messages.TakeWhile(m => isWithinTwoWeeks(m)).Select(m => m.Id).ToList()).Count == 0) ||
@@ -1111,7 +1127,7 @@ namespace Botwinder.Bot
 
 						await msg.Edit("~~" + msg.RawText + "~~\n\nDone! _(This message will self-destruct in 10 seconds.)_");
 						if( reachedTwoWeeks )
-							await e.Message.Channel.SendMessage("I couldn't delete all of it though, sowwy :<\n_(Discord Developers have decided to shut-down our ability to delete messages older than two weeks. <https://github.com/hammerandchisel/discord-api-docs/issues/208>)_");
+							await e.Message.Channel.SendMessageSafe("I couldn't delete all of it though, sowwy :<\n_(Discord Developers have decided to shut-down our ability to delete messages older than two weeks. <https://github.com/hammerandchisel/discord-api-docs/issues/208>)_");
 						await Task.Delay(TimeSpan.FromSeconds(10f));
 						await msg.Edit("BOOM!!");
 						await Task.Delay(TimeSpan.FromSeconds(2f));
@@ -1138,6 +1154,127 @@ namespace Botwinder.Bot
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("clearlinks"));
 
+// !forceNuke
+			newCommand = new Command("forceNuke");
+			newCommand.Type = Command.CommandType.ChatOnly;
+			newCommand.Description = "Nuke the whole channel.";
+			newCommand.RequiredPermissions = Command.PermissionType.OwnerOnly;
+			newCommand.OnExecute += async (sender, e) =>{
+				Operation op = null;
+				try
+				{
+					if( !e.Message.Server.CurrentUser.ServerPermissions.ManageMessages )
+					{
+						await e.Message.Channel.SendMessageSafe("I don't have `ManageMessages` permission >_<");
+						return;
+					}
+
+					int n = 0;
+					Message msg = null;
+
+					n = int.MaxValue - 1;
+					msg = await e.Message.Channel.SendMessage("Nuking the channel, I'll tell you when I'm done (large channels may take up to several hours...)");
+
+					guid lastRemoved = e.Message.Id;
+
+					if( n > GlobalConfig.LargeOperationThreshold )
+					{
+						op = Operation.Create<TUser>(client, e);
+						if( await op.Await(client, async () => await msg.Edit(msg.RawText + string.Format("\n"+ GlobalConfig.OperationQueuedText, client.CurrentOperations.Count, e.Command.ID))) )
+						{
+							await msg.Edit("This operation was canceled. (Either manually or it is a duplicate of already queued up command. Be patient please.)");
+							return;
+						}
+						op.CurrentState = Operation.State.Running;
+					}
+
+					int cyclesToYield = 5;
+					int exceptions = 0;
+					while( n > 0 )
+					{
+						if( op != null && await op.AwaitConnection(client) )
+						{
+							await msg.Edit("This operation was canceled.");
+							return;
+						}
+
+						Message[] messages = null;
+
+						try
+						{
+							messages = await e.Message.Channel.DownloadMessages(Math.Min(100, n), lastRemoved, useCache: false);
+						} catch( Exception exception )
+						{
+							client.LogException(exception, e);
+							lastRemoved = 0;
+							break;
+						}
+
+						if( messages == null || messages.Length == 0 )
+						{
+							lastRemoved = e.Message.Id;
+							break;
+						}
+
+						if( !client.ClearedMessageIDs.ContainsKey(e.Server.ID) )
+							 client.ClearedMessageIDs.Add(e.Server.ID, new List<guid>());
+
+						lastRemoved = messages.Last().Id;
+						if( messages.Length > n )
+							messages = messages.Take(n).ToArray();
+						client.ClearedMessageIDs[e.Server.ID].AddRange(messages.Select(m => m.Id));
+
+						try
+						{
+							foreach( Message message in messages )
+							{
+								if( message.Deleted )
+									continue;
+								await message.Delete();
+							}
+						} catch( Exception exception )
+						{
+							if( ++exceptions > 10 || exception.Message.Contains("50034") )
+								break;
+
+							//Continue if it this fails.
+						}
+
+						n -= messages.Length;
+						if( messages.Length < 100 ) //this was the last pull
+							n = 0;
+
+						if( --cyclesToYield <= 0 )
+						{
+							cyclesToYield = 5;
+							await Task.Yield(); //Take a break, do other things!
+						}
+					}
+
+					if( lastRemoved == 0 )
+						await msg.Edit("There was an error while downloading messages, you can try again but if it doesn't work, then it's a bug - please tell Rhea :<");
+					else
+					{
+						if( !e.Message.Deleted )
+							await e.Message.Delete();
+
+						await msg.Edit("~~" + msg.RawText + "~~\n\nDone! _(This message will self-destruct in 10 seconds.)_");
+						await Task.Delay(TimeSpan.FromSeconds(10f));
+						await msg.Edit("BOOM!!");
+						await Task.Delay(TimeSpan.FromSeconds(2f));
+						await msg.Delete();
+					}
+				} catch( Exception exception ) when( exception.GetType() != typeof(Discord.Net.HttpException) )
+				{
+					client.LogException(exception, e);
+				}
+
+				if( op != null )
+					op.Finalise(client);
+				op = null;
+			};
+			commands.Add(newCommand);
+
 // !memberRoles
 			newCommand = new Command("memberRoles");
 			newCommand.Type = Command.CommandType.ChatOnly;
@@ -1162,7 +1299,7 @@ namespace Botwinder.Bot
 							newString = (i == 0 ? "`" : i == memberRoles.Length -1 ? " and `" : ", `") + role.Name +"`";
 							if( newString.Length + response.Length > GlobalConfig.MessageCharacterLimit )
 							{
-								await e.Message.Channel.SendMessage(response);
+								await e.Message.Channel.SendMessageSafe(response);
 								response = "";
 							}
 							response += newString;
@@ -1170,7 +1307,7 @@ namespace Botwinder.Bot
 					}
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("memberroles"));
@@ -1223,7 +1360,7 @@ namespace Botwinder.Bot
 								if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
 								{
 									string logMessage = string.Format("`{0}`: __{1}__ promoted __{2}__ to _{3}_.", Utils.GetTimestamp(), e.Message.User.Name, user.Name, (role == null ? roleName : role.Name));
-									await logChannel.SendMessage(logMessage);
+									await logChannel.SendMessageSafe(logMessage);
 								}
 							}
 						}
@@ -1305,7 +1442,7 @@ namespace Botwinder.Bot
 								if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
 								{
 									string logMessage = string.Format("`{0}`: __{1}__ demoted {2} from _{3}_.", Utils.GetTimestamp(), e.Message.User.Name, user.Name, (role == null ? roleName : role.Name));
-									await logChannel.SendMessage(logMessage);
+									await logChannel.SendMessageSafe(logMessage);
 								}
 							}
 						}
@@ -1338,26 +1475,54 @@ namespace Botwinder.Bot
 			};
 			commands.Add(newCommand);
 
-// !ping
-			newCommand = new Command("ping");
+// !tempChannel
+			newCommand = new Command("tempChannel");
+			newCommand.Type = Command.CommandType.ChatOnly;
+			newCommand.Description = "Creates a temporary voice channel. This channel will be destroyed when it becomes empty, with grace period of three minutes since it's creation.";
+			newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator | Command.PermissionType.SubModerator;
+			newCommand.OnExecute += async (sender, e) =>{
+				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
+				{
+					await e.Message.Channel.SendMessage("Please specify a name for the new temporary channel.");
+					return;
+				}
+				Channel newChannel = await e.Message.Server.CreateChannel(e.TrimmedMessage, ChannelType.Voice);
+				client.TemporaryChannels.Add(newChannel.Id, newChannel);
+
+				if( e.Server.ServerConfig.TemporaryChannels == null )
+					e.Server.ServerConfig.TemporaryChannels = new guid[1];
+				else
+					Array.Resize<guid>(ref e.Server.ServerConfig.TemporaryChannels, e.Server.ServerConfig.TemporaryChannels.Length +1);
+
+				int channelIndex = e.Server.ServerConfig.TemporaryChannels.Length -1;
+				e.Server.ServerConfig.TemporaryChannels[channelIndex] = e.Message.Channel.Id;
+				e.Server.ServerConfig.SaveAsync();
+
+				await e.Message.Channel.SendMessage("Here you go! <3\n_(Temporary channel `"+ e.TrimmedMessage +"` was created.)_");
+			};
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("tc"));
+
+// !pingMe
+			newCommand = new Command("pingMe");
 			newCommand.Type = Command.CommandType.ChatOnly;
 			newCommand.SendTyping = false;
 			newCommand.Description = "What's the response time of Botwinder?";
 			newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator;
 			newCommand.OnExecute += async (sender, e) => {
-				await e.Message.Channel.SendMessage("I'm pinging myself!");
+				await e.Message.Channel.SendMessageSafe("I'm pinging myself!");
 				await Task.Delay(1500);
-				await e.Message.Channel.SendMessage("I'm looking for the ID of that first message cause I forgot what was it x_X");
+				await e.Message.Channel.SendMessageSafe("I'm looking for the ID of that first message cause I forgot what was it x_X");
 				await Task.Delay(3000);
-				await e.Message.Channel.SendMessage("Ah, got it! Now i'm gonna calculate its timetsamp!");
+				await e.Message.Channel.SendMessageSafe("Ah, got it! Now i'm gonna calculate its timetsamp!");
 				await Task.Delay(2500);
-				await e.Message.Channel.SendMessage("_This divided by this and then... hmm..._");
+				await e.Message.Channel.SendMessageSafe("_This divided by this and then... hmm..._");
 				await Task.Delay(2500);
-				await e.Message.Channel.SendMessage("I'm gonna count the time now... One, two, three, ...");
+				await e.Message.Channel.SendMessageSafe("I'm gonna count the time now... One, two, three, ...");
 				await Task.Delay(1500);
 #pragma warning disable 4014
-				e.Message.Channel.SendMessage("Juuust...");
-				e.Message.Channel.SendMessage("...kidding! :D");
+				e.Message.Channel.SendMessageSafe("Juuust...");
+				e.Message.Channel.SendMessageSafe("...kidding! :D");
 #pragma warning restore 4014
 			};
 			commands.Add(newCommand);

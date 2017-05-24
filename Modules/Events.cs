@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -76,7 +77,7 @@ namespace Botwinder.Modules
 		protected override string Filename => "events.json";
 
 
-		private Dictionary<guid, Event> EventsDictionary;
+		private ConcurrentDictionary<guid, Event> EventsDictionary;
 
 		public Event this[guid id]
 		{
@@ -94,7 +95,7 @@ namespace Botwinder.Modules
 					if( this.EventsDictionary.ContainsKey(id) )
 						this.EventsDictionary[id] = value;
 					else
-						this.EventsDictionary.Add(id, value);
+						this.EventsDictionary.TryAdd(id, value);
 				}
 			}
 		}
@@ -112,7 +113,7 @@ namespace Botwinder.Modules
 				newCommand.Type = Command.CommandType.ChatOnly;
 				newCommand.Description = "A system to help you run the best events - use the command to see more details.";
 				newCommand.OnExecute += async (sender, e) => {
-					await e.Message.Channel.SendMessage("Events are currently disabled for technical difficulties. Please be patient, we are working on it.");
+					await e.Message.Channel.SendMessageSafe("Events are currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
 				commands.Add(newCommand.CreateAlias("events"));
@@ -121,7 +122,7 @@ namespace Botwinder.Modules
 
 			commands = base.Init<TUser>(client);
 
-			this.EventsDictionary = new Dictionary<guid, Event>();
+			this.EventsDictionary = new ConcurrentDictionary<guid, Event>();
 			if( this.Data != null && this.Data.Events != null )
 			{
 				foreach(Event e in this.Data.Events)
@@ -247,7 +248,7 @@ namespace Botwinder.Modules
 
 								if( newLine.Length + responseMessage.Length >= GlobalConfig.MessageCharacterLimit )
 								{
-									await e.Message.Channel.SendMessage(responseMessage);
+									await e.Message.Channel.SendMessageSafe(responseMessage);
 									responseMessage = "";
 								}
 								responseMessage += newLine;
@@ -280,7 +281,7 @@ namespace Botwinder.Modules
 
 								if( newLine.Length + responseMessage.Length >= GlobalConfig.MessageCharacterLimit )
 								{
-									await e.Message.Channel.SendMessage(responseMessage);
+									await e.Message.Channel.SendMessageSafe(responseMessage);
 									responseMessage = "";
 								}
 								responseMessage += newLine;
@@ -382,7 +383,7 @@ namespace Botwinder.Modules
 
 				if( save )
 					SaveAsync();
-				await e.Message.Channel.SendMessage(responseMessage);
+				await e.Message.Channel.SendMessageSafe(responseMessage);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("events"));

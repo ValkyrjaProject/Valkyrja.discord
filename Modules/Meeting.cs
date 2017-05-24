@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,7 +13,9 @@ namespace Botwinder.Modules
 {
 	public class Meetings: IModule
 	{
-		private Dictionary<guid, Meeting> MeetingsCache = new Dictionary<guid, Meeting>();
+		public bool UpdateInProgress{ get; set; } = false;
+
+		private ConcurrentDictionary<guid, Meeting> MeetingsCache = new ConcurrentDictionary<guid, Meeting>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
@@ -41,7 +44,7 @@ namespace Botwinder.Modules
 				if( e.MessageArgs == null || e.MessageArgs.Length == 0 ||
 				    (e.MessageArgs.Length < 2 && e.MessageArgs[0] != "end" && e.MessageArgs[0] != "undo" && e.MessageArgs[0] != "reload") )
 				{
-					await e.Message.Channel.SendMessage(invalidArguments);
+					await e.Message.Channel.SendMessageSafe(invalidArguments);
 					return;
 				}
 
@@ -74,7 +77,7 @@ namespace Botwinder.Modules
 
 				if( meeting == null && e.MessageArgs[0] != "start" && e.MessageArgs[0] != "reload" )
 				{
-					await e.Message.Channel.SendMessage(string.Format("I couldn't find open meeting. " +
+					await e.Message.Channel.SendMessageSafe(string.Format("I couldn't find open meeting. " +
 					                                                  "If you did not start it, please have the owner of the meeting run any command, or `{0}{1} reload.`",
 						e.Server.ServerConfig.CommandCharacter, e.Command.ID));
 					return;
@@ -82,7 +85,7 @@ namespace Botwinder.Modules
 
 				if( meeting != null && !meeting.IsActive && e.MessageArgs[0] != "start" )
 				{
-					await e.Message.Channel.SendMessage("Dude, that meeting already ended o_O");
+					await e.Message.Channel.SendMessageSafe("Dude, that meeting already ended o_O");
 					return;
 				}
 
@@ -135,7 +138,7 @@ namespace Botwinder.Modules
 					break;
 				case "end":
 					meeting.End();
-					await e.Message.Channel.SendMessage(string.Format("Your meeting __**{0}**__ ended, please wait a moment while I finish up the logs.", meeting.MeetingName));
+					await e.Message.Channel.SendMessageSafe(string.Format("Your meeting __**{0}**__ ended, please wait a moment while I finish up the logs.", meeting.MeetingName));
 					await Task.Delay(TimeSpan.FromMilliseconds(100));
 					await meeting.AppendLog(e.Message);
 
@@ -151,7 +154,7 @@ namespace Botwinder.Modules
 				}
 
 				if( !string.IsNullOrWhiteSpace(response) )
-					await e.Message.Channel.SendMessage(response);
+					await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("meetings"));

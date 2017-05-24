@@ -1,23 +1,40 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.Entities;
+using Discord;
 using RedditSharp;
+
 using guid = System.UInt64;
 
 namespace Botwinder.Modules
 {
-	public class Reddit : IModule
+	public class Verification : IModule
 	{
-		protected static Reddit Instance = null;
+		public bool UpdateInProgress{ get; set; } = false;
 
-		public static Reddit Get()
+		protected static Verification Instance = null;
+
+		public static Verification Get()
 		{
 			return Instance;
 		}
 
+		private class HashedValue
+		{
+			public guid UserId;
+			public guid ServerId;
+
+			public HashedValue(guid userId, guid serverId)
+			{
+				this.UserId = userId;
+				this.ServerId = serverId;
+			}
+		}
 
 		public const string VerifySent = "<@{0}>, check your messages!";
 		public const string VerifyDonePM = "You have been verified on the `{0}` server =]";
@@ -31,6 +48,8 @@ namespace Botwinder.Modules
 		private RedditSharp.Reddit RedditClient = null;
 		private string LastVerifyMessage = "";
 		private readonly List<string> RecentRedditMessages = new List<string>();
+
+		private readonly ConcurrentDictionary<string, HashedValue> HashedValues = new ConcurrentDictionary<string, HashedValue>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
@@ -46,7 +65,7 @@ namespace Botwinder.Modules
 				newCommand.Description = "Participate in currently active giveaway.";
 				newCommand.OnExecute += async (sender, e) =>
 				{
-					await e.Message.Channel.SendMessage(
+					await e.Message.Channel.SendMessageSafe(
 						"Reddit verification is currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
@@ -83,7 +102,7 @@ namespace Botwinder.Modules
 				if( (!e.Server.ServerConfig.VerifyEnabled || e.Server.ServerConfig.VerifyRoleID == 0) &&
 				    !client.IsGlobalAdmin(e.Message.User) )
 				{
-					await e.Message.Channel.SendMessage("Verification is disabled on this server.");
+					await e.Message.Channel.SendMessageSafe("Verification is disabled on this server.");
 					return;
 				}
 
@@ -103,12 +122,12 @@ namespace Botwinder.Modules
 					if( !guid.TryParse(e.MessageArgs[0], out serverID) || (discordServer = client.GetServer(serverID)) == null ||
 					    !guid.TryParse(e.MessageArgs[1], out userID) || (user = discordServer.GetUser(userID)) == null )
 					{
-						await e.Message.Channel.SendMessage(UserNotFound);
+						await e.Message.Channel.SendMessageSafe(UserNotFound);
 						return;
 					}
 
 					await VerifyUser(user, client.GetServerData(serverID), (e.MessageArgs[2] == "force" ? null : e.MessageArgs[2]));
-					await e.Message.Channel.SendMessage(string.Format(VerifyDone, user.Id));
+					await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
 					return;
 				}
 
@@ -124,12 +143,12 @@ namespace Botwinder.Modules
 					if( (e.Message.MentionedUsers.Count() != 1 || (user = e.Message.MentionedUsers.ElementAt(0)) == null) &&
 					    (!guid.TryParse(e.MessageArgs[0], out id) || (user = e.Message.Server.GetUser(id)) == null) )
 					{
-						await e.Message.Channel.SendMessage(UserNotFound);
+						await e.Message.Channel.SendMessageSafe(UserNotFound);
 						return;
 					}
 
 					await VerifyUser(user, server, (e.MessageArgs[1] == "force" ? null : e.MessageArgs[1]));
-					await e.Message.Channel.SendMessage(string.Format(VerifyDone, user.Id));
+					await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
 					return;
 				}
 
@@ -147,14 +166,14 @@ namespace Botwinder.Modules
 
 				if( user == null )
 				{
-					await e.Message.Channel.SendMessage(VerifyError);
+					await e.Message.Channel.SendMessageSafe(VerifyError);
 				}
 				else
 				{
 					if( await VerifyUserPM(user, server) )
-						await e.Message.Channel.SendMessage(string.Format(VerifyDone, user.Id));
+						await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
 					else
-						await e.Message.Channel.SendMessage(string.Format(VerifySent, user.Id));
+						await e.Message.Channel.SendMessageSafe(string.Format(VerifySent, user.Id));
 				}
 			};
 			commands.Add(newCommand);
@@ -178,7 +197,7 @@ namespace Botwinder.Modules
 						this.RedditClient.User.UnreadMessages.Count());
 				}
 
-				await e.Message.Channel.SendMessage(message);
+				await e.Message.Channel.SendMessageSafe(message);
 			};
 			commands.Add(newCommand);
 
@@ -216,7 +235,7 @@ namespace Botwinder.Modules
 					}
 				}
 
-				await e.Message.Channel.SendMessage(message);
+				await e.Message.Channel.SendMessageSafe(message);
 			};
 			commands.Add(newCommand);
 
@@ -242,7 +261,7 @@ namespace Botwinder.Modules
 					message = "Done.";
 				}
 
-				await e.Message.Channel.SendMessage(message);
+				await e.Message.Channel.SendMessageSafe(message);
 			};
 			commands.Add(newCommand);
 
@@ -252,23 +271,32 @@ namespace Botwinder.Modules
 
 		public async Task Update<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
 		{
-			if( !client.GlobalConfig.RedditEnabled )
+			if( !client.GlobalConfig.RedditEnabled || this.UpdateInProgress )
 				return;
+
+			this.UpdateInProgress = true;
 
 			try
 			{
 				if( this.RedditClient == null || this.RedditClient.User == null || this.RedditClient.User.UnreadMessages == null )
+				{
+					this.UpdateInProgress = false;
 					return;
+				}
 
 				Discord.Server mainServer = client.GetServer(client.GlobalConfig.MainServerID);
 				Discord.Channel mainChannel = null;
 				if( mainServer != null )
 					mainChannel = mainServer.GetChannel(client.GlobalConfig.MainLogChannelID);
 
+				int i = 0;
 				RedditSharp.Things.PrivateMessage message = null;
 				List<RedditSharp.Things.Thing> list = this.RedditClient.User.UnreadMessages.ToList();
 				foreach( RedditSharp.Things.Thing thing in list )
 				{
+					if( ++i > 99 )
+						break;
+
 					try
 					{
 						message = thing as RedditSharp.Things.PrivateMessage;
@@ -318,7 +346,7 @@ namespace Botwinder.Modules
 								//await message.ReplyAsync("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
 								//message.Reply("Hi!\n I'm sorry but something went wrong with the reddit message (or discord servers) and I couldn't verify you... I did however notify Rhea (my mum!) and she will take care of it!\nI would like to ask you for patience, she may not be online =]");
 								if( mainChannel != null )
-									await mainChannel.SendMessage(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}",
+									await mainChannel.SendMessageSafe(string.Format("Invalid DiscordVerification message received.\n    Author: {0}\n    Subject: {1}\n    Message: {2}\n    Found User: <@{3}>\n    Link to Author: {4}",
 										string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author,
 										string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject,
 										string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body, user == null ? "null" : user.Id.ToString(),
@@ -328,7 +356,7 @@ namespace Botwinder.Modules
 						else
 						{
 							if( mainChannel != null )
-								await mainChannel.SendMessage(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}",
+								await mainChannel.SendMessageSafe(string.Format("I received an unknown private message on reddit:\n{0}: {1}\n{2}",
 									string.IsNullOrWhiteSpace(message.Author) ? "" : message.Author,
 									string.IsNullOrWhiteSpace(message.Subject) ? "" : message.Subject,
 									string.IsNullOrWhiteSpace(message.Body) ? "" : message.Body));
@@ -354,6 +382,8 @@ namespace Botwinder.Modules
 				else
 					throw;
 			}
+
+			this.UpdateInProgress = false;
 		}
 
 		//Returns true if the user is already verified.
@@ -366,31 +396,95 @@ namespace Botwinder.Modules
 				return true;
 			}
 
-			string message = string.Format("Hi {0},\nthe `{1}` server is using reddit verification.\n\n{2}\n\n",
-				user.Name, user.Server.Name, server.ServerConfig.VerifyPM);
+			string verifyPm = server.ServerConfig.VerifyPM;
+			if( !server.ServerConfig.VerifyUseReddit )
+			{
+				int source = Math.Abs((user.Id.ToString() + server.ID).GetHashCode());
+				int chunkNum = (int)Math.Ceiling(Math.Ceiling(Math.Log(source)) / 2);
+				StringBuilder hashBuilder = new StringBuilder(chunkNum);
+				for( int i = 0; i < chunkNum; i++ )
+				{
+					char c = (char)((source % 100) / 4 + 97);
+					hashBuilder.Append(c);
+					source = source / 100;
+				}
+				string hash = hashBuilder.ToString();
+				hash = hash.Length > 5 ? hash.Substring(0, 5) : hash;
+				if( !this.HashedValues.ContainsKey(hash) )
+					this.HashedValues.Add(hash, new HashedValue(user.Id, server.ID));
+
+				verifyPm = "In order to get verified, you must reply to me with a hidden code within the below rules. " +
+				           "Just the code by itself, do not add anything extra. Read the rules and you will find the code.\n" +
+				           "_(Beware that this will expire in a few hours, " +
+				           "if it does simply run the `verify` command in the server chat, " +
+				           "and re-send the code that you already found - it won't change.)_";
+
+				string[] lines = server.ServerConfig.VerifyPM.Split('\n');
+				string[] words = null;
+				bool found = false;
+				for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); i >= lines.Length / 2; i-- )
+				{
+					if( i <= lines.Length / 2 )
+					{
+						i = lines.Length - 1;
+						continue;
+					}
+					if( (words = lines[i].Split(' ')).Length > 10 )
+					{
+						int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
+						lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, " the secret is: " + hash );
+
+						hashBuilder = new StringBuilder(lines.Length+1);
+						hashBuilder.AppendLine(verifyPm).AppendLine("");
+						for(int j = 0; j < lines.Length; j++)
+							hashBuilder.AppendLine(lines[j]);
+						verifyPm = hashBuilder.ToString();
+						found = true;
+						break;
+					}
+				}
+
+				if( !found )
+				{
+					verifyPm = "```diff\n- Error!\n\n  " +
+							   "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
+							   "(It may be either too short, or too long. The algorithm is looking for lines with at least 10 words.)```";
+				}
+			}
+
+			string message = string.Format("Hi {0},\nthe `{1}` server is using "+ (server.ServerConfig.VerifyUseReddit ? "reddit" : "code") +" verification.\n\n{2}\n\n",
+				user.Name, user.Server.Name, verifyPm);
 
 			if( server.ServerConfig.VerifyKarma > 0 )
 				message += string.Format("You will also get {0} `{1}{2}` for verifying!\n\n", server.ServerConfig.VerifyKarma,
 					server.ServerConfig.CommandCharacter, server.ServerConfig.KarmaCurrency);
 
-			string newMessage = string.Format(
-				"The only requirement is to have registered Discord account with valid email address, otherwise you may lose this status.\n" +
-				"In order to complete the verification, please send me this message on Reddit _(Do not change anything, just click the link and hit send.)_\n" +
-				"https://www.reddit.com/message/compose/?to=Botwinder&subject=DiscordVerification&message={0}%20{1}" +
-				"\n_(Please note that this will **not** work on **mobile** version of Reddit." +
-				"If you are on mobile, you have to 1. click the link, 2. click reddit menu, 3. click \"Desktop Site\", 4. hit \"send.\")_" +
-				"\n\nCheers! :smiley:",
-				user.Server.Id, user.Id);
-
-			if( newMessage.Length + message.Length > GlobalConfig.MessageCharacterLimit )
+			if( server.ServerConfig.VerifyUseReddit )
 			{
-				await user.SendMessage(message);
-				message = "";
+				message += string.Format(
+					"The only requirement is to have registered Discord account with valid email address, otherwise you may lose this status.\n" +
+					"In order to complete the verification, please send me this message on Reddit _(Do not change anything, just click the link and hit send.)_\n" +
+					"https://www.reddit.com/message/compose/?to=Botwinder&subject=DiscordVerification&message={0}%20{1}" +
+					"\n_(Please note that this will **not** work on **mobile** version of Reddit." +
+					"If you are on mobile, you have to 1. click the link, 2. click reddit menu, 3. click \"Desktop Site\", 4. hit \"send.\")_" +
+					"\n\nCheers! :smiley:",
+					user.Server.Id, user.Id);
 			}
-			message += newMessage;
 
-			await user.SendMessage(message);
+			await user.SendMessageSafe(message);
 			return false;
+		}
+
+		/// <summary>Verifies a user based on a hashCode string and returns true if successful.</summary>
+		public async Task<bool> VerifyUserHash<TUser>(IBotwinderClient<TUser> client, Discord.User user, string hashCode)
+			where TUser : UserData, new()
+		{
+			if( !this.HashedValues.ContainsKey(hashCode) || this.HashedValues[hashCode].UserId != user.Id )
+				return false;
+
+			Server<TUser> server = client.GetServerData(this.HashedValues[hashCode].ServerId);
+			await VerifyUser(server.DiscordServer.GetUser(user.Id), server, null);
+			return true;
 		}
 
 		private async Task VerifyUser<TUser>(Discord.User user, Server<TUser> server, string verifiedInfo = null)
@@ -427,7 +521,7 @@ namespace Botwinder.Modules
 			try
 			{
 				if( !alreadyVerified )
-					await user.SendMessage(string.Format(VerifyDonePM, server.DiscordServer.Name));
+					await user.SendMessageSafe(string.Format(VerifyDonePM, server.DiscordServer.Name));
 			}
 			catch( Exception ){}
 		}

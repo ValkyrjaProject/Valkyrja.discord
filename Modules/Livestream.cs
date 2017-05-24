@@ -2,6 +2,7 @@
  * Copyright Radka Janek aka RheaAyase www.ayase.eu - modifications only with explicit permission.
  */
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -108,7 +109,7 @@ namespace Botwinder.Modules
 		protected const float EventCooldown = 300f;
 
 
-		public Dictionary<string, LivestreamChannel> ChannelDictionary;
+		public ConcurrentDictionary<string, LivestreamChannel> ChannelDictionary;
 
 
 		public override List<Command> Init<TUser>(IBotwinderClient<TUser> client)
@@ -124,7 +125,7 @@ namespace Botwinder.Modules
 				newCommand.Description = "Add a channel to watch list, to send a short notification message in \"this\" channel, whenever they go live. Supported services are: `twitch`, `hitbox` & `beam` (more will be added soon.) Example: `livestreamAdd twitch RheaAyase` (Use of this command and bot's response will be deleted for your convenience.)";
 				newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator;
 				newCommand.OnExecute += async (sender, e) => {
-					await e.Message.Channel.SendMessage("Livestream notifications are currently disabled for technical difficulties. Please be patient, we are working on it.");
+					await e.Message.Channel.SendMessageSafe("Livestream notifications are currently disabled for technical difficulties. Please be patient, we are working on it.");
 				};
 				commands.Add(newCommand);
 				newCommand = newCommand.CreateCopy("livestreamRemove");
@@ -138,7 +139,7 @@ namespace Botwinder.Modules
 
 			commands = base.Init<TUser>(client);
 
-			this.ChannelDictionary = new Dictionary<string, LivestreamChannel>();
+			this.ChannelDictionary = new ConcurrentDictionary<string, LivestreamChannel>();
 			if( this.Data != null && this.Data.Channels != null )
 			{
 				foreach( LivestreamChannel data in this.Data.Channels )
@@ -290,8 +291,10 @@ namespace Botwinder.Modules
 
 		public override async Task Update<TUser>(IBotwinderClient<TUser> client)
 		{
-			if( !client.GlobalConfig.LivestreamEnabled || this.ChannelDictionary == null || !this.ChannelDictionary.Any() )
+			if( !client.GlobalConfig.LivestreamEnabled || this.ChannelDictionary == null || !this.ChannelDictionary.Any() || this.UpdateInProgress )
 				return;
+
+			this.UpdateInProgress = true;
 
 			foreach(KeyValuePair<string, LivestreamChannel> pair in this.ChannelDictionary)
 			{
@@ -327,6 +330,7 @@ namespace Botwinder.Modules
 				}
 			}
 
+			this.UpdateInProgress = false;
 		}
 
 		private async Task OnStarted<TUser>(IBotwinderClient<TUser> client, StreamInfo info) where TUser: UserData, new()
@@ -337,7 +341,7 @@ namespace Botwinder.Modules
 
 				if( channel != null )
 				{
-					await channel.SendMessage(string.Format("**{0} is Live!**\n{1}: {2}\n<{3}>",
+					await channel.SendMessageSafe(string.Format("**{0} is Live!**\n{1}: {2}\n<{3}>",
 						info.DisplayName, info.Game, info.StreamTitle, info.Url
 					));
 				}

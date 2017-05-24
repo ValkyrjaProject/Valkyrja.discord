@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -12,7 +13,9 @@ namespace Botwinder.Modules
 {
 	public class TimeAtWork: IModule
 	{
-		private Dictionary<guid, UserTimeAtWork> TimeAtWorkCache = new Dictionary<guid, UserTimeAtWork>();
+		public bool UpdateInProgress{ get; set; } = false;
+
+		private ConcurrentDictionary<guid, UserTimeAtWork> TimeAtWorkCache = new ConcurrentDictionary<guid, UserTimeAtWork>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
@@ -158,7 +161,7 @@ namespace Botwinder.Modules
 					}
 				}
 
-				await e.Message.Channel.SendMessage(responseMessage);
+				await e.Message.Channel.SendMessageSafe(responseMessage);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("job"));

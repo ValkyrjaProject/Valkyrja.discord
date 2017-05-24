@@ -38,14 +38,14 @@ namespace Botwinder.Bot
 					string newString = "\n "+ (channel.Name == "@everyone" ? "@-everyone" : channel.Name) +" | "+ channel.Id.ToString();
 					if( response.Length + newString.Length >= GlobalConfig.MessageCharacterLimit )
 					{
-						await e.Message.Channel.SendMessage(response);
+						await e.Message.Channel.SendMessageSafe(response);
 						response = "";
 					}
 
 					response += newString;
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("getChannels"));
@@ -63,14 +63,14 @@ namespace Botwinder.Bot
 					string newString = "\n "+ (role.Name == "@everyone" ? "@-everyone" : role.Name) +" | "+ role.Id.ToString() +" | "+ role.Color.ToString();
 					if( response.Length + newString.Length >= GlobalConfig.MessageCharacterLimit )
 					{
-						await e.Message.Channel.SendMessage(response);
+						await e.Message.Channel.SendMessageSafe(response);
 						response = "";
 					}
 
 					response += newString;
 				}
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("getRoles"));
@@ -87,7 +87,7 @@ namespace Botwinder.Bot
 				List<Role> roles = null;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || (!guid.TryParse(e.TrimmedMessage, out id) && (roles = e.Message.Server.Roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower())).ToList()).Count() == 0) )
 				{
-					await e.Message.Channel.SendMessage("Role not found.");
+					await e.Message.Channel.SendMessageSafe("Role not found.");
 					return;
 				}
 				else if( id != 0 && (roleFromId = e.Message.Server.GetRole(id)) != null )
@@ -98,14 +98,14 @@ namespace Botwinder.Bot
 
 				if( roles == null || !roles.Any() )
 				{
-					await e.Message.Channel.SendMessage("Role not found.");
+					await e.Message.Channel.SendMessageSafe("Role not found.");
 					return;
 				}
 
 				foreach(Role role in roles)
 				{
 					string hex = BitConverter.ToString(new byte[]{role.Color.R, role.Color.G, role.Color.B}).Replace("-", "");
-					await e.Message.Channel.SendMessage(string.Format("Role: `{0}`\n  Id: `{1}`\n  Position: `{2}`\n  Color: `rgb({3},{4},{5})` | `hex(#{6})`", role.Name, role.Id, role.Position, role.Color.R, role.Color.G, role.Color.B, hex));
+					await e.Message.Channel.SendMessageSafe(string.Format("Role: `{0}`\n  Id: `{1}`\n  Position: `{2}`\n  Color: `rgb({3},{4},{5})` | `hex(#{6})`", role.Name, role.Id, role.Position, role.Color.R, role.Color.G, role.Color.B, hex));
 				}
 			};
 			commands.Add(newCommand);
@@ -119,7 +119,7 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessage("What name should the new role have?");
+					await e.Message.Channel.SendMessageSafe("What name should the new role have?");
 					return;
 				}
 
@@ -143,7 +143,7 @@ namespace Botwinder.Bot
 						client.LogException(exception, e);
 					}
 				}
-				await e.Message.Channel.SendMessage(result);
+				await e.Message.Channel.SendMessageSafe(result);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("createrole"));
@@ -156,7 +156,7 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) =>{
 				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
-					await e.Message.Channel.SendMessage("Invalid arguments.");
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.");
 					return;
 				}
 
@@ -164,7 +164,7 @@ namespace Botwinder.Bot
 				Role foundRole = null;
 				if( !guid.TryParse(e.MessageArgs[0], out id) || (foundRole = e.Message.Server.GetRole(id)) == null )
 				{
-					await e.Message.Channel.SendMessage("Invalid Role ID");
+					await e.Message.Channel.SendMessageSafe("Invalid Role ID");
 					return;
 				}
 
@@ -181,7 +181,7 @@ namespace Botwinder.Bot
 				}
 #pragma warning restore 0168
 
-				await e.Message.Channel.SendMessage(response);
+				await e.Message.Channel.SendMessageSafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("setcolor"));
@@ -192,7 +192,7 @@ namespace Botwinder.Bot
 			newCommand.Description = "Botwinder will leave this server.";
 			newCommand.RequiredPermissions = Command.PermissionType.ServerOwner;
 			newCommand.OnExecute += async (sender, e) =>{
-				await e.Message.Channel.SendMessage("You know where to find me! <http://botwinder.info>\n_\\*frameshifts out of the chat*_\n~");
+				await e.Message.Channel.SendMessageSafe("You know where to find me! <http://botwinder.info>\n_\\*frameshifts out of the chat*_\n~");
 				await Task.Delay(TimeSpan.FromSeconds(2f));
 				await Task.Delay(TimeSpan.FromSeconds(3f));
 				await e.Message.Server.Leave();
@@ -208,12 +208,12 @@ namespace Botwinder.Bot
 			newCommand.OnExecute += async (sender, e) => {
 				if( !e.Message.Server.CurrentUser.ServerPermissions.ManageChannels && !e.Message.Server.CurrentUser.ServerPermissions.Administrator )
 				{
-					await e.Message.Channel.SendMessage("I don't have `ManageChannels` permission >_<");
+					await e.Message.Channel.SendMessageSafe("I don't have `ManageChannels` permission >_<");
 					return;
 				}
 				if( e.Message.Server.Id == e.Message.Channel.Id )
 				{
-					await e.Message.Channel.SendMessage("I can not hide the default channel.");
+					await e.Message.Channel.SendMessageSafe("I can not hide the default channel.");
 					return;
 				}
 
@@ -224,7 +224,7 @@ namespace Botwinder.Bot
 				if( !string.IsNullOrEmpty(e.TrimmedMessage) && (e.TrimmedMessage == "delete" || e.TrimmedMessage == "silent") )
 					await e.Message.Delete();
 				else
-					await e.Message.Channel.SendMessage(originalPermissions.ReadMessages == PermValue.Deny ? "This channel is now visible." : "Channel hidden.");
+					await e.Message.Channel.SendMessageSafe(originalPermissions.ReadMessages == PermValue.Deny ? "This channel is now visible." : "Channel hidden.");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("hidechannel"));
@@ -257,7 +257,7 @@ namespace Botwinder.Bot
 					bool huge = e.Server.IsGlobalAdmin(e.Message.User);
 
 					op = Operation.Create<TUser>(client, e, true);
-					if( await op.Await(client, async () => await e.Message.Channel.SendMessage(string.Format(GlobalConfig.OperationQueuedText, client.CurrentOperations.Count, e.Command.ID))) )
+					if( await op.Await(client, async () => await e.Message.Channel.SendMessageSafe(string.Format(GlobalConfig.OperationQueuedText, client.CurrentOperations.Count, e.Command.ID))) )
 						return;
 					op.CurrentState = Operation.State.Running;
 
@@ -277,9 +277,9 @@ namespace Botwinder.Bot
 
 					await archive.ArchiveList(messages, e.TrimmedMessage.Contains("nice"));
 					if( messages.Count < GlobalConfig.ArchiveMessageLimit || huge )
-						await e.Message.Channel.SendMessage("Whew! I saved " + messages.Count + " messages.");
+						await e.Message.Channel.SendMessageSafe("Whew! I saved " + messages.Count + " messages.");
 					else
-						await e.Message.Channel.SendMessage("I couldn't get all of them, the channel is a bit too..**HUGE**! Anyway I saved the last " + messages.Count + " messages at least.\nIf you would like me to save more, please get in touch with Rhea... I'm scared of big files, I want her to watch over me >_<");
+						await e.Message.Channel.SendMessageSafe("I couldn't get all of them, the channel is a bit too..**HUGE**! Anyway I saved the last " + messages.Count + " messages at least.\nIf you would like me to save more, please get in touch with Rhea... I'm scared of big files, I want her to watch over me >_<");
 
 					if( e.Message.Server.GetUser(e.Message.Client.CurrentUser.Id).ServerPermissions.AttachFiles && (new FileInfo(path)).Length < 8000000 )
 					{
@@ -290,11 +290,11 @@ namespace Botwinder.Bot
 						}
 						else
 						{
-							await e.Message.Channel.SendMessage("The file seems to be too large to be able to upload it, you can poke `Rhea#0321` and she can send it to you :sunglasses:");
+							await e.Message.Channel.SendMessageSafe("The file seems to be too large to be able to upload it, you can poke `Rhea#0321` and she can send it to you :sunglasses:");
 						}
 					}
 					else
-						await e.Message.Channel.SendMessage("The file seems to be too large to be able to upload it (or I don't have permissions,) you can poke `Rhea#0321` and she can send it to you :sunglasses:");
+						await e.Message.Channel.SendMessageSafe("The file seems to be too large to be able to upload it (or I don't have permissions,) you can poke `Rhea#0321` and she can send it to you :sunglasses:");
 				} catch( Exception exception ) when( exception.GetType() != typeof(Discord.Net.HttpException) )
 				{
 					client.LogException(exception, e);
@@ -319,7 +319,7 @@ namespace Botwinder.Bot
 					Role roleFromId = null;
 					if( string.IsNullOrEmpty(e.TrimmedMessage) || !guid.TryParse(e.TrimmedMessage, out id) || (roleFromId = e.Message.Server.GetRole(id)) == null )
 					{
-						await e.Message.Channel.SendMessage("Role not found.");
+						await e.Message.Channel.SendMessageSafe("Role not found.");
 						return;
 					}
 
@@ -327,7 +327,7 @@ namespace Botwinder.Bot
 					int count = 0;
 					int fails = 0;
 					op = Operation.Create<TUser>(client, e, true);
-					if( await op.Await(client, async () => await e.Message.Channel.SendMessage(string.Format(GlobalConfig.OperationQueuedText, client.CurrentOperations.Count, e.Command.ID))) )
+					if( await op.Await(client, async () => await e.Message.Channel.SendMessageSafe(string.Format(GlobalConfig.OperationQueuedText, client.CurrentOperations.Count, e.Command.ID))) )
 						return;
 					op.CurrentState = Operation.State.Running;
 
@@ -355,7 +355,7 @@ namespace Botwinder.Bot
 							}
 						}
 					}
-					await e.Message.Channel.SendMessage(string.Format("Done!\n{0} successful;\n{1} failed! (It will fail to assign the role according to the role hierarchy.)", count, fails));
+					await e.Message.Channel.SendMessageSafe(string.Format("Done!\n{0} successful;\n{1} failed! (It will fail to assign the role according to the role hierarchy.)", count, fails));
 				} catch( Exception exception ) when( exception.GetType() != typeof(Discord.Net.HttpException) )
 				{
 					client.LogException(exception, e);
