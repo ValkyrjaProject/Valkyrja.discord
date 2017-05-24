@@ -413,7 +413,7 @@ namespace Botwinder.Modules
 				if( !this.HashedValues.ContainsKey(hash) )
 					this.HashedValues.Add(hash, new HashedValue(user.Id, server.ID));
 
-				verifyPm = "In order to get verified, you must reply to me with a hidden code within the below rules. " +
+				verifyPm = "In order to get verified, you must reply to me with a hidden code **within the below rules.** " +
 				           "Just the code by itself, do not add anything extra. Read the rules and you will find the code.\n" +
 				           "_(Beware that this will expire in a few hours, " +
 				           "if it does simply run the `verify` command in the server chat, " +
@@ -432,7 +432,7 @@ namespace Botwinder.Modules
 					if( (words = lines[i].Split(' ')).Length > 10 )
 					{
 						int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
-						lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, " the secret is: " + hash );
+						lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, " (the secret is: " + hash + ")" );
 
 						hashBuilder = new StringBuilder(lines.Length+1);
 						hashBuilder.AppendLine(verifyPm).AppendLine("");
