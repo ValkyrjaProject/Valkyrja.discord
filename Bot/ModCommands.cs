@@ -604,7 +604,6 @@ namespace Botwinder.Bot
 				try
 				{
 					List<User> mutedUsers = new List<User>();
-				    List<User> idMutedUsers = Utils.GetMentionedUsers(e);
 					lock(client.ServersLock)
 					{
 						foreach(User user in e.Message.MentionedUsers)
@@ -623,22 +622,6 @@ namespace Botwinder.Bot
 
 							mutedUsers.Add(user);
 						}
-					    foreach(User user in idMutedUsers)
-					    {
-					        if( e.Server.IsAdmin(user) || e.Server.IsModerator(user) || (e.Server.ServerConfig.MutedUsers != null && e.Server.ServerConfig.MutedUsers.Contains(user.Id)) )
-					            continue;
-
-					        if( e.Server.ServerConfig.MutedUsers == null )
-					            e.Server.ServerConfig.MutedUsers = new guid[1];
-					        else
-					            Array.Resize<guid>(ref e.Server.ServerConfig.MutedUsers, e.Server.ServerConfig.MutedUsers.Length + 1);
-
-					        e.Server.ServerConfig.MutedUsers[e.Server.ServerConfig.MutedUsers.Length - 1] = user.Id;
-					        e.Server.ServerConfig.MuteDuration = (e.Server.ServerConfig.MuteDuration < 5 ? 5 : e.Server.ServerConfig.MuteDuration > 60 ? 60 : e.Server.ServerConfig.MuteDuration);
-					        e.Server.ServerConfig.SaveAsync();
-
-					        mutedUsers.Add(user);
-					    }
 					}
 
 					foreach(User user in mutedUsers)
