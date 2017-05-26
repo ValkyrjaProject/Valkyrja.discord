@@ -153,7 +153,9 @@ namespace Botwinder.Modules
 						"    `{0}{1} close` - Close the current event (Irreversible, wipes the results as well!)\n" +
 						"    `{0}{1} signup @-mention` - Signup @-mentioned people.\n" +
 						"    `{0}{1} checkin @-mention` - Check @-mentioned people in.\n" +
-						"    `{0}{1} score value @-mention` - Give @-mentioned people score, where `value` is the number (points, time, whatever you wish - single number) This overwrites any previous score!\n" +
+						"    `{0}{1} score value @-mention` - Set absolute score of @-mentioned people, where `value` is the number (points, time, whatever you wish - single number) This overwrites any previous score!\n" +
+						"    `{0}{1} score+ value @-mention` - Add relative `value` to the total score for @-mentioned people.\n" +
+						"    `{0}{1} score- value @-mention` - Remove relative `value` from the total score for @-mentioned people.\n" +
 						"    `{0}{1} list` - Display list of all attendees.\n" +
 						"    `{0}{1} list present` - Display list of attendees who are checked-in.\n" +
 						"    `{0}{1} list missing` - Display list of attendees who are _not_ checked-in.\n" +
@@ -169,12 +171,12 @@ namespace Botwinder.Modules
 					responseMessage = invalidParameters;
 				}
 				else if( (!e.Server.IsAdmin(e.Message.User) && !e.Server.IsModerator(e.Message.User) && !e.Server.IsSubModerator(e.Message.User)) &&
-				         (e.MessageArgs[0] == "new" || e.MessageArgs[0] == "title" || e.MessageArgs[0] == "close" || e.MessageArgs[0] == "list" || e.MessageArgs[0] == "results" ||
-				          (e.Message.MentionedUsers.Count() > 0 && (e.MessageArgs[0] == "signup" || e.MessageArgs[0] == "checkin" || e.MessageArgs[0] == "score"))) ||
+				         (e.MessageArgs[0] == "new" || e.MessageArgs[0] == "title" || e.MessageArgs[0] == "close" || e.MessageArgs[0] == "list" || e.MessageArgs[0] == "results" || e.MessageArgs[0] == "score+" || e.MessageArgs[0] == "score-" ||
+				          (e.Message.MentionedUsers.Any() && (e.MessageArgs[0] == "signup" || e.MessageArgs[0] == "checkin" || e.MessageArgs[0] == "score"))) ||
 				         (!e.Server.IsGlobalAdmin(e.Message.User) && e.MessageArgs[0] == "reload"))
 				{
 					responseMessage = string.Format("I'm sorry, but only Moderators can use `{0}{1}{2}`", e.Server.ServerConfig.CommandCharacter, e.Command.ID, e.MessageArgs[0]);
-					if( e.MessageArgs[0] == "signup" || e.MessageArgs[0] == "checkin" || e.MessageArgs[0] == "score" )
+					if( e.MessageArgs[0] == "signup" || e.MessageArgs[0] == "checkin" || e.MessageArgs[0] == "score" || e.MessageArgs[0] == "score+" || e.MessageArgs[0] == "score-" )
 						responseMessage += " with mentions.";
 				}
 				else
@@ -359,7 +361,7 @@ namespace Botwinder.Modules
 								break;
 							}
 
-							responseMessage = string.Format("Score of {0:#0.###} was given to ", score);
+							responseMessage = string.Format("Score of {0:#0.###} was assigned to ", score);
 							for(int i = 0; i < users.Count; i++)
 							{
 								this[e.Server.ID].GetOrAddMember(users[i].Id, true).Score = score;
@@ -369,7 +371,73 @@ namespace Botwinder.Modules
 							save = true;
 						}
 							break;
-						default:
+							case "score+":
+							{
+								if( this[e.Server.ID] == null )
+								{
+									responseMessage = "We don't have an event right now, you're doomed to boredom!";
+									break;
+								}
+
+								List<Discord.User> users = new List<Discord.User>(e.Message.MentionedUsers);
+								if( users.Count == 0 )
+								{
+									responseMessage = "Please use @-mention to specify target users.";
+									break;
+								}
+
+								float score = 0f;
+								if( !float.TryParse(e.MessageArgs[1], out score) )
+								{
+									responseMessage = string.Format("That's a weird number o_o\nScore value has to be the first parameter after the keyword: `{0}{1} score+ 123 @-user`",
+										e.Server.ServerConfig.CommandCharacter, e.Command.ID);
+									break;
+								}
+
+								responseMessage = string.Format("Score of {0:#0.###} was given to ", score);
+								for(int i = 0; i < users.Count; i++)
+								{
+									this[e.Server.ID].GetOrAddMember(users[i].Id, true).Score += score;
+									responseMessage += string.Format((i == 0 ? "" : i == users.Count -1 ? " and " : ", ") + "<@{0}>", users[i].Id);
+								}
+								responseMessage += ".";
+								save = true;
+							}
+								break;
+							case "score-":
+							{
+								if( this[e.Server.ID] == null )
+								{
+									responseMessage = "We don't have an event right now, you're doomed to boredom!";
+									break;
+								}
+
+								List<Discord.User> users = new List<Discord.User>(e.Message.MentionedUsers);
+								if( users.Count == 0 )
+								{
+									responseMessage = "Please use @-mention to specify target users.";
+									break;
+								}
+
+								float score = 0f;
+								if( !float.TryParse(e.MessageArgs[1], out score) )
+								{
+									responseMessage = string.Format("That's a weird number o_o\nScore value has to be the first parameter after the keyword: `{0}{1} score- 123 @-user`",
+										e.Server.ServerConfig.CommandCharacter, e.Command.ID);
+									break;
+								}
+
+								responseMessage = string.Format("Score of {0:#0.###} was taken from ", score);
+								for(int i = 0; i < users.Count; i++)
+								{
+									this[e.Server.ID].GetOrAddMember(users[i].Id, true).Score -= score;
+									responseMessage += string.Format((i == 0 ? "" : i == users.Count -1 ? " and " : ", ") + "<@{0}>", users[i].Id);
+								}
+								responseMessage += ".";
+								save = true;
+							}
+								break;
+							default:
 							responseMessage = invalidParameters;
 							break;
 						}
