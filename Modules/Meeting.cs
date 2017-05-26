@@ -210,6 +210,8 @@ namespace Botwinder.Modules
 
 			public string Url{ get{ return "http://botwinder.info/" + Foldername + "/" + this.ChannelID.ToString() + "/" + this.MeetingName.Replace(" ", "%20") + "/meeting?date=" + this.Filename; } }
 
+			private readonly Regex RegexMarkdownTopicFilter = new Regex("([\\\\\\*_`\\/])", RegexOptions.Compiled);
+			private readonly Regex RegexMarkdownFilter = new Regex("([\\\\`])", RegexOptions.Compiled);
 
 			[NonSerialized] private Object _Lock = new Object();
 			[NonSerialized] public string Filename = "";
@@ -273,6 +275,7 @@ namespace Botwinder.Modules
 				this.OwnerID = message.User.Id;
 
 				string name = message.Text.Substring(message.Text.IndexOf(' ', message.Text.IndexOf(' ') + 1) + 1) + " (" + DateTime.UtcNow.ToString("yyyy-MM-dd") + ")";
+				name = this.RegexMarkdownTopicFilter.Replace(name, "");
 				this._MarkdownFile.LogMessageAsync("#" + name + "\n\n&nbsp;\n\n##Meeting minutes:", true);
 				SaveAsync();
 				return name;
@@ -283,6 +286,7 @@ namespace Botwinder.Modules
 			{
 				this.PreviousTopic = this.CurrentTopic;
 				this.CurrentTopic = message.Text.Substring(message.Text.IndexOf(' ', message.Text.IndexOf(' ') + 1) + 1);
+				this.CurrentTopic = this.RegexMarkdownTopicFilter.Replace(this.CurrentTopic, "");
 
 				this._MarkdownFile.LogMessageAsync("\n\n1. **" + this.CurrentTopic + "**", true);
 
@@ -391,6 +395,7 @@ namespace Botwinder.Modules
 			private string GetFormattedMessage(Discord.Message message, string prefix = null)
 			{
 				string text = message.RawText.Substring(message.RawText.IndexOf(' ', message.RawText.IndexOf(' ') + 1) + 1);
+				text = this.RegexMarkdownFilter.Replace(text, "");
 				text = text.Replace("_", "\\_").Replace("*", "\\*");
 				text = (string.IsNullOrEmpty(this.CurrentTopic) ? "\n" : "\n    ") + "* " + (string.IsNullOrWhiteSpace(prefix) ? "" : ("**" + prefix + "** ")) + text;
 				text = text.Replace("<@!" + message.User.Id + ">", "__" + ((message.User.Nickname == null || string.IsNullOrWhiteSpace(message.User.Nickname)) ? message.User.Name : message.User.Nickname) + "__");
