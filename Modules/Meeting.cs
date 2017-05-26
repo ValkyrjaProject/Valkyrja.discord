@@ -26,7 +26,8 @@ namespace Botwinder.Modules
 			Command newCommand = new Command("meeting");
 			newCommand.Type = Command.CommandType.ChatOnly;
 			newCommand.Description = "Manage a meeting that will create nice logs and meeting minutes on our website. For example see <http://botwinder.info/meetings/244607894165651457/Example%20meeting>.";
-			newCommand.OnExecute += async (sender, e) =>{
+			newCommand.OnExecute += async (sender, e) =>
+			{
 				string invalidArguments = string.Format(
 					"Use this command with the following arguments:\n" +
 					"  `{0}{1} start meetingName` - Start a new meeting with a name - please do not use any date in it, this will be added for you.\n" +
@@ -42,23 +43,26 @@ namespace Botwinder.Modules
 				);
 
 				if( e.MessageArgs == null || e.MessageArgs.Length == 0 ||
-				    (e.MessageArgs.Length < 2 && e.MessageArgs[0] != "end" && e.MessageArgs[0] != "undo" && e.MessageArgs[0] != "reload") )
+				    (e.MessageArgs.Length < 2 && e.MessageArgs[0] != "end" && e.MessageArgs[0] != "undo" &&
+				     e.MessageArgs[0] != "reload") )
 				{
 					await e.Message.Channel.SendMessageSafe(invalidArguments);
 					return;
 				}
 
 				string response = "";
-				Meeting meeting = this.MeetingsCache.ContainsKey(e.Message.Channel.Id) ? this.MeetingsCache[e.Message.Channel.Id] : null;
+				Meeting meeting = this.MeetingsCache.ContainsKey(e.Message.Channel.Id)
+					? this.MeetingsCache[e.Message.Channel.Id]
+					: null;
 				if( meeting == null )
 				{
 					string path = Path.Combine(Meeting.Foldername, e.Message.Channel.Id.ToString());
 					if( Directory.Exists(Meeting.Foldername) && Directory.Exists(path) )
 					{
 						DirectoryInfo dirChannel = new DirectoryInfo(path);
-						foreach(DirectoryInfo dir in dirChannel.GetDirectories())
+						foreach( DirectoryInfo dir in dirChannel.GetDirectories() )
 						{
-							foreach(FileInfo file in dir.GetFiles())
+							foreach( FileInfo file in dir.GetFiles() )
 							{
 								if( file.Name.EndsWith(".json") )
 								{
@@ -78,7 +82,7 @@ namespace Botwinder.Modules
 				if( meeting == null && e.MessageArgs[0] != "start" && e.MessageArgs[0] != "reload" )
 				{
 					await e.Message.Channel.SendMessageSafe(string.Format("I couldn't find open meeting. " +
-					                                                  "If you did not start it, please have the owner of the meeting run any command, or `{0}{1} reload.`",
+					                                                      "If you did not start it, please have the owner of the meeting run any command, or `{0}{1} reload.`",
 						e.Server.ServerConfig.CommandCharacter, e.Command.ID));
 					return;
 				}
@@ -89,72 +93,87 @@ namespace Botwinder.Modules
 					return;
 				}
 
-				switch(e.MessageArgs[0])
+				switch( e.MessageArgs[0] )
 				{
-				case "reload":
-					if( meeting == null )
-						response = "I did not find your meeting, you have to be in the same channel and stuff...";
-					else
-						response = "You can continue your meeting!";
-					break;
-				case "start":
-					if( meeting != null && meeting.IsActive )
-					{
-						response = "There is another meeting in this channel, please consider closing it first!";
+					case "reload":
+						if( meeting == null )
+							response = "I did not find your meeting, you have to be in the same channel and stuff...";
+						else
+							response = "You can continue your meeting!";
 						break;
-					}
-
-					string trimmedMessage = e.TrimmedMessage.Substring(e.TrimmedMessage.IndexOf(e.MessageArgs[1]));
-					string filename = "";
-					for(int i = 0; true; i++)
-					{
-						filename =  string.Format("{0}_{1:00}", DateTime.UtcNow.ToString("yyyy-MM-dd"), i);
-						if( !File.Exists(Path.Combine(Meeting.Foldername, e.Message.Channel.Id.ToString(), trimmedMessage, filename+".json")) )
+					case "start":
+						if( meeting != null && meeting.IsActive )
+						{
+							response = "There is another meeting in this channel, please consider closing it first!";
 							break;
-					}
-					meeting = Meeting.Load(e.Message.Channel.Id, trimmedMessage, filename);
-					if( this.MeetingsCache.ContainsKey(e.Message.Channel.Id) )
-						this.MeetingsCache[e.Message.Channel.Id] = meeting;
-					else
-						this.MeetingsCache.Add(e.Message.Channel.Id, meeting);
+						}
 
-					response = string.Format("Your meeting __**{0}**__ has started, you can follow the minutes here: <{1}>", meeting.Start(e.Message), meeting.Url);
-					break;
-				case "topic":
-					response = string.Format((string.IsNullOrWhiteSpace(meeting.CurrentTopic) ? "" : "Topic changed from: _\""+ meeting.CurrentTopic +"\"_\n") + "New topic: **{0}**", meeting.Topic(e.Message));
-					break;
-				case "link":
-				case "info":
-					meeting.Info(e.Message);
-					break;
-				case "idea":
-					meeting.Idea(e.Message);
-					break;
-				case "agreed":
-					meeting.Agreed(e.Message);
-					break;
-				case "action":
-					meeting.Action(e.Message);
-					break;
-				case "end":
-					meeting.End();
-					await e.Message.Channel.SendMessageSafe(string.Format("Your meeting __**{0}**__ ended, please wait a moment while I finish up the logs.", meeting.MeetingName));
-					await Task.Delay(TimeSpan.FromMilliseconds(100));
-					await meeting.AppendLog(e.Message);
+						string trimmedMessage = e.TrimmedMessage.Substring(e.TrimmedMessage.IndexOf(e.MessageArgs[1]));
+						if( e.Server.ServerConfig.IgnoreEveryone )
+							trimmedMessage = trimmedMessage.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+						string filename = "";
+						for( int i = 0; true; i++ )
+						{
+							filename = string.Format("{0}_{1:00}", DateTime.UtcNow.ToString("yyyy-MM-dd"), i);
+							if( !File.Exists(Path.Combine(Meeting.Foldername, e.Message.Channel.Id.ToString(), trimmedMessage,
+								filename + ".json")) )
+								break;
+						}
+						meeting = Meeting.Load(e.Message.Channel.Id, trimmedMessage, filename);
+						if( this.MeetingsCache.ContainsKey(e.Message.Channel.Id) )
+							this.MeetingsCache[e.Message.Channel.Id] = meeting;
+						else
+							this.MeetingsCache.Add(e.Message.Channel.Id, meeting);
 
-					response = string.Format("Done, here you go! =)\nMinutes: <{0}>", meeting.Url);
-					break;
-				case "undo":
-					string undo = meeting.Undo();
-					response = string.IsNullOrWhiteSpace(undo) ? "I did not remove anything, you are at the beginning." : ("Removed: " + undo);
-					break;
-				default:
-					response = invalidArguments;
-					break;
+						response = string.Format("Your meeting __**{0}**__ has started, you can follow the minutes here: <{1}>",
+							meeting.Start(e.Message), meeting.Url);
+						break;
+					case "topic":
+						response = string.Format(
+							(string.IsNullOrWhiteSpace(meeting.CurrentTopic)
+								? ""
+								: "Topic changed from: _\"" + meeting.CurrentTopic + "\"_\n") + "New topic: **{0}**", meeting.Topic(e.Message));
+						break;
+					case "link":
+					case "info":
+						meeting.Info(e.Message);
+						break;
+					case "idea":
+						meeting.Idea(e.Message);
+						break;
+					case "agreed":
+						meeting.Agreed(e.Message);
+						break;
+					case "action":
+						meeting.Action(e.Message);
+						break;
+					case "end":
+						meeting.End();
+						await e.Message.Channel.SendMessageSafe(string.Format(
+							"Your meeting __**{0}**__ ended, please wait a moment while I finish up the logs.", meeting.MeetingName));
+						await Task.Delay(TimeSpan.FromMilliseconds(100));
+						await meeting.AppendLog(e.Message);
+
+						response = string.Format("Done, here you go! =)\nMinutes: <{0}>", meeting.Url);
+						break;
+					case "undo":
+						string undo = meeting.Undo();
+						response = string.IsNullOrWhiteSpace(undo)
+							? "I did not remove anything, you are at the beginning."
+							: ("Removed: " + undo);
+						break;
+					default:
+						response = invalidArguments;
+						break;
 				}
 
 				if( !string.IsNullOrWhiteSpace(response) )
+				{
+					if( e.Server.ServerConfig.IgnoreEveryone )
+						response = response.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 					await e.Message.Channel.SendMessageSafe(response);
+				}
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("meetings"));
