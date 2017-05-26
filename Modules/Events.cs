@@ -155,7 +155,7 @@ namespace Botwinder.Modules
 						"    `{0}{1} checkin @-mention` - Check @-mentioned people in.\n" +
 						"    `{0}{1} score value @-mention` - Set absolute score of @-mentioned people, where `value` is the number (points, time, whatever you wish - single number) This overwrites any previous score!\n" +
 						"    `{0}{1} score+ value @-mention` - Add relative `value` to the total score for @-mentioned people.\n" +
-						"    `{0}{1} score- value @-mention` - Remove relative `value` from the total score for @-mentioned people.\n" +
+						"    `{0}{1} score- value @-mention` - Subtract relative `value` from the total score for @-mentioned people.\n" +
 						"    `{0}{1} list` - Display list of all attendees.\n" +
 						"    `{0}{1} list present` - Display list of attendees who are checked-in.\n" +
 						"    `{0}{1} list missing` - Display list of attendees who are _not_ checked-in.\n" +
