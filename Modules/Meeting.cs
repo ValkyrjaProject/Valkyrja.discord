@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.Entities;
 using Newtonsoft.Json;
@@ -14,8 +15,9 @@ namespace Botwinder.Modules
 	public class Meetings: IModule
 	{
 		public bool UpdateInProgress{ get; set; } = false;
+		private readonly Regex RegexFilenameFilter = new Regex("([^\\w\\s\\d\\-_~,;\\[\\]\\(\\).])|(\\.\\.+)", RegexOptions.Compiled);
 
-		private ConcurrentDictionary<guid, Meeting> MeetingsCache = new ConcurrentDictionary<guid, Meeting>();
+		private readonly ConcurrentDictionary<guid, Meeting> MeetingsCache = new ConcurrentDictionary<guid, Meeting>();
 
 
 		public List<Command> Init<TUser>(IBotwinderClient<TUser> client) where TUser : UserData, new()
@@ -111,6 +113,9 @@ namespace Botwinder.Modules
 						string trimmedMessage = e.TrimmedMessage.Substring(e.TrimmedMessage.IndexOf(e.MessageArgs[1]));
 						if( e.Server.ServerConfig.IgnoreEveryone )
 							trimmedMessage = trimmedMessage.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
+						trimmedMessage = this.RegexFilenameFilter.Replace(trimmedMessage, "");
+
 						string filename = "";
 						for( int i = 0; true; i++ )
 						{
