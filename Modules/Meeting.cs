@@ -27,6 +27,7 @@ namespace Botwinder.Modules
 // !meeting
 			Command newCommand = new Command("meeting");
 			newCommand.Type = Command.CommandType.ChatOnly;
+			newCommand.SendTyping = false;
 			newCommand.Description = "Manage a meeting that will create nice logs and meeting minutes on our website. For example see <http://botwinder.info/meetings/244607894165651457/Example%20meeting>.";
 			newCommand.OnExecute += async (sender, e) =>
 			{
