@@ -873,6 +873,48 @@ namespace Botwinder.Bot
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("addwarning"));
+// !issueWarning
+		    newCommand = new Command("issueWarning");
+		    newCommand.Type = Command.CommandType.ChatOnly;
+		    newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database **and** PM to the user.";
+		    newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator | Command.PermissionType.SubModerator;
+		    newCommand.OnExecute += async (sender, e) =>{
+		        if( string.IsNullOrEmpty(e.TrimmedMessage) )
+		        {
+		            await e.Message.Channel.SendMessage("You're missing something x_X");
+		            return;
+		        }
+
+		        List<TUser> mentionedUsers = Utils.GetMentionedUsersData<TUser>(e);
+		        List<User> usersToMessage = Utils.GetMentionedUsers(e); //gets the users to be messaged
+
+		        if( mentionedUsers.Count == 0 )
+		        {
+		            await e.Message.Channel.SendMessage("I couldn't find them :(");
+		            return;
+		        }
+
+		        string warning = "";
+		        for(int i = mentionedUsers.Count; i < e.MessageArgs.Length; i++)
+		        {
+		            warning += e.MessageArgs[i] + " ";
+		        }
+
+		        foreach (TUser user in mentionedUsers)
+		        {
+		            user.AddWarning(warning);
+		        }
+		        foreach (User user in usersToMessage) //iterates through all users mentioned
+		        {
+		            await user.SendMessage("The moderators of " + e.Message.Server.Name +
+		                                   " have issued you a warning: " + warning); //sends the warning message
+		        }
+		        (e.Server as Server<TUser>).UserDatabase.SaveAsync();
+		        await e.Message.Channel.SendMessage("It has been done!");
+		    };
+		    commands.Add(newCommand);
+		    commands.Add(newCommand.CreateAlias("issuewarning"));
+
 
 			newCommand = newCommand.CreateCopy("issueWarning");
 			newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database. This will also be PMed to the user.";
