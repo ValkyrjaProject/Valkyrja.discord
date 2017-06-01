@@ -95,9 +95,9 @@ namespace Botwinder.Modules
 			public const string HitboxTitle = "media_status";
 			public const string HitboxUrl = "media_name"; //"channel_link"; -> that doesn't work...
 
-			public const string BeamBaseUrl = "https://beam.pro/api/v1/channels/";
+			public const string BeamBaseUrl = "https://beam.pro/api/v1/resources/";
 			public const string BeamIsLive = "online"; //bool
-			public const string BeamDisplayName = "token";
+			public const string BeamDisplayName = "token"; //this may be "channelIdOrToken"
 			public const string BeamGameParent = "type"; //object
 			public const string BeamGame = "name";
 			public const string BeamTitle = "name";
