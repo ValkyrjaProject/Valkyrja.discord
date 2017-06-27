@@ -444,7 +444,7 @@ namespace Botwinder.Modules
 				{
 					jObject = await RequestJson(uri);
 					JToken game = null;
-					if( jObject == null || (game = jObject.Value<JToken>(Constants.\GameParent)) == null || !game.Any() )
+					if( jObject == null || (game = jObject.Value<JToken>(Constants.MixerGameParent)) == null || !game.Any() )
 						break;
 
 					info = new StreamInfo(channelConfig, jObject.Value<bool>(Constants.MixerIsLive), jObject.Value<string>(Constants.MixerDisplayName), game.Value<string>(Constants.MixerGame), jObject.Value<string>(Constants.MixerTitle), "https://mixer.com/" + channelConfig.ChannelName);
