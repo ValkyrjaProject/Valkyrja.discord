@@ -46,7 +46,7 @@ namespace Botwinder.Modules
 			//Youtube,
 			Twitch,
 			Hitbox,
-			Beam
+			Mixer
 		}
 
 		public class StreamInfo
@@ -95,12 +95,12 @@ namespace Botwinder.Modules
 			public const string HitboxTitle = "media_status";
 			public const string HitboxUrl = "media_name"; //"channel_link"; -> that doesn't work...
 
-			public const string BeamBaseUrl = "https://beam.pro/api/v1/channels/";
-			public const string BeamIsLive = "online"; //bool
-			public const string BeamDisplayName = "token";
-			public const string BeamGameParent = "type"; //object
-			public const string BeamGame = "name";
-			public const string BeamTitle = "name";
+			public const string MixerBaseUrl = "https://mixer.com/api/v1/channels/";
+			public const string MixerIsLive = "online"; //bool
+			public const string MixerDisplayName = "token";
+			public const string MixerGameParent = "type"; //object
+			public const string MixerGame = "name";
+			public const string MixerTitle = "name";
 		}
 
 
@@ -122,7 +122,7 @@ namespace Botwinder.Modules
 				commands = new List<Command>();
 				newCommand = new Command("livestreamAdd");
 				newCommand.Type = Command.CommandType.ChatOnly;
-				newCommand.Description = "Add a channel to watch list, to send a short notification message in \"this\" channel, whenever they go live. Supported services are: `twitch`, `hitbox` & `beam` (more will be added soon.) Example: `livestreamAdd twitch RheaAyase` (Use of this command and bot's response will be deleted for your convenience.)";
+				newCommand.Description = "Add a channel to watch list, to send a short notification message in \"this\" channel, whenever they go live. Supported services are: `twitch`, `hitbox` & `mixer` (more will be added soon.) Example: `livestreamAdd twitch RheaAyase` (Use of this command and bot's response will be deleted for your convenience.)";
 				newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator;
 				newCommand.OnExecute += async (sender, e) => {
 					await e.Message.Channel.SendMessageSafe("Livestream notifications are currently disabled for technical difficulties. Please be patient, we are working on it.");
@@ -151,7 +151,7 @@ namespace Botwinder.Modules
 // !livestreamAdd
 			newCommand = new Command("livestreamAdd");
 			newCommand.Type = Command.CommandType.ChatOnly;
-			newCommand.Description = "Add a channel to watch list, to send a short notification message in \"this\" channel, whenever they go live. Supported services are: `twitch`, `hitbox` & `beam` (more will be added soon.) Example: `livestreamAdd twitch RheaAyase` (Use of this command and bot's response will be deleted for your convenience.)";
+			newCommand.Description = "Add a channel to watch list, to send a short notification message in \"this\" channel, whenever they go live. Supported services are: `twitch`, `hitbox` & `mixer` (more will be added soon.) Example: `livestreamAdd twitch RheaAyase` (Use of this command and bot's response will be deleted for your convenience.)";
 			newCommand.RequiredPermissions = Command.PermissionType.ServerOwner | Command.PermissionType.Admin | Command.PermissionType.Moderator;
 			newCommand.OnExecute += async (sender, e) =>{
 				Discord.Message responseMessage;
@@ -166,8 +166,8 @@ namespace Botwinder.Modules
 						type = ServiceType.Twitch;
 					if( e.MessageArgs[0].ToLower() == ServiceType.Hitbox.ToString().ToLower() )
 						type = ServiceType.Hitbox;
-					if( e.MessageArgs[0].ToLower() == ServiceType.Beam.ToString().ToLower() )
-						type = ServiceType.Beam;
+					if( e.MessageArgs[0].ToLower() == ServiceType.Mixer.ToString().ToLower() )
+						type = ServiceType.Mixer;
 
 					if( type == ServiceType.None )
 					{
@@ -210,8 +210,8 @@ namespace Botwinder.Modules
 						type = ServiceType.Twitch;
 					if( e.MessageArgs[0] == ServiceType.Hitbox.ToString().ToLower() )
 						type = ServiceType.Hitbox;
-					if( e.MessageArgs[0] == ServiceType.Beam.ToString().ToLower() )
-						type = ServiceType.Beam;
+					if( e.MessageArgs[0] == ServiceType.Mixer.ToString().ToLower() )
+						type = ServiceType.Mixer;
 
 					if( type == ServiceType.None )
 						responseMessage = await e.Message.Channel.SendMessage("That's an invalid streaming service!");
@@ -440,14 +440,14 @@ namespace Botwinder.Modules
 					channel = stream.ElementAtOrDefault(0);
 					info = new StreamInfo(channelConfig, channel.Value<string>(Constants.HitboxIsLive) == "1", channel.Value<string>(Constants.HitboxDisplayName), channel.Value<string>(Constants.HitboxGame), channel.Value<string>(Constants.HitboxTitle), "http://www.hitbox.tv/" + channelConfig.ChannelName);
 				}break;
-			case ServiceType.Beam:
+			case ServiceType.Mixer:
 				{
 					jObject = await RequestJson(uri);
 					JToken game = null;
-					if( jObject == null || (game = jObject.Value<JToken>(Constants.BeamGameParent)) == null || !game.Any() )
+					if( jObject == null || (game = jObject.Value<JToken>(Constants.\GameParent)) == null || !game.Any() )
 						break;
 
-					info = new StreamInfo(channelConfig, jObject.Value<bool>(Constants.BeamIsLive), jObject.Value<string>(Constants.BeamDisplayName), game.Value<string>(Constants.BeamGame), jObject.Value<string>(Constants.BeamTitle), "https://beam.pro/" + channelConfig.ChannelName);
+					info = new StreamInfo(channelConfig, jObject.Value<bool>(Constants.MixerIsLive), jObject.Value<string>(Constants.MixerDisplayName), game.Value<string>(Constants.MixerGame), jObject.Value<string>(Constants.MixerTitle), "https://mixer.com/" + channelConfig.ChannelName);
 				}break;
 			default:
 				throw new NotImplementedException(channelConfig.Type.GetType().ToString() + " is not implemented.");
@@ -464,8 +464,8 @@ namespace Botwinder.Modules
 				return Constants.TwitchStreamUrl + channelConfig.ChannelName;
 			case ServiceType.Hitbox:
 				return Constants.HitboxBaseUrl + channelConfig.ChannelName;
-			case ServiceType.Beam:
-				return Constants.BeamBaseUrl + channelConfig.ChannelName;
+			case ServiceType.Mixer:
+				return Constants.MixerBaseUrl + channelConfig.ChannelName;
 			default:
 				throw new NotImplementedException(channelConfig.Type.GetType().ToString() + " is not implemented.");
 			}
