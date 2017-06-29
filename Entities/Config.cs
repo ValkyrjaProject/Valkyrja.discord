@@ -53,6 +53,7 @@ namespace Botwinder.Entities
 		public guid MainLogChannelID = 170139120318808065;
 		public guid[] PartneredServerIDs = null;
 		public guid[] PartneredUserIDs = null;
+		public int VipUsercountThreshold = 20000;
 		public string CommandCharacter = "!";
 		public int AntispamClearInterval = 10;
 		public int AntispamPermitDuration = 180;
