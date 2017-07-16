@@ -11,6 +11,7 @@ namespace Botwinder.Entities
 	{
 		public const string DefaultFolder = "config";
 		public const string Filename = "config.json";
+		public const string CommandsListFile = "commandsList.json";
 		public const string DataFolder = "data";
 		public const string BanDataFolder = "assetsBans";
 		public const string BunnehDataFolder = "bunneh";
