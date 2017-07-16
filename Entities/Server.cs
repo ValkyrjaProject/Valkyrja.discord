@@ -51,8 +51,7 @@ namespace Botwinder.Entities
 		public Discord.Server DiscordServer{ get; set; }
 
 		/// <summary> Commands that can be used on this server. Please use Botwinder.AddCommand to correctly add commands, and avoid directly changing this collection. </summary>
-		public Dictionary<string, Command> Commands{ get{ return this._Commands; } }
-		private Dictionary<string, Command> _Commands = new Dictionary<string, Command>();
+		public Dictionary<string, Command> Commands{ get; set; }
 
 		public DateTime ClearAntispamMuteTime = DateTime.UtcNow;
 		public Dictionary<guid, int> AntispamMuteCount{ get{ return this._AntispamMuteCount; } }
