@@ -15,6 +15,7 @@ namespace Botwinder.Entities
 		public CommandConfig.PermissionOverrides PermissionOverrides = CommandConfig.PermissionOverrides.Default;
 		public bool DeleteRequest = false;
 		public guid[] ChannelBlacklist = null;
+		public guid[] ChannelWhitelist = null;
 
 		public CommandOptions(string id)
 		{

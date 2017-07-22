@@ -202,7 +202,14 @@ namespace Botwinder.Entities
 						return false;
 
 			//Custom Command Channel Permissions
-			if( this.RequiredPermissions != PermissionType.OwnerOnly && channel != null && commandOptions != null && commandOptions.ChannelBlacklist != null && commandOptions.ChannelBlacklist.Contains(channel.Id) )
+			if( this.RequiredPermissions != PermissionType.OwnerOnly && channel != null &&
+			    commandOptions != null && commandOptions.ChannelBlacklist != null &&
+			    commandOptions.ChannelBlacklist.Contains(channel.Id) )
+				return false;
+
+			if( this.RequiredPermissions != PermissionType.OwnerOnly && channel != null &&
+			    commandOptions != null && commandOptions.ChannelWhitelist != null &&
+			    !commandOptions.ChannelWhitelist.Contains(channel.Id) )
 				return false;
 
 			//Custom Command Permission Overrides
