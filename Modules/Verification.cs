@@ -2,13 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.Entities;
 using Discord;
+using Discord.Net;
 using RedditSharp;
-
+using RestSharp.Extensions;
 using guid = System.UInt64;
 
 namespace Botwinder.Modules
@@ -502,6 +505,7 @@ namespace Botwinder.Modules
 
 			userData.Verified = true;
 			server.UserDatabase.SaveAsync();
+			string response = string.Format(VerifyDonePM, server.DiscordServer.Name);
 
 			try
 			{
@@ -509,8 +513,10 @@ namespace Botwinder.Modules
 				if( verifiedRole != null )
 					await user.AddRoles(verifiedRole);
 			}
-			catch( Exception exception )
+			catch( HttpException exception )
 			{
+				response = "I'm sorry but something went wrong. " + (exception.StatusCode == HttpStatusCode.Forbidden ? "Insufficient permissions to assign the role." : "Unknown error (random Discord derp?)" );
+
 				if( HandleException != null )
 					HandleException(this,
 						new ModuleExceptionArgs(exception, server.Name + ": Failed to assign VerifyRole to " + user.Name));
@@ -521,7 +527,7 @@ namespace Botwinder.Modules
 			try
 			{
 				if( !alreadyVerified )
-					await user.SendMessageSafe(string.Format(VerifyDonePM, server.DiscordServer.Name));
+					await user.SendMessageSafe(response);
 			}
 			catch( Exception ){}
 		}
