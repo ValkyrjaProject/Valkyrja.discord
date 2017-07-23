@@ -739,7 +739,7 @@ namespace Botwinder.Bot
 
 					if( foundUsers == null || foundUsers.Count == 0 )
 					{
-						await e.Message.Channel.SendMessageSafe("I couldn't find them on this server, try using `!find` to search the whole database :)");
+						await e.Message.Channel.SendMessageSafe("I couldn't find them on this server, try using `"+ e.Server.ServerConfig.CommandCharacter +"find` to search the whole database :)");
 						return;
 					}
 					if( foundUsers.Count > GlobalConfig.WhoisCommandLimit )
