@@ -56,6 +56,9 @@ namespace Botwinder.Entities
 		/// <summary> True if this command can not be changed by `permissions` or `restrict` </summary>
 		public bool IsCoreCommand{ get; set; }
 
+		/// <summary> True if this is a custom command. </summary>
+		public bool IsCustomCommand{ get; set; }
+
 		/// <summary> Set ServerWhitelistEnabled = true; to use the ServerWhitelist. Otherwise the command will be available on all the servers. </summary>
 		public bool ServerWhitelistEnabled = false;
 
