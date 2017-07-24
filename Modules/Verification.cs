@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -425,26 +426,37 @@ namespace Botwinder.Modules
 				string[] lines = server.ServerConfig.VerifyPM.Split('\n');
 				string[] words = null;
 				bool found = false;
-				for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); i >= lines.Length / 2; i-- )
+				try
 				{
-					if( i <= lines.Length / 2 )
+					for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); i >= lines.Length / 2; i-- )
 					{
-						i = lines.Length - 1;
-						continue;
-					}
-					if( (words = lines[i].Split(' ')).Length > 10 )
-					{
-						int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
-						lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, " the secret is: " + hash + " " );
+						if( i <= lines.Length / 2 )
+						{
+							i = lines.Length - 1;
+							continue;
+						}
+						if( (words = lines[i].Split(' ')).Length > 10 )
+						{
+							int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
+							lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, " the secret is: " + hash + " ");
 
-						hashBuilder = new StringBuilder(lines.Length+1);
-						hashBuilder.AppendLine(verifyPm).AppendLine("");
-						for(int j = 0; j < lines.Length; j++)
-							hashBuilder.AppendLine(lines[j]);
-						verifyPm = hashBuilder.ToString();
-						found = true;
-						break;
+							hashBuilder = new StringBuilder(lines.Length + 1);
+							hashBuilder.AppendLine(verifyPm).AppendLine("");
+							for( int j = 0; j < lines.Length; j++ )
+								hashBuilder.AppendLine(lines[j]);
+							verifyPm = hashBuilder.ToString();
+							found = true;
+							break;
+						}
 					}
+				}
+				catch(Exception e)
+				{
+					// This is ignored because user. Send them a message to fix it.
+					found = false;
+
+					if( HandleException != null )
+						HandleException(this, new ModuleExceptionArgs(e, "Module.Verification.VerifyUserPM failed for "+ server.ID.ToString()));
 				}
 
 				if( !found )
