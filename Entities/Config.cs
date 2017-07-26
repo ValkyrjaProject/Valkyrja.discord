@@ -194,6 +194,7 @@ namespace Botwinder.Entities
 		public bool IgnoreBots{ get; set; }
 		public bool IgnoreEveryone{ get; set; }
 		public string CommandCharacter{ get; set; }
+		public string AltCommandPrefix{ get; set; }
 		public bool ExecuteCommandsOnEditedMessages{ get; set; }
 
 		public bool PrioritizeAntispam{ get; set; }
@@ -300,6 +301,7 @@ namespace Botwinder.Entities
 			this.IgnoreBots = true;
 			this.IgnoreEveryone = true;
 			this.CommandCharacter = "!";
+			this.AltCommandPrefix = "";
 			this.ExecuteCommandsOnEditedMessages = true;
 
 			this.PrioritizeAntispam = false;
