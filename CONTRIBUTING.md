@@ -94,4 +94,4 @@ Please try to set-up your IDE to handle this for you:
 
 ### Import Jetbrains Rider configuration
 
-You can just import [my Jetbrains Rider settings](https://www.dropbox.com/s/wo9g5kd63zs983a/jetbrains-rider.jar) =)
+You can just import [my Jetbrains Rider settings](https://cloud.rhea-ayase.eu/s/VCl0MmI1qMbNCIP) =)
