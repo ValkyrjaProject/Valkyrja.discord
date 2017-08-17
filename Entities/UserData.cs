@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-
+using System.Runtime.Remoting.Messaging;
 using guid = System.UInt64;
 
 namespace Botwinder.Entities
@@ -46,6 +46,8 @@ namespace Botwinder.Entities
 		/// <summary> Returns false in case the username is already in the list. </summary>
 		public bool AddName(string username)
 		{
+			return true; //HACK - legal
+
 			if( this.Names == null )
 			{
 				this.Names = new string[1];
@@ -64,6 +66,8 @@ namespace Botwinder.Entities
 		/// <summary> Returns false in case the username is already in the list. </summary>
 		public bool AddNickname(string username)
 		{
+			return true; //HACK - legal
+
 			if( string.IsNullOrEmpty(username) )
 				return false;
 
@@ -84,6 +88,8 @@ namespace Botwinder.Entities
 
 		public string GetNames()
 		{
+			return "Unable to retrieve usernames. Feature temporarily disabled."; //HACK - legal
+
 			if( this.Names == null )
 			{
 				return "";
@@ -103,6 +109,8 @@ namespace Botwinder.Entities
 
 		public string GetNicknames()
 		{
+			return "Unable to retrieve usernames. Feature temporarily disabled."; //HACK - legal
+
 			if( this.Nicknames == null )
 			{
 				return "";
