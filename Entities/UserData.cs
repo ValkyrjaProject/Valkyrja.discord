@@ -38,16 +38,14 @@ namespace Botwinder.Entities
 		public UserData(){}
 		public UserData(Discord.User user)
 		{
-			AddName(user.Name);
-			AddNickname(user.Nickname);
+			//AddName(user.Name); //HACK - legal
+			//AddNickname(user.Nickname); //HACK - legal
 			this.ID = user.Id;
 		}
 
 		/// <summary> Returns false in case the username is already in the list. </summary>
 		public bool AddName(string username)
 		{
-			return true; //HACK - legal
-
 			if( this.Names == null )
 			{
 				this.Names = new string[1];
@@ -66,8 +64,6 @@ namespace Botwinder.Entities
 		/// <summary> Returns false in case the username is already in the list. </summary>
 		public bool AddNickname(string username)
 		{
-			return true; //HACK - legal
-
 			if( string.IsNullOrEmpty(username) )
 				return false;
 
@@ -109,7 +105,7 @@ namespace Botwinder.Entities
 
 		public string GetNicknames()
 		{
-			return "Unable to retrieve usernames. Feature temporarily disabled."; //HACK - legal
+			return "Unable to retrieve nicknames. Feature temporarily disabled."; //HACK - legal
 
 			if( this.Nicknames == null )
 			{

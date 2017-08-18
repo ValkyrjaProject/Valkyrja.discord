@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.IO;
+using System.Runtime.Remoting.Messaging;
 using Newtonsoft.Json;
 
 using guid = System.UInt64;
@@ -121,8 +122,8 @@ namespace Botwinder.Entities
 				return this._Dictionary[user.Id];
 
 			TUser userData = new TUser();
-			userData.AddName(user.Name);
-			userData.AddNickname(user.Nickname);
+			//userData.AddName(user.Name); //HACK legal
+			//userData.AddNickname(user.Nickname); //HACK legal
 			userData.ID = user.Id;
 			this._Dictionary.Add(user.Id, userData);
 			return userData;
