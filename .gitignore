@@ -2,6 +2,7 @@
 
 ## Botwinder specific:
 Core/
+Secure/
 Bot/bin/
 Modules/bin/
 Entities/bin/

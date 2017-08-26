@@ -2,8 +2,7 @@
 
 namespace Botwinder.entities
 {
-	public class UserData
-	{
-
-	}
+    public class GlobalConfig
+    {
+    }
 }

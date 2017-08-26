@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Botwinder.core.csproj" />
+    <ProjectReference Include="..\Entities\Botwinder.entities.csproj" />
+    <ProjectReference Include="..\Modules\Botwinder.modules.csproj" />
+    <ProjectReference Include="..\Secure\Botwinder.secure.csproj" />
+  </ItemGroup>
+</Project>
