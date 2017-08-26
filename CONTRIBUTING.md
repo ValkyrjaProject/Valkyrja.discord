@@ -11,11 +11,11 @@ As a contributor you can directly commit to the project. Please create a new bra
     * `improvement-123-youtubeNotifications` (for issue `#123`)
     * `fix-123` (for issue `#123`) _Please don't use **just** the number for bigger features, add some title to know what's that about without having to look it up._
 2. Commit your code properly into your branch as you work on it.
-  1. Recommended IDE to write your code:
-    * [Jetbrains Rider](https://www.jetbrains.com/rider) - Windows, Linux and Mac.
+  1. Recommended IDE to write your code (You can also refer to [fedoraloves.net](http://fedoraloves.net) for further information on C# in Fedora Linux.)
+    * [Jetbrains Rider](https://www.jetbrains.com/rider) - Windows, Linux and Mac. Prefered choice and active contributors will receive a license from Rhea.
     * [Visual Studio Code](https://code.visualstudio.com) - Windows, Linux and Mac.
-    * MonoDevelop works flawlessly on Linux.
     * Standard Visual Studio is not recommended, however you can use it if you prefer. There are issues ;)
+    * MonoDevelop - Mono only as of writing of this document, won't work with netcore.
     * Xamarin - Do not use this ever.
   2. Follow our naming conventions and code style guide below. (Set up your IDE for it...)
   3. Discuss your problems and ideas with our awesome dev team on Discord, to further improve them!
@@ -35,8 +35,8 @@ The only difference is that you would first fork the repository, then follow all
 
 ## Solution file
 
-* The solution as-is won't compile for you, unless you have `Botwinder.core` repository cloned into your `Botwinder.discord/Core` directory. (If you clone it right there, you can ignore the below two points as they are irrelevant. See [Readme file](README.md) for info about Core)
-* You have to kick the missing Core project out of the solution file, and comment out the `#define UsingBotwinderCore` in Program.cs
+* The solution as-is won't compile for you, unless you have `Botwinder.core` repository cloned into your `Botwinder.discord/Core` directory.
+* Further you have to kick the missing Secure project out of the solution file, remove the dependency in `Bot/Botwinder.discord.csproj`, and comment out the `#define UsingBotwinderSecure` in `Bot/Program.cs`
 * Do not submit any of these changes, otherwise you will screw up our build!
 
 ## Code style and Naming Conventions
@@ -71,7 +71,7 @@ Just a few guidelines about the code:
     /// Returns true if the operation was canceled, false otherwise. </summary>
     public async Task<bool> AwaitConnection<TUser>(TUser user) where TUser: UserData, new()
     {
-      while(this.State != ConnectionState.Peachy)
+      while( this.State != ConnectionState.Peachy )
       {
         if( this.LoopCount++ >= this.LoopLimit )
           return true;
@@ -89,9 +89,11 @@ Just a few guidelines about the code:
 Please try to set-up your IDE to handle this for you:
 
 * Use tabs, do not expand to spaces.
+* **Always** use explicit types. **Do Not Use `var`!**
 * Set the IDE to remove trailing whitespace, it triggers OCD...
 * Default VS-style will try to format your code in rather weird way that is a little irational in my opinion. Please follow the above displayed format: `if( something )`. (Note that the VS style would place spaces for if statement this way: `if (something)`)
 
 ### Import Jetbrains Rider configuration
 
 You can just import [my Jetbrains Rider settings](https://cloud.rhea-ayase.eu/s/VCl0MmI1qMbNCIP) =)
+

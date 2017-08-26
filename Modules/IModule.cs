@@ -3,7 +3,7 @@ using Botwinder.entities;
 
 namespace Botwinder.modules
 {
-    public interface IModule
-    {
-    }
+	public interface IModule
+	{
+	}
 }

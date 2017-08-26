@@ -2,7 +2,7 @@
 
 namespace Botwinder.entities
 {
-    public class GlobalConfig
-    {
-    }
+	public class GlobalConfig
+	{
+	}
 }

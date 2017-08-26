@@ -16,9 +16,10 @@ Please take a look at our website to see what's the bot about, full list of feat
 
 ## Project structure
 
-The Botwinder project is split into five repositories:
+The Botwinder project is split into six repositories:
 * `Botwinder.core` - Core client code.
 * `Botwinder.discord` - Most of the Botwinder's features.
+* `Botwinder.secure` - Private repository containing sensitive code, such as antispam.
 * `Botwinder.service` - Separate bot to manage Botwinder.discord and other systemd services.
 * `Botwinder.web` - The `botwinder.info` website.
 * `Botwinder.status` - The `status.botwinder.info` page - only slightly modified [eZ Server Monitor](https://github.com/shevabam/ezservermonitor-web)

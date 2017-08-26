@@ -4,6 +4,5 @@ namespace Botwinder.entities
 {
 	public class UserData
 	{
-
 	}
 }
