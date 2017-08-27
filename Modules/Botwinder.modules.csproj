@@ -6,4 +6,9 @@
     <ProjectReference Include="..\Core\Botwinder.core.csproj" />
     <ProjectReference Include="..\Entities\Botwinder.entities.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Discord.Net.Core" Version="1.0.2-build-00808" />
+    <PackageReference Include="Discord.Net.Rest" Version="1.0.2-build-00808" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="1.0.2-build-00808" />
+  </ItemGroup>
 </Project>
