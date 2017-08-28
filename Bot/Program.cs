@@ -1,6 +1,7 @@
 ﻿#define UsingBotwinderSecure
 
 using System;
+using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Botwinder.modules;
@@ -16,7 +17,22 @@ namespace Botwinder.discord
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Hello World!");
+			(new Client()).RunAndWait();
+		}
+	}
+
+	class Client
+	{
+		private BotwinderClient<UserData> Bot;
+
+
+		public Client()
+		{}
+
+		public async Task RunAndWait()
+		{
+			this.Bot = new BotwinderClient<UserData>();
+			Console.WriteLine(await this.Bot.TestDb());
 		}
 	}
 }
