@@ -6,8 +6,9 @@ using Botwinder.entities;
 using Botwinder.modules;
 #if UsingBotwinderSecure
 using Botwinder.secure;
-
 #endif
+
+using guid = System.Int64;
 
 namespace Botwinder.discord
 {
