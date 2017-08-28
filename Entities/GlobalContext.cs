@@ -1,8 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
-
+using MySQL.Data.EntityFrameworkCore.Extensions;
 using guid = System.Int64;
 
 namespace Botwinder.entities
@@ -15,6 +16,9 @@ namespace Botwinder.entities
 		public DbSet<BlacklistEntry> Blacklist;
 		public DbSet<LogEntry> Log;
 		public DbSet<Exception> Exceptions;
+
+		public GlobalContext(DbContextOptions<GlobalContext> options): base(options)
+		{}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -29,6 +33,15 @@ namespace Botwinder.entities
 			modelBuilder.Entity<PartneredServer>()
 				.Property(p => p.IsPremium)
 				.HasDefaultValue(false);
+		}
+
+		public static GlobalContext Create(string connectionString)
+		{
+			DbContextOptionsBuilder<GlobalContext> optionsBuilder = new DbContextOptionsBuilder<GlobalContext>();
+			optionsBuilder.UseMySQL(connectionString);
+
+			GlobalContext newContext = new GlobalContext(optionsBuilder.Options);
+			return newContext;
 		}
 	}
 }

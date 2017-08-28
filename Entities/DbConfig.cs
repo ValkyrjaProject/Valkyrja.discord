@@ -11,9 +11,15 @@ namespace Botwinder.entities
 		private Object _Lock = new Object();
 
 		public string Host = "127.0.0.1";
+		public string Port = "3306";
 		public string Username = "db_user";
 		public string Password = "db_password";
 		public string Database = "db_botwinder";
+
+		public string GetDbConnectionString()
+		{
+			return $"server={this.Host};userid={this.Username};pwd={this.Password};port={this.Port};database={this.Database};sslmode=none;";
+		}
 
 		public static DbConfig Load()
 		{
