@@ -122,6 +122,7 @@ namespace Botwinder.entities
 	[Table("subscribers")]
 	public class Subscriber
 	{
+		[Key]
 		[Required]
 		[Column("userid")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -134,6 +135,7 @@ namespace Botwinder.entities
 	[Table("partners")]
 	public class PartneredServer
 	{
+		[Key]
 		[Required]
 		[Column("serverid")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -146,6 +148,7 @@ namespace Botwinder.entities
 	[Table("blacklist")]
 	public class BlacklistEntry
 	{
+		[Key]
 		[Required]
 		[Column("id")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]

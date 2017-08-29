@@ -6,7 +6,7 @@
     <PackageReference Include="Discord.Net.Core" Version="1.0.2-build-00808" />
     <PackageReference Include="Discord.Net.Rest" Version="1.0.2-build-00808" />
     <PackageReference Include="Discord.Net.WebSocket" Version="1.0.2-build-00808" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.1" />
     <PackageReference Include="MySql.Data.EntityFrameworkCore" Version="8.0.8-dmr" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>

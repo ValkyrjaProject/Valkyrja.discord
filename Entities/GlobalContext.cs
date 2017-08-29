@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using MySQL.Data.EntityFrameworkCore.Extensions;
 using guid = System.Int64;
 
@@ -17,8 +18,10 @@ namespace Botwinder.entities
 		public DbSet<LogEntry> Log;
 		public DbSet<Exception> Exceptions;
 
-		public GlobalContext(DbContextOptions<GlobalContext> options): base(options)
-		{}
+		public GlobalContext(DbContextOptions<GlobalContext> options) : base(options)
+		{
+			this.GlobalConfigs = new InternalDbSet<GlobalConfig>(this);
+		}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -41,6 +44,7 @@ namespace Botwinder.entities
 			optionsBuilder.UseMySQL(connectionString);
 
 			GlobalContext newContext = new GlobalContext(optionsBuilder.Options);
+			newContext.Database.EnsureCreated();
 			return newContext;
 		}
 	}

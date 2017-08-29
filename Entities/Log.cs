@@ -10,6 +10,7 @@ namespace Botwinder.entities
 	[Table("logs")]
 	public class LogEntry
 	{
+		[Key]
 		[Required]
 		[Column("messageid")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -43,6 +44,7 @@ namespace Botwinder.entities
 	[Table("exceptions")]
 	public class Exception
 	{
+		[Key]
 		[Column("id")]
 		public Int64 Id{ get; set; } = 0;
 

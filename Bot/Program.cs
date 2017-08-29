@@ -17,7 +17,7 @@ namespace Botwinder.discord
 	{
 		static void Main(string[] args)
 		{
-			(new Client()).RunAndWait();
+			(new Client()).RunAndWait().Wait();
 		}
 	}
 
