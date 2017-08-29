@@ -1,6 +1,7 @@
 *.userprefs
 
 ## Botwinder specific:
+dbConfig.json
 Core/
 Secure/
 Bot/bin/
