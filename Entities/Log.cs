@@ -28,7 +28,7 @@ namespace Botwinder.entities
 		[Column("type", TypeName = "tinyint")]
 		public LogType Type{ get; set; } = LogType.None;
 
-		[Column("message", TypeName = "text")] //todo
+		[Column("message", TypeName = "text")]
 		public string Message{ get; set; } = "";
 	}
 
@@ -54,7 +54,7 @@ namespace Botwinder.entities
 		[Column("message", TypeName = "varchar(255)")]
 		public string Message{ get; set; } = "";
 
-		[Column("stack", TypeName = "text")] //todo
+		[Column("stack", TypeName = "text")]
 		public string Stack{ get; set; } = "";
 
 		[Column("data", TypeName = "varchar(255)")]

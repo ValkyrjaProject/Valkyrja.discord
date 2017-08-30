@@ -17,6 +17,8 @@ namespace Botwinder.entities
 		public DbSet<BlacklistEntry> Blacklist;
 		public DbSet<LogEntry> Log;
 		public DbSet<Exception> Exceptions;
+		public DbSet<Exception> Shards;
+		//public DbSet<Localisation> Localisation;
 
 		public GlobalContext(DbContextOptions<GlobalContext> options) : base(options)
 		{

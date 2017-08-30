@@ -130,6 +130,9 @@ namespace Botwinder.entities
 
 		[Column("premium")]
 		public bool IsPremium{ get; set; } = false;
+
+		[Column("has_bonus")]
+		public bool HasBonus{ get; set; } = false;
 	}
 
 	[Table("partners")]
