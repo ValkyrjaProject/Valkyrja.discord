@@ -17,7 +17,7 @@ namespace Botwinder.discord
 	{
 		static void Main(string[] args)
 		{
-			(new Client()).RunAndWait().Wait();
+			(new Client()).RunAndWait().GetAwaiter().GetResult();
 		}
 	}
 
@@ -32,7 +32,10 @@ namespace Botwinder.discord
 		public async Task RunAndWait()
 		{
 			this.Bot = new BotwinderClient<UserData>();
-			Console.WriteLine(await this.Bot.TestDb());
+
+			await this.Bot.Connect();
+
+			await Task.Delay(-1);
 		}
 	}
 }
