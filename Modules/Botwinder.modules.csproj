@@ -2,14 +2,17 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup>
+    <RestoreSources>../packages;https://api.nuget.org./v3/index.json</RestoreSources>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Botwinder.core.csproj" />
     <ProjectReference Include="..\Entities\Botwinder.entities.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Core" Version="1.0.2-build-00808" />
-    <PackageReference Include="Discord.Net.Rest" Version="1.0.2-build-00808" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="1.0.2-build-00808" />
+    <PackageReference Include="Discord.Net.Core" Version="2.0.0-alpha-build-00824" />
+    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-alpha-build-00824" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-alpha-build-00824" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.1" />
   </ItemGroup>
 </Project>
