@@ -18,4 +18,24 @@ namespace Botwinder.entities
 		/// <summary> Main Update loop for this module. Do whatever you want. </summary>
 		Task Update<TUser>(IBotwinderClient<TUser> client) where TUser: UserData, new();
 	}
+
+	/*
+	public class ExampleModule: IModule
+	{
+		public Func<Exception, string, guid, Task> HandleException{ get; set; }
+
+		public async Task<List<Command>> Init<TUser>(IBotwinderClient<TUser> iClient) where TUser : UserData, new()
+		{
+			//This way you can actually use all the sweets that the client offers...
+			BotwinderClient<TUser> client = iClient as BotwinderClient<TUser>;
+			throw new NotImplementedException();
+		}
+
+		public Task Update<TUser>(IBotwinderClient<TUser> iClient) where TUser : UserData, new()
+		{
+			BotwinderClient<TUser> client = iClient as BotwinderClient<TUser>;
+			throw new NotImplementedException();
+		}
+	}
+	*/
 }
