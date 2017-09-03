@@ -11,9 +11,11 @@ namespace Botwinder.entities
 	public class LogEntry
 	{
 		[Key]
-		[Required]
+		[Column("id")]
+		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		public Int64 Id{ get; set; } = 0;
+
 		[Column("messageid")]
-		[DatabaseGenerated(DatabaseGeneratedOption.None)]
 		public guid MessageId{ get; set; } = 0;
 
 		[Column("serverid")]
@@ -35,17 +37,17 @@ namespace Botwinder.entities
 	public enum LogType
 	{
 		None = 0,
-		Exception,
 		Debug,
 		Command,
 		Response
 	}
 
 	[Table("exceptions")]
-	public class Exception
+	public class ExceptionEntry
 	{
 		[Key]
 		[Column("id")]
+		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public Int64 Id{ get; set; } = 0;
 
 		[Column("serverid")]

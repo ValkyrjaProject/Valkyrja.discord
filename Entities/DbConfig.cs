@@ -15,6 +15,7 @@ namespace Botwinder.entities
 		public string Username = "db_user";
 		public string Password = "db_password";
 		public string Database = "db_botwinder";
+		public string ConfigName = "default";
 
 		public string GetDbConnectionString()
 		{
