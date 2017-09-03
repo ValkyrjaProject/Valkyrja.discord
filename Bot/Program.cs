@@ -4,7 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
-using Botwinder.modules;
+//using Botwinder.modules; //todo - doesn't exist yet...
 #if UsingBotwinderSecure
 using Botwinder.secure;
 #endif

@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Botwinder.core.csproj" />
+    <ProjectReference Include="..\Core\Botwinder.core.csproj" />
     <ProjectReference Include="..\Entities\Botwinder.entities.csproj" />
   </ItemGroup>
   <ItemGroup>
