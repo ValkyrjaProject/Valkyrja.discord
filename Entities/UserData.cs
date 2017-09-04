@@ -21,6 +21,8 @@ namespace Botwinder.entities
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
 		public guid UserId{ get; set; } = 0;
 
+		//todo
+
 		public List<Username> Usernames;
 		public List<Nickname> Nicknames;
 	}
