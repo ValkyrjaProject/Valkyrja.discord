@@ -7,8 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Botwinder.core.csproj" />
-    <ProjectReference Include="..\Core\Botwinder.core.csproj" />
-    <ProjectReference Include="..\Entities\Botwinder.entities.csproj" />
+    <ProjectReference Include="..\Core\Entities\Botwinder.entities.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Discord.Net.Core" Version="2.0.0-alpha-build-00824" />
