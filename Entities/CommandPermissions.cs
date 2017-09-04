@@ -1,5 +1,15 @@
 ﻿namespace Botwinder.entities
 {
+	public enum RolePermissionLevel
+	{
+		None = 0,
+		Public,
+		Member,
+		SubModerator,
+		Moderator,
+		Admin
+	}
+
 	public enum PermissionOverrides
 	{
 		Default = -1,
