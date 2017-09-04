@@ -7,6 +7,7 @@ using guid = System.Int64;
 
 namespace Botwinder.entities
 {
+	[Table("server_config")]
 	public class ServerConfig
 	{
 		[Key]

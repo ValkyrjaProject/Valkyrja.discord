@@ -17,6 +17,11 @@ namespace Botwinder.entities
 		public Dictionary<string, CommandChannelOptions> CommandChannelOptions;
 		public ServerConfig Config;
 
+		public List<guid> IgnoredChannels;
+		public List<guid> MutedChannels = new List<guid>();
+		public List<guid> TemporaryChannels = new List<guid>();
+
+
 		public Server(guid id, Dictionary<string, Command<TUser>> allCommands, ServerContext db)
 		{
 			this.Id = id;
@@ -43,6 +48,15 @@ namespace Botwinder.entities
 			this.CustomAliases = db.CustomAliases.Where(c => c.ServerId == this.Id).ToDictionary(c => c.Alias);
 			this.CommandOptions = db.CommandOptions.Where(c => c.ServerId == this.Id).ToDictionary(c => c.CommandId);
 			this.CommandChannelOptions = db.CommandChannelOptions.Where(c => c.ServerId == this.Id).ToDictionary(c => c.CommandId);
+		}
+
+		public void LoadConfig(ServerContext db)
+		{
+			this.IgnoredChannels = db.Channels.Where(c => c.ServerId == this.Id && c.Ignored).Select(c => c.ChannelId).ToList();
+			this.TemporaryChannels = db.Channels.Where(c => c.ServerId == this.Id && c.Temporary).Select(c => c.ChannelId).ToList();
+			this.MutedChannels = db.Channels.Where(c => c.ServerId == this.Id && c.MutedUntil > DateTime.MinValue).Select(c => c.ChannelId).ToList();
+
+			ReloadConfig(db);
 		}
 	}
 }
