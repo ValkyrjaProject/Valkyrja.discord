@@ -36,10 +36,13 @@ namespace Botwinder.entities
 		public bool IsCustomCommand{ get; set; }
 
 		/// <summary> Subscriber bonus only </summary>
-		public bool IsBonusCommand{ get; set; }
+		public bool IsBonusCommand{ get; set; } //todo - Check for user being partnered and bonus.
 
 		/// <summary> Subscriber bonus only </summary>
-		public bool IsPremiumCommand{ get; set; }
+		public bool IsPremiumCommand{ get; set; } //todo - Check for user being partnered and premium.
+
+		/// <summary> Subscriber bonus only </summary>
+		public bool IsPremiumServerwideCommand{ get; set; } //todo - Check for server being partnered and premium, and owner being partnered and premium.
 
 		/// <summary> Use <c>Command.PermissionType</c> to determine who can use this command. Defaults to ServerOwnder + Whitelisted or Everyone </summary>
 		public int RequiredPermissions = PermissionType.Everyone | PermissionType.ServerOwner;
