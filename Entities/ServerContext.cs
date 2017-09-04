@@ -11,8 +11,9 @@ namespace Botwinder.entities
 {
 	public class ServerContext: DbContext
 	{
+		public DbSet<ServerConfig> ServerConfigurations;
 		public DbSet<CommandOptions> CommandOptions;
-		public DbSet<CommandOptions> CommandChannelOptions;
+		public DbSet<CommandChannelOptions> CommandChannelOptions;
 		public DbSet<CustomCommand> CustomCommands;
 		public DbSet<CustomAlias> CustomAliases;
 

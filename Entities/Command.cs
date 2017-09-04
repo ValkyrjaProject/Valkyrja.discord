@@ -9,13 +9,13 @@ namespace Botwinder.entities
 	public class Command<TUser> where TUser: UserData, new()
 	{
 		/// <summary> ID of a command is what you use in combination with the command character to execute it. </summary>
-		public string Id = "";
+		public string Id{ get; set; } = "";
 
 		/// <summary> List of aliases to this command. </summary>
-		public List<string> Aliases;
+		public List<string> Aliases{ get; set; }
 
 		/// <summary> Parent of this command, if it is an alias. </summary>
-		public string ParentId;
+		public string ParentId{ get; set; }
 
 		/// <summary> Send the "typing" event before executing the command? </summary>
 		public bool SendTyping{ get; set; } = true;
@@ -45,7 +45,7 @@ namespace Botwinder.entities
 		public int RequiredPermissions = PermissionType.Everyone | PermissionType.ServerOwner;
 
 		/// <summary> Description of this command will be used when the user invokes `help` command. </summary>
-		public string Description = "";
+		public string Description{ get; set; } = "";
 
 
 		public Func<CommandArguments<TUser>, Task> OnExecute{ get; set; }

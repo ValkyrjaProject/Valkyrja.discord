@@ -13,17 +13,17 @@ namespace Botwinder.entities
 	{
 		[Column("serverid")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
-		public guid ServerId = 0;
+		public guid ServerId{ get; set; } = 0;
 
 		[Column("commandid", TypeName = "varchar(255)")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
-		public string CommandId = "";
+		public string CommandId{ get; set; } = "";
 
 		[Column("permission_overrides", TypeName = "tinyint")]
-		public PermissionOverrides PermissionOverrides = PermissionOverrides.Default;
+		public PermissionOverrides PermissionOverrides{ get; set; } = PermissionOverrides.Default;
 
 		[Column("delete_request")]
-		public bool DeleteRequest = false;
+		public bool DeleteRequest{ get; set; } = false;
 	}
 
 	[Table("command_channel_options")]
@@ -31,20 +31,20 @@ namespace Botwinder.entities
 	{
 		[Column("serverid")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
-		public guid ServerId = 0;
+		public guid ServerId{ get; set; } = 0;
 
 		[Column("commandid", TypeName = "varchar(255)")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
-		public string CommandId = "";
+		public string CommandId{ get; set; } = "";
 
 		[Column("channelidid")]
 		[DatabaseGenerated(DatabaseGeneratedOption.None)]
-		public guid ChannelId = 0;
+		public guid ChannelId{ get; set; } = 0;
 
 		[Column("blacklisted")]
-		public bool Blacklisted = false;
+		public bool Blacklisted{ get; set; } = false;
 
 		[Column("whitelisted")]
-		public bool Whitelisted = false;
+		public bool Whitelisted{ get; set; } = false;
 	}
 }
