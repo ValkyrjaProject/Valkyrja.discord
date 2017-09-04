@@ -21,6 +21,8 @@ namespace Botwinder.entities
 		public List<guid> MutedChannels = new List<guid>();
 		public List<guid> TemporaryChannels = new List<guid>();
 
+		public Dictionary<guid, RoleConfig> Roles;
+
 
 		public Server(guid id, Dictionary<string, Command<TUser>> allCommands, ServerContext db)
 		{
@@ -43,11 +45,13 @@ namespace Botwinder.entities
 			this.CustomAliases.Clear();
 			this.CommandOptions.Clear();
 			this.CommandChannelOptions.Clear();
+			this.Roles.Clear();
 
 			this.CustomCommands = db.CustomCommands.Where(c => c.ServerId == this.Id).ToDictionary(c => c.CommandId);
 			this.CustomAliases = db.CustomAliases.Where(c => c.ServerId == this.Id).ToDictionary(c => c.Alias);
 			this.CommandOptions = db.CommandOptions.Where(c => c.ServerId == this.Id).ToDictionary(c => c.CommandId);
 			this.CommandChannelOptions = db.CommandChannelOptions.Where(c => c.ServerId == this.Id).ToDictionary(c => c.CommandId);
+			this.Roles = db.Roles.Where(c => c.ServerId == this.Id).ToDictionary(c => c.RoleId);
 		}
 
 		public void LoadConfig(ServerContext db)
