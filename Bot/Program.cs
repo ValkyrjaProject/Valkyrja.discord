@@ -9,7 +9,7 @@ using Botwinder.entities;
 using Botwinder.secure;
 #endif
 
-using guid = System.Int64;
+using guid = System.UInt64;
 
 namespace Botwinder.discord
 {
