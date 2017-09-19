@@ -1,0 +1,4 @@
+[submodule "Botwinder.core"]
+  path = Core
+  url = git@github.com:RheaAyase/Botwinder.core.git
+  ignore = all
