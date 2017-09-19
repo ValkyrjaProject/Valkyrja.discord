@@ -1,6 +1,7 @@
 ﻿#define UsingBotwinderSecure
 
 using System;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
@@ -31,11 +32,20 @@ namespace Botwinder.discord
 
 		public async Task RunAndWait()
 		{
-			this.Bot = new BotwinderClient<UserData>();
-
-			await this.Bot.Connect();
-
-			await Task.Delay(-1);
+			while( true )
+			{
+				try
+				{
+					this.Bot = new BotwinderClient<UserData>();
+					await this.Bot.Connect();
+					await Task.Delay(-1);
+				}
+				catch(Exception e)
+				{
+					await this.Bot.LogException(e, "--BotwinderClient crashed.");
+					this.Bot.Dispose();
+				}
+			}
 		}
 	}
 }
