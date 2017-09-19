@@ -12,7 +12,7 @@ Please take a look at our website to see what's the bot about, full list of feat
 ## Contributors:
 
 * Please read the [Contributing file](CONTRIBUTING.md) before you start =)
-* Please excuse the hacks. The project is full of them after the last few weeks (February 2017)
+* Fork this repository, and then clone it recursively to get the Core library as well: `git clone -b dev --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
 
 ## Project structure
 

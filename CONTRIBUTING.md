@@ -2,6 +2,9 @@
 
 As a contributor you can directly commit to the project. Please create a new branch for everything, and then submit pull-request. This is done easily right here on the page if you're not awesome enough in the CLI.
 
+Clone the repository recursively to include the Core project:
+* `git clone -b dev --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
+
 1. Create a new branch. This can be done easily on github. [e.g.](https://i.imgur.com/EDtnZ56.png)
   1. Naming convention: `<type of branch>-<name of your contribution>` where
     * `<type of branch>` is generally either `feature`, `improvement` or `fix` (similar to issue labels)
