@@ -12,8 +12,8 @@
     <ProjectReference Include="..\Secure\Botwinder.secure.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Core" Version="2.0.0-alpha-bunny-00005" />
-    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-alpha-bunny-00005" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-alpha-bunny-00005" />
+    <PackageReference Include="Discord.Net.Core" Version="2.0.0-alpha-build-00006" />
+    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-alpha-build-00006" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-alpha-build-00006" />
   </ItemGroup>
 </Project>
