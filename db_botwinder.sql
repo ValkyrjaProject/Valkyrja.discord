@@ -21,6 +21,7 @@ CREATE TABLE `global_config` (
 	`vip_skip_queue` BOOLEAN NOT NULL DEFAULT '0',
 	`vip_members_max` BIGINT NOT NULL DEFAULT '0',
 	`vip_trial_hours` BIGINT NOT NULL DEFAULT '36',
+	`vip_trial_joins` BIGINT NOT NULL DEFAULT '5',
 	`antispam_clear_interval` BIGINT NOT NULL DEFAULT '10',
 	`antispam_permit_duration` BIGINT NOT NULL DEFAULT '180',
 	`antispam_safety_limit` BIGINT NOT NULL DEFAULT '30',
