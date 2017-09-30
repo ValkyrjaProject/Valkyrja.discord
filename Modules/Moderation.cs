@@ -209,9 +209,49 @@ namespace Botwinder.secure
 			newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
-				await iClient.SendMessageToChannel(e.Channel, response);
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "Remove warning from who?\n" + e.Command.Description);
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I couldn't find them :(");
+					return;
+				}
+
+				StringBuilder warning = new StringBuilder();
+				for(int i = mentionedUsers.Count; i < e.MessageArgs.Length; i++)
+				{
+					warning.Append(e.MessageArgs[i]);
+					warning.Append(" ");
+				}
+
+				bool sendMessage = e.Command.Id.ToLower() == "issuewarning";
+				foreach(UserData userData in mentionedUsers)
+				{
+					userData.WarningCount++;
+					userData.Notes += string.IsNullOrEmpty(userData.Notes) ? warning.ToString() : (" | " + warning.ToString());
+					try
+					{
+						if( sendMessage )
+						{
+							SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+							if( user != null )
+								await user.SendMessageSafe(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
+									e.Server.Guild.Name, warning));
+						}
+					}
+					catch(Exception) { }
+				}
+
+				dbContext.SaveChanges();
+
+				await iClient.SendMessageToChannel(e.Channel, "Done.");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("addwarning"));
@@ -229,7 +269,7 @@ namespace Botwinder.secure
 			newCommand.OnExecute += async e => {
 				throw new NotImplementedException();
 				string response = "";
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await iClient.SendMessageToChannel(e.Channel, "Done.");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("removewarning"));
