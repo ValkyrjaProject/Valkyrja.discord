@@ -28,7 +28,7 @@ namespace Botwinder.secure
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
 				if( role == null )
 				{
-					await iClient.SendMessageToChannel(e.Channel, string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.ServerConfig.CommandCharacter));
+					await iClient.SendMessageToChannel(e.Channel, string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.Config.CommandPrefix));
 					return;
 				}
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
