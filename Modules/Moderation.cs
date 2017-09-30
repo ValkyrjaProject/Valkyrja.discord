@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
@@ -244,8 +245,47 @@ namespace Botwinder.secure
 			newCommand.Description = "Search for a User on this server.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "Who are you looking for?");
+					return;
+				}
+
+				string expression = e.TrimmedMessage.ToLower();
+				List<guid> foundUserIds = e.Server.Guild.Users
+					.Where(u => u.Username.ToLower().Contains(expression) ||
+					            (u.Nickname != null && u.Nickname.Contains(expression)))
+					.Select(u => u.Id).ToList();
+
+				foundUserIds.AddRange(e.Message.MentionedUsers.Select(u => u.Id));
+
+				for( int i = 0; i < e.MessageArgs.Length; i++ )
+				{
+					if( guid.TryParse(e.MessageArgs[i], out guid id) )
+						foundUserIds.Add(id);
+				}
+
+				string response = "I found too many, please be more specific.";
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+
+				if( foundUserIds.Count <= 5 )
+				{
+					StringBuilder whoisStrings = new StringBuilder();
+					for( int i = 0; i < foundUserIds.Count; i++ )
+					{
+						UserData userData = dbContext.UserDatabase.FirstOrDefault(u => u.ServerId == e.Server.Id && u.UserId == foundUserIds[i]);
+						if( userData != null )
+							whoisStrings.AppendLine(userData.GetWhoisString(dbContext));
+					}
+
+					if( string.IsNullOrEmpty(response) )
+					{
+						response = "I did not find anyone.";
+					}
+
+					response = whoisStrings.ToString();
+				}
+
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
