@@ -267,8 +267,51 @@ namespace Botwinder.secure
 			newCommand.Description = "Use with parameter `@user` = user mention or id, you can remove the last warning from multiple people, just mention them all.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "Remove warning from who?\n" + e.Command.Description);
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I couldn't find them :(");
+					return;
+				}
+
+				bool modified = false;
+				foreach(UserData userData in mentionedUsers)
+				{
+					if( userData.WarningCount == 0 )
+						continue;
+
+					modified = true;
+					if( e.Command.Id.ToLower() == "removeallwarnings" )
+					{
+						userData.WarningCount = 0;
+						userData.Notes = "";
+					}
+					else
+					{
+						userData.WarningCount--;
+						if( userData.Notes.Contains(" | ") )
+						{
+							int index = userData.Notes.LastIndexOf(" |");
+							userData.Notes = userData.Notes.Remove(index);
+						}
+						else
+						{
+							userData.Notes = "";
+						}
+					}
+				}
+
+				if( modified )
+					dbContext.SaveChanges();
+
 				await iClient.SendMessageToChannel(e.Channel, "Done.");
 			};
 			commands.Add(newCommand);
