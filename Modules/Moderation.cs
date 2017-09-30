@@ -51,7 +51,8 @@ namespace Botwinder.secure
 						await user.AddRoleAsync(role);
 						response = "Go get em tiger!";
 					}
-				}catch(Exception exception)
+				}
+				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
 					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -73,7 +74,8 @@ namespace Botwinder.secure
 				string response = "";
 				try
 				{
-				}catch(Exception exception)
+				}
+				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
 					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -95,7 +97,8 @@ namespace Botwinder.secure
 				string response = "";
 				try
 				{
-				}catch(Exception exception)
+				}
+				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
 					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -113,11 +116,52 @@ namespace Botwinder.secure
 			newCommand.Description = "Use with parameters `@user reason` where `@user` = user mention or id; `reason` = worded description why did you kick them out - they will receive this via PM.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "Give a warning to whom?\n" + e.Command.Description);
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I couldn't find them :(");
+					return;
+				}
+
+				StringBuilder warning = new StringBuilder();
+				for(int i = mentionedUsers.Count; i < e.MessageArgs.Length; i++)
+				{
+					warning.Append(e.MessageArgs[i]);
+					warning.Append(" ");
+				}
+
 				string response = "";
+				List<string> usernames = new List<string>();
 				try
 				{
-				}catch(Exception exception)
+					foreach( UserData userData in mentionedUsers )
+					{
+						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+						if( user == null )
+							continue;
+
+						try
+						{
+							await user.SendMessageSafe(string.Format("Hello!\nYou have been kicked out of the **{0} server** by its Moderators for the following reason:\n{1}",
+								e.Server.Guild.Name, warning.ToString()));
+						}
+						catch(Exception) { }
+						await Task.Delay(300);
+
+						await user.KickAsync(warning.ToString());
+						userData.AddWarning(warning.ToString());
+						usernames.Add(user.GetUsername());
+					}
+				}
+				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
 					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -125,6 +169,17 @@ namespace Botwinder.secure
 					else
 						throw;
 				}
+
+				if( !usernames.Any() )
+				{
+					response = "I wasn't able to shoot anyone.";
+				}
+				else if( string.IsNullOrEmpty(response) )
+				{
+					response = "I've fired them railguns at " + usernames.ToString() + ".";
+					dbContext.SaveChanges();
+				}
+
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
@@ -139,7 +194,8 @@ namespace Botwinder.secure
 				string response = "";
 				try
 				{
-				}catch(Exception exception)
+				}
+				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
 					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -169,7 +225,8 @@ namespace Botwinder.secure
 				string response = "";
 				try
 				{
-				}catch(Exception exception)
+				}
+				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
 					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -191,7 +248,8 @@ namespace Botwinder.secure
 				string response = "";
 				try
 				{
-				}catch(Exception exception)
+				}
+				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
 					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -211,7 +269,7 @@ namespace Botwinder.secure
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Remove warning from who?\n" + e.Command.Description);
+					await iClient.SendMessageToChannel(e.Channel, "Give a warning to whom?\n" + e.Command.Description);
 					return;
 				}
 
@@ -234,19 +292,18 @@ namespace Botwinder.secure
 				bool sendMessage = e.Command.Id.ToLower() == "issuewarning";
 				foreach(UserData userData in mentionedUsers)
 				{
-					userData.WarningCount++;
-					userData.Notes += string.IsNullOrEmpty(userData.Notes) ? warning.ToString() : (" | " + warning.ToString());
-					try
+					userData.AddWarning(warning.ToString());
+					if( sendMessage )
 					{
-						if( sendMessage )
+						try
 						{
 							SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
 							if( user != null )
 								await user.SendMessageSafe(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
-									e.Server.Guild.Name, warning));
+									e.Server.Guild.Name, warning.ToString()));
 						}
+						catch(Exception) { }
 					}
-					catch(Exception) { }
 				}
 
 				dbContext.SaveChanges();
@@ -269,7 +326,7 @@ namespace Botwinder.secure
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Remove warning from who?\n" + e.Command.Description);
+					await iClient.SendMessageToChannel(e.Channel, "Remove warning from whom?\n" + e.Command.Description);
 					return;
 				}
 
