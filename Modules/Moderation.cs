@@ -296,8 +296,58 @@ namespace Botwinder.secure
 			newCommand.Description = "Find a User in the database."; //todo - improve desc.
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "Who are you looking for?");
+					return;
+				}
+
+				string response = "I found too many, please be more specific.";
+				string expression = e.TrimmedMessage.ToLower();
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<Username> foundUsernames = dbContext.Usernames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
+				List<Nickname> foundNicknames = dbContext.Nicknames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
+				List<guid> foundUserIds = new List<guid>();
+
+				for( int i = 0; i < e.MessageArgs.Length; i++ )
+				{
+					if( guid.TryParse(e.MessageArgs[i], out guid id) )
+						foundUserIds.Add(id);
+				}
+
+				foreach( Username username in foundUsernames )
+				{
+					if( foundUserIds.Contains(username.UserId) )
+						continue;
+
+					foundUserIds.Add(username.UserId);
+				}
+				foreach( Nickname nickname in foundNicknames )
+				{
+					if( foundUserIds.Contains(nickname.UserId) )
+						continue;
+
+					foundUserIds.Add(nickname.UserId);
+				}
+
+				if( foundUserIds.Count <= 5 )
+				{
+					StringBuilder whoisStrings = new StringBuilder();
+					for( int i = 0; i < foundUserIds.Count; i++ )
+					{
+						UserData userData = dbContext.UserDatabase.FirstOrDefault(u => u.ServerId == e.Server.Id && u.UserId == foundUserIds[i]);
+						if( userData != null )
+							whoisStrings.AppendLine(userData.GetWhoisString(dbContext));
+					}
+
+					response = whoisStrings.ToString();
+				}
+
+				if( string.IsNullOrEmpty(response) )
+				{
+					response = "I did not find anyone.";
+				}
+
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
