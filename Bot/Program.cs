@@ -24,7 +24,7 @@ namespace Botwinder.discord
 
 	class Client
 	{
-		private BotwinderClient<UserData> Bot;
+		private BotwinderClient Bot;
 
 
 		public Client()
@@ -36,7 +36,7 @@ namespace Botwinder.discord
 			{
 				try
 				{
-					this.Bot = new BotwinderClient<UserData>();
+					this.Bot = new BotwinderClient();
 					await this.Bot.Connect();
 					await Task.Delay(-1);
 				}

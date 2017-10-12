@@ -14,13 +14,13 @@ namespace Botwinder.secure
 	{
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 
-		public async Task<List<Command<TUser>>> Init<TUser>(IBotwinderClient<TUser> iClient) where TUser : UserData, new()
+		public async Task<List<Command>> Init(IBotwinderClient iClient)
 		{
-			BotwinderClient<TUser> client = iClient as BotwinderClient<TUser>;
-			List<Command<TUser>> commands = new List<Command<TUser>>();
+			BotwinderClient client = iClient as BotwinderClient;
+			List<Command> commands = new List<Command>();
 
 // !op
-			Command<TUser> newCommand = new Command<TUser>("op");
+			Command newCommand = new Command("op");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <http://botwinder.info/config>)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -65,7 +65,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !mute
-			newCommand = new Command<TUser>("mute");
+			newCommand = new Command("mute");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Temporarily mute mentioned members from both the chat and voice. This command has to be configured at <http://botwinder.info/config>!";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -88,7 +88,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !munute
-			newCommand = new Command<TUser>("unmute");
+			newCommand = new Command("unmute");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Unmute previously muted members. This command has to be configured at <http://botwinder.info/config>.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -111,7 +111,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !kick
-			newCommand = new Command<TUser>("kick");
+			newCommand = new Command("kick");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Use with parameters `@user reason` where `@user` = user mention or id; `reason` = worded description why did you kick them out - they will receive this via PM.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
@@ -185,7 +185,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !ban
-			newCommand = new Command<TUser>("ban");
+			newCommand = new Command("ban");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Use with parameters `@user time reason` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or `0` for permanent.); `reason` = worded description why did you ban them - they will receive this via PM (use `silentBan` to not send the PM)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
@@ -216,7 +216,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !quickban
-			newCommand = new Command<TUser>("quickban");
+			newCommand = new Command("quickban");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. You can mention several people at once. (This command has to be first configured via `config` or <http://botwinder.info/config>.)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
@@ -239,7 +239,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !unban
-			newCommand = new Command<TUser>("unban");
+			newCommand = new Command("unban");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Use with parameter `@user` where `@user` = user mention or id;";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
@@ -262,7 +262,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !addWarning
-			newCommand = new Command<TUser>("addWarning");
+			newCommand = new Command("addWarning");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -319,7 +319,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand.CreateAlias("issuewarning"));
 
 // !removeWarning
-			newCommand = new Command<TUser>("removeWarning");
+			newCommand = new Command("removeWarning");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Use with parameter `@user` = user mention or id, you can remove the last warning from multiple people, just mention them all.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -380,7 +380,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand.CreateAlias("removeallwarnings"));
 
 // !whois
-			newCommand = new Command<TUser>("whois");
+			newCommand = new Command("whois");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Search for a User on this server.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -431,7 +431,7 @@ namespace Botwinder.secure
 			commands.Add(newCommand);
 
 // !find
-			newCommand = new Command<TUser>("find");
+			newCommand = new Command("find");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Find a User in the database."; //todo - improve desc.
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -495,9 +495,9 @@ namespace Botwinder.secure
 			return commands;
 		}
 
-		public Task Update<TUser>(IBotwinderClient<TUser> iClient) where TUser : UserData, new()
+		public Task Update(IBotwinderClient iClient)
 		{
-			BotwinderClient<TUser> client = iClient as BotwinderClient<TUser>;
+			BotwinderClient client = iClient as BotwinderClient;
 			throw new NotImplementedException();
 		}
 	}
