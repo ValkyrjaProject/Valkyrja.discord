@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,8 +11,13 @@ using guid = System.UInt64;
 
 namespace Botwinder.secure
 {
-	public class Antispam: IModule
+	public class Moderation: IModule
 	{
+		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
+		private const string BanConfirmString = "_\\*fires them railguns at <@{0}>*_  Ò_Ó";
+		private const string UnbanConfirmString = "Okhay... ó_ò";
+
+
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 
 		public async Task<List<Command>> Init(IBotwinderClient iClient)
@@ -500,5 +506,106 @@ namespace Botwinder.secure
 			BotwinderClient client = iClient as BotwinderClient;
 			throw new NotImplementedException();
 		}
+
+
+
+
+		/// <summary> Ban the User - this will also ban them as soon as they join the server, if they are not there right now. </summary>
+		/// <param name="duration">Use zero for permanent ban.</param>
+		/// <param name="silent">Set to true to not PM the user information about the ban (time, server, reason)</param>
+		public async Task<string> Ban(ServerContext dbContext, Server server, guid userId, TimeSpan duration, string reason, bool silent = false, bool deleteMessages = false, SocketGuildUser bannedBy = null)
+		{
+			DateTime bannedUntil = DateTime.MaxValue;
+			if( duration.TotalHours >= 1 )
+				bannedUntil = DateTime.UtcNow + duration;
+			else
+				duration = TimeSpan.Zero;
+
+			SocketGuildUser user = server.Guild.GetUser(userId);
+
+			StringBuilder durationString = new StringBuilder();
+			if( duration == TimeSpan.Zero )
+				durationString.Append("permanently");
+			else
+			{
+				durationString.Append("for ");
+				if( duration.Days > 0 )
+				{
+					durationString.Append(duration.Days);
+					durationString.Append(duration.Days == 1 ? " day" : " days");
+					if( duration.Hours > 0 )
+						durationString.Append(" and ");
+				}
+				if( duration.Hours > 0 )
+				{
+					durationString.Append(duration.Hours);
+					durationString.Append(duration.Hours == 1 ? " hour" : " hours");
+				}
+			}
+
+			if( !silent && user != null )
+			{
+				try
+				{
+					await user.SendMessageSafe(string.Format(BanPmString,
+						durationString.ToString(), server.Guild.Name, reason));
+					await Task.Delay(500);
+				}
+				catch(Exception) { }
+			}
+
+			string response = string.Format(BanConfirmString, userId);
+			try
+			{
+				//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+
+				await server.Guild.AddBanAsync(userId, (deleteMessages ? 1 : 0), reason);
+
+				//UserBanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+
+				UserData userData = dbContext.GetOrAddUser(server.Id, userId);
+				userData.BannedUntil = bannedUntil;
+				userData.AddWarning($"Banned {durationString.ToString()} with reason: {reason}");
+			}
+			catch(Exception exception)
+			{
+				Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
+				if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+				else
+					throw;
+			}
+
+			return response;
+		}
+
+		public async Task<string> UnBan(ServerContext dbContext, Server server, guid userId)
+		{
+			string response = string.Format(UnbanConfirmString, userId);
+			try
+			{
+				//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+
+				await server.Guild.RemoveBanAsync(userId);
+
+				//UserUnbanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+
+				UserData userData = dbContext.GetOrAddUser(server.Id, userId);
+				userData.BannedUntil = DateTime.MinValue;
+			}
+			catch(Exception exception)
+			{
+				Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
+				if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+				else
+					throw;
+			}
+
+			return response;
+		}
+
+
+
 	}
 }
