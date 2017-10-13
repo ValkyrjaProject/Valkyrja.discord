@@ -16,7 +16,7 @@ namespace Botwinder.secure
 	{
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanConfirmString = "_\\*fires them railguns at <@{0}>*_  Ò_Ó";
-		private const string UnbanConfirmString = "{0} unbanned... ó_ò";
+		private const string UnbanConfirmString = "I've unbanned {0}... ó_ò";
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -187,6 +187,7 @@ namespace Botwinder.secure
 					dbContext.SaveChanges();
 				}
 
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
@@ -325,6 +326,7 @@ namespace Botwinder.secure
 
 				dbContext.SaveChanges();
 
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, "Done.");
 			};
 			commands.Add(newCommand);
@@ -386,6 +388,7 @@ namespace Botwinder.secure
 				if( modified )
 					dbContext.SaveChanges();
 
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, "Done.");
 			};
 			commands.Add(newCommand);
@@ -443,6 +446,7 @@ namespace Botwinder.secure
 					response = whoisStrings.ToString();
 				}
 
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
@@ -505,6 +509,7 @@ namespace Botwinder.secure
 					response = "I did not find anyone.";
 				}
 
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
@@ -524,15 +529,13 @@ namespace Botwinder.secure
 		/// <summary> Ban the User - this will also ban them as soon as they join the server, if they are not there right now. </summary>
 		/// <param name="duration">Use zero for permanent ban.</param>
 		/// <param name="silent">Set to true to not PM the user information about the ban (time, server, reason)</param>
-		public async Task<string> Ban(ServerContext dbContext, Server server, guid userId, TimeSpan duration, string reason, bool silent = false, bool deleteMessages = false, SocketGuildUser bannedBy = null)
+		public async Task<string> Ban(Server server, List<UserData> users, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false)
 		{
 			DateTime bannedUntil = DateTime.MaxValue;
 			if( duration.TotalHours >= 1 )
 				bannedUntil = DateTime.UtcNow + duration;
 			else
 				duration = TimeSpan.Zero;
-
-			SocketGuildUser user = server.Guild.GetUser(userId);
 
 			StringBuilder durationString = new StringBuilder();
 			if( duration == TimeSpan.Zero )
@@ -554,38 +557,46 @@ namespace Botwinder.secure
 				}
 			}
 
-			if( !silent && user != null )
+			string response = "";
+			List<guid> banned = new List<guid>();
+			foreach( UserData userData in users )
 			{
+				SocketGuildUser user;
+				if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
+				{
+					try
+					{
+						await user.SendMessageSafe(string.Format(BanPmString,
+							durationString.ToString(), server.Guild.Name, reason));
+					}
+					catch(Exception) { }
+				}
+
+				await Task.Delay(500);
+
 				try
 				{
-					await user.SendMessageSafe(string.Format(BanPmString,
-						durationString.ToString(), server.Guild.Name, reason));
-					await Task.Delay(500);
+					//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+
+					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
+					userData.BannedUntil = bannedUntil;
+					userData.AddWarning($"Banned {durationString.ToString()} with reason: {reason}");
+					banned.Add(userData.UserId);
+
+					//client.Events.UserBanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
 				}
-				catch(Exception) { }
+				catch(Exception exception)
+				{
+					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
+					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+					else
+						throw;
+				}
 			}
 
-			string response = string.Format(BanConfirmString, userId);
-			try
-			{
-				//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
-
-				await server.Guild.AddBanAsync(userId, (deleteMessages ? 1 : 0), reason);
-
-				//UserBanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
-
-				UserData userData = dbContext.GetOrAddUser(server.Id, userId);
-				userData.BannedUntil = bannedUntil;
-				userData.AddWarning($"Banned {durationString.ToString()} with reason: {reason}");
-			}
-			catch(Exception exception)
-			{
-				Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-				if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-					response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
-				else
-					throw;
-			}
+			if( banned.Any() )
+				response = string.Format(BanConfirmString, banned.ToString());
 
 			return response;
 		}
@@ -610,13 +621,15 @@ namespace Botwinder.secure
 				catch(Exception exception)
 				{
 					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex == null || (ex.HttpCode != System.Net.HttpStatusCode.Forbidden && ex.HttpCode != System.Net.HttpStatusCode.InternalServerError) ) //TODO - all the "forbidden" errors should also include InternalServerError
+					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+					else
 						throw;
 				}
 			}
 
 			if( unbanned.Any() )
-				response = string.Format(UnbanConfirmString, unbanned.ToString() + (unbanned.Count == 1 ? " is" : " are"));
+				response = string.Format(UnbanConfirmString, unbanned.ToString());
 
 			return response;
 		}
