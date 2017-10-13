@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Botwinder.core;
@@ -15,7 +16,7 @@ namespace Botwinder.secure
 	{
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanConfirmString = "_\\*fires them railguns at <@{0}>*_  Ò_Ó";
-		private const string UnbanConfirmString = "Okhay... ó_ò";
+		private const string UnbanConfirmString = "{0} unbanned... ó_ò";
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -579,33 +580,35 @@ namespace Botwinder.secure
 			return response;
 		}
 
-		public async Task<string> UnBan(ServerContext dbContext, Server server, guid userId)
+		public async Task<string> UnBan(Server server, List<UserData> users)
 		{
-			string response = string.Format(UnbanConfirmString, userId);
-			try
+			string response = "";
+			List<guid> unbanned = new List<guid>();
+			foreach( UserData user in users )
 			{
-				//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+				try
+				{
+					//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
 
-				await server.Guild.RemoveBanAsync(userId);
+					await server.Guild.RemoveBanAsync(user.UserId);
 
-				//UserUnbanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+					//UserUnbanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
 
-				UserData userData = dbContext.GetOrAddUser(server.Id, userId);
-				userData.BannedUntil = DateTime.MinValue;
+					user.BannedUntil = DateTime.MinValue;
+					unbanned.Add(user.UserId);
+				}
+				catch(Exception exception)
+				{
+					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
+					if( ex == null || (ex.HttpCode != System.Net.HttpStatusCode.Forbidden && ex.HttpCode != System.Net.HttpStatusCode.InternalServerError) ) //TODO - all the "forbidden" errors should also include InternalServerError
+						throw;
+				}
 			}
-			catch(Exception exception)
-			{
-				Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-				if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-					response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
-				else
-					throw;
-			}
+
+			if( unbanned.Any() )
+				response = string.Format(UnbanConfirmString, unbanned.ToString() + (unbanned.Count == 1 ? " is" : " are"));
 
 			return response;
 		}
-
-
-
 	}
 }
