@@ -251,19 +251,29 @@ namespace Botwinder.secure
 			newCommand.Description = "Use with parameter `@user` where `@user` = user mention or id;";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
+				guid id;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				string response = "ó_ò";
+
 				try
 				{
-				}
-				catch(Exception exception)
+					response = await UnBan(e.Server, mentionedUsers);
+					dbContext.SaveChanges();
+				} catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
-					else
-						throw;
+					await client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
+
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
