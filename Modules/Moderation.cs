@@ -229,19 +229,29 @@ namespace Botwinder.secure
 			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. You can mention several people at once. (This command has to be first configured via `config` or <http://botwinder.info/config>.)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
+				guid id;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				string response = "ò_ó";
+
 				try
 				{
-				}
-				catch(Exception exception)
+					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(e.Server.Config.QuickbanDuration), e.Server.Config.QuickbanReason, e.Message.Author as SocketGuildUser);
+					dbContext.SaveChanges();
+				} catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
-					else
-						throw;
+					await client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
+
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
