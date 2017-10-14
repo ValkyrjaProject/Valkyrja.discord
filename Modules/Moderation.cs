@@ -35,6 +35,12 @@ namespace Botwinder.secure
 			BotwinderClient client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
 
+			client.Events.BanUsers += Ban;
+			client.Events.UnBanUsers += UnBan;
+			client.Events.MuteUsers += Mute;
+			client.Events.UnMuteUsers += UnMute;
+
+
 // !op
 			Command newCommand = new Command("op");
 			newCommand.Type = CommandType.Standard;
@@ -146,7 +152,7 @@ namespace Botwinder.secure
 
 				try
 				{
-					response = await Mute(e.Server, mentionedUsers, TimeSpan.FromMinutes(muteDurationMinutes), role);
+					response = await Mute(e.Server, mentionedUsers, TimeSpan.FromMinutes(muteDurationMinutes), role, e.Message.Author as SocketGuildUser);
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
@@ -159,7 +165,7 @@ namespace Botwinder.secure
 			};
 			commands.Add(newCommand);
 
-// !munute
+// !unmute
 			newCommand = new Command("unmute");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Unmute previously muted members. This command has to be configured at <http://botwinder.info/config>.";
@@ -865,7 +871,7 @@ namespace Botwinder.secure
 
 
 // Mute
-		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role)
+		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 
@@ -930,7 +936,7 @@ namespace Botwinder.secure
 				try
 				{
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-					await user.AddRoleAsync(role);
+					await user.RemoveRoleAsync(role);
 
 					userData.MutedUntil = DateTime.MinValue;
 					unmuted.Add(userData.UserId);
