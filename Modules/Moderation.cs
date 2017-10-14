@@ -833,5 +833,35 @@ namespace Botwinder.secure
 
 			return response;
 		}
+
+		public async Task<string> UnMute(Server server, List<UserData> users, IRole role)
+		{
+			string response = "";
+			List<guid> unmuted = new List<guid>();
+			foreach( UserData userData in users )
+			{
+				try
+				{
+					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					await user.AddRoleAsync(role);
+
+					userData.MutedUntil = DateTime.MinValue;
+					unmuted.Add(userData.UserId);
+					//UserUnmuted(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+				}
+				catch(Exception exception)
+				{
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+					else
+						throw;
+				}
+			}
+
+			if( unmuted.Any() )
+				response = string.Format(UnmuteConfirmString, unmuted.ToString());
+
+			return response;
+		}
 	}
 }
