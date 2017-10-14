@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
@@ -14,9 +15,15 @@ namespace Botwinder.secure
 {
 	public class Moderation: IModule
 	{
+		private const string ErrorPermissionsString = "I don't have necessary permissions.";
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
+		private const string BanNotFoundString = "I couldn't find them :(";
 		private const string BanConfirmString = "_\\*fires them railguns at <@{0}>*_  Ò_Ó";
 		private const string UnbanConfirmString = "I've unbanned {0}... ó_ò";
+		private const string KickArgsString = "I'm supposed to shoot... who?\n";
+		private const string KickNotFoundString = "I couldn't find them :(";
+		private const string KickPmString = "Hello!\nYou have been kicked out of the **{0} server** by its Moderators for the following reason:\n{1}";
+		private const string WarningNotFoundString = "I couldn't find them :(";
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -123,9 +130,23 @@ namespace Botwinder.secure
 			newCommand.Description = "Use with parameters `@user reason` where `@user` = user mention or id; `reason` = worded description why did you kick them out - they will receive this via PM.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.KickMembers )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
+
+				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
+				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
+				    !client.IsGlobalAdmin(e.Message.Author.Id) )
+				{
+					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					return;
+				}
+
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Give a warning to whom?\n" + e.Command.Description);
+					await iClient.SendMessageToChannel(e.Channel, KickArgsString + e.Command.Description);
 					return;
 				}
 
@@ -134,7 +155,15 @@ namespace Botwinder.secure
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "I couldn't find them :(");
+					await iClient.SendMessageToChannel(e.Channel, KickNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( mentionedUsers.Count < e.MessageArgs.Length + 1 )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
 					return;
 				}
 
@@ -157,7 +186,7 @@ namespace Botwinder.secure
 
 						try
 						{
-							await user.SendMessageSafe(string.Format("Hello!\nYou have been kicked out of the **{0} server** by its Moderators for the following reason:\n{1}",
+							await user.SendMessageSafe(string.Format(KickPmString,
 								e.Server.Guild.Name, warning.ToString()));
 						}
 						catch(Exception) { }
@@ -239,6 +268,20 @@ namespace Botwinder.secure
 				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( mentionedUsers.Count < e.MessageArgs.Length )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
+
 				string response = "ò_ó";
 
 				try
@@ -271,6 +314,20 @@ namespace Botwinder.secure
 
 				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( mentionedUsers.Count < e.MessageArgs.Length )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
 
 				string response = "ó_ò";
 
@@ -306,7 +363,15 @@ namespace Botwinder.secure
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "I couldn't find them :(");
+					await iClient.SendMessageToChannel(e.Channel, WarningNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( mentionedUsers.Count < e.MessageArgs.Length + 1 )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
 					return;
 				}
 
@@ -364,9 +429,19 @@ namespace Botwinder.secure
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "I couldn't find them :(");
+					await iClient.SendMessageToChannel(e.Channel, WarningNotFoundString);
+					dbContext.Dispose();
 					return;
 				}
+
+				if( mentionedUsers.Count < e.MessageArgs.Length )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
+
+				bool allWarnings = e.Command.Id.ToLower() == "removeallwarnings";
 
 				bool modified = false;
 				foreach(UserData userData in mentionedUsers)
@@ -375,7 +450,7 @@ namespace Botwinder.secure
 						continue;
 
 					modified = true;
-					if( e.Command.Id.ToLower() == "removeallwarnings" )
+					if( allWarnings )
 					{
 						userData.WarningCount = 0;
 						userData.Notes = "";
