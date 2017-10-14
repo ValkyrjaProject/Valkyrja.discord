@@ -85,6 +85,12 @@ namespace Botwinder.secure
 			newCommand.Description = "Temporarily mute mentioned members from both the chat and voice. Use with parameters `@user time` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or 1h30m - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
+
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
 				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
@@ -92,19 +98,63 @@ namespace Botwinder.secure
 					return;
 				}
 
-				throw new NotImplementedException();
-				string response = "";
+				SocketRole roleOp = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
+				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
+				    !client.IsGlobalAdmin(e.Message.Author.Id) )
+				{
+					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
+
+				int muteDurationMinutes = 0;
+				Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
+				Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
+				Match minuteMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+m", RegexOptions.IgnoreCase);
+
+				if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out muteDurationMinutes) )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( minuteMatch.Success )
+					muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
+				if( hourMatch.Success )
+					muteDurationMinutes = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+				if( dayMatch.Success )
+					muteDurationMinutes += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+
+				string response = "ò_ó";
+
 				try
 				{
-				}
-				catch(Exception exception)
+					response = await Mute(e.Server, mentionedUsers, TimeSpan.FromMinutes(muteDurationMinutes), role);
+					dbContext.SaveChanges();
+				} catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
-					else
-						throw;
+					await client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
+
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
@@ -115,6 +165,12 @@ namespace Botwinder.secure
 			newCommand.Description = "Unmute previously muted members. This command has to be configured at <http://botwinder.info/config>.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
+
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
 				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
