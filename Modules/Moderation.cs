@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
+using Discord;
 using Discord.WebSocket;
 using guid = System.UInt64;
 
@@ -24,6 +23,9 @@ namespace Botwinder.secure
 		private const string KickNotFoundString = "I couldn't find them :(";
 		private const string KickPmString = "Hello!\nYou have been kicked out of the **{0} server** by its Moderators for the following reason:\n{1}";
 		private const string WarningNotFoundString = "I couldn't find them :(";
+		private const string MuteConfirmString = "*Silence!!  ò_ó\n...\nI keel u, {0}!!*  Ò_Ó";
+		private const string UnmuteConfirmString = "Speak {0}!";
+		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -68,8 +70,7 @@ namespace Botwinder.secure
 				}
 				catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 					else
 						throw;
@@ -199,8 +200,7 @@ namespace Botwinder.secure
 				}
 				catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 					else
 						throw;
@@ -292,7 +292,7 @@ namespace Botwinder.secure
 				try
 				{
 					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(banDurationHours),
-						e.Server.Config.QuickbanReason, e.Message.Author as SocketGuildUser,
+						warning.ToString(), e.Message.Author as SocketGuildUser,
 						e.Command.Id.ToLower() == "silentban", e.Command.Id.ToLower() == "purgeban");
 					dbContext.SaveChanges();
 				} catch(Exception exception)
@@ -320,7 +320,6 @@ namespace Botwinder.secure
 			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. You can mention several people at once. (This command has to be first configured via `config` or <http://botwinder.info/config>.)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
-				guid id;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
 					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
@@ -367,7 +366,6 @@ namespace Botwinder.secure
 			newCommand.Description = "Use with parameter `@user` where `@user` = user mention or id;";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
-				guid id;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
 					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
@@ -672,7 +670,7 @@ namespace Botwinder.secure
 
 
 
-
+// Ban
 		/// <summary> Ban the User - this will also ban them as soon as they join the server, if they are not there right now. </summary>
 		/// <param name="duration">Use zero for permanent ban.</param>
 		/// <param name="silent">Set to true to not PM the user information about the ban (time, server, reason)</param>
@@ -715,11 +713,10 @@ namespace Botwinder.secure
 					{
 						await user.SendMessageSafe(string.Format(BanPmString,
 							durationString.ToString(), server.Guild.Name, reason));
+						await Task.Delay(500);
 					}
 					catch(Exception) { }
 				}
-
-				await Task.Delay(500);
 
 				try
 				{
@@ -734,8 +731,7 @@ namespace Botwinder.secure
 				}
 				catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 					else
 						throw;
@@ -752,23 +748,22 @@ namespace Botwinder.secure
 		{
 			string response = "";
 			List<guid> unbanned = new List<guid>();
-			foreach( UserData user in users )
+			foreach( UserData userData in users )
 			{
 				try
 				{
 					//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
 
-					await server.Guild.RemoveBanAsync(user.UserId);
+					await server.Guild.RemoveBanAsync(userData.UserId);
 
 					//UserUnbanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
 
-					user.BannedUntil = DateTime.MinValue;
-					unbanned.Add(user.UserId);
+					userData.BannedUntil = DateTime.MinValue;
+					unbanned.Add(userData.UserId);
 				}
 				catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 					else
 						throw;
