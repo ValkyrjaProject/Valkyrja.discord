@@ -775,5 +775,63 @@ namespace Botwinder.secure
 
 			return response;
 		}
+
+
+// Mute
+		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role)
+		{
+			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
+
+			StringBuilder durationString = new StringBuilder();
+			durationString.Append("for ");
+			if( duration.Days > 0 )
+			{
+				durationString.Append(duration.Days);
+				durationString.Append(duration.Days == 1 ? " day" : " days");
+				if( duration.Hours > 0 || duration.Minutes > 0 )
+					durationString.Append(" and ");
+			}
+			if( duration.Hours > 0 )
+			{
+				durationString.Append(duration.Hours);
+				durationString.Append(duration.Hours == 1 ? " hour" : " hours");
+				if( duration.Minutes > 0 )
+					durationString.Append(" and ");
+			}
+			if( duration.Minutes > 0 )
+			{
+				durationString.Append(duration.Minutes);
+				durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
+			}
+
+			string response = "";
+			List<guid> muted = new List<guid>();
+			foreach( UserData userData in users )
+			{
+				try
+				{
+					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					await user.AddRoleAsync(role);
+
+					userData.MutedUntil = mutedUntil;
+					userData.AddWarning($"Muted for {durationString.ToString()}");
+					muted.Add(userData.UserId);
+
+					//client.Events.UserMuted(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+				}
+				catch(Exception exception)
+				{
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+					else
+						throw;
+				}
+			}
+
+			if( muted.Any() )
+				response = string.Format(MuteConfirmString, muted.ToString());
+
+			return response;
+		}
 	}
 }
