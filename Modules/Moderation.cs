@@ -227,19 +227,79 @@ namespace Botwinder.secure
 			newCommand.Description = "Use with parameters `@user time reason` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or `0` for permanent.); `reason` = worded description why did you ban them - they will receive this via PM (use `silentBan` to not send the PM)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
+				if( e.MessageArgs == null || e.MessageArgs.Length < 3 )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					return;
+				}
+
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.BanMembers )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
+
+				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
+				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
+				    !client.IsGlobalAdmin(e.Message.Author.Id) )
+				{
+					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( mentionedUsers.Count < e.MessageArgs.Length + 2 )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
+
+				StringBuilder warning = new StringBuilder();
+				for(int i = mentionedUsers.Count + 1; i < e.MessageArgs.Length; i++)
+				{
+					warning.Append(e.MessageArgs[i]);
+					warning.Append(" ");
+				}
+
+				int banDurationHours = 0;
+				Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
+				Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
+
+				if( !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out banDurationHours) )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( hourMatch.Success )
+					banDurationHours = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+				if( dayMatch.Success )
+					banDurationHours += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+
+				string response = "ò_ó";
+
 				try
 				{
-				}
-				catch(Exception exception)
+					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(banDurationHours), e.Server.Config.QuickbanReason, e.Message.Author as SocketGuildUser);
+					dbContext.SaveChanges();
+				} catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
-					else
-						throw;
+					await client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
+
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
