@@ -82,9 +82,16 @@ namespace Botwinder.secure
 // !mute
 			newCommand = new Command("mute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Temporarily mute mentioned members from both the chat and voice. This command has to be configured at <http://botwinder.info/config>!";
+			newCommand.Description = "Temporarily mute mentioned members from both the chat and voice. Use with parameters `@user time` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or 1h30m - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
+				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
+				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					return;
+				}
+
 				throw new NotImplementedException();
 				string response = "";
 				try
@@ -108,19 +115,43 @@ namespace Botwinder.secure
 			newCommand.Description = "Unmute previously muted members. This command has to be configured at <http://botwinder.info/config>.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				throw new NotImplementedException();
-				string response = "";
+				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
+				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+
+				if( mentionedUsers.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, MuteNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				if( mentionedUsers.Count < e.MessageArgs.Length )
+				{
+					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					dbContext.Dispose();
+					return;
+				}
+
+				string response = "ó_ò";
+
 				try
 				{
-				}
-				catch(Exception exception)
+					response = await UnMute(e.Server, mentionedUsers, role);
+					dbContext.SaveChanges();
+				} catch(Exception exception)
 				{
-					Discord.Net.HttpException ex = exception as Discord.Net.HttpException;
-					if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
-					else
-						throw;
+					await client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
+
+				dbContext.Dispose();
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
@@ -161,7 +192,7 @@ namespace Botwinder.secure
 					return;
 				}
 
-				if( mentionedUsers.Count < e.MessageArgs.Length + 1 )
+				if( mentionedUsers.Count +1 > e.MessageArgs.Length )
 				{
 					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					dbContext.Dispose();
@@ -257,7 +288,7 @@ namespace Botwinder.secure
 					return;
 				}
 
-				if( mentionedUsers.Count < e.MessageArgs.Length + 2 )
+				if( mentionedUsers.Count + 2 > e.MessageArgs.Length )
 				{
 					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					dbContext.Dispose();
@@ -428,7 +459,7 @@ namespace Botwinder.secure
 					return;
 				}
 
-				if( mentionedUsers.Count < e.MessageArgs.Length + 1 )
+				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
 				{
 					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
 					dbContext.Dispose();
