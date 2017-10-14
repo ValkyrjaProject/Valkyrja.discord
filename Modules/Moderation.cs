@@ -755,10 +755,51 @@ namespace Botwinder.secure
 			return commands;
 		}
 
-		public Task Update(IBotwinderClient iClient)
+
+//Update
+		public async Task Update(IBotwinderClient iClient)
 		{
 			BotwinderClient client = iClient as BotwinderClient;
-			throw new NotImplementedException();
+			ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+			bool save = false;
+
+			foreach( UserData userData in dbContext.UserDatabase )
+			{
+				try{
+				Server server;
+
+				//Unban
+				if( userData.BannedUntil > DateTime.MinValue && userData.BannedUntil < DateTime.UtcNow &&
+				    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
+				{
+					await server.Guild.RemoveBanAsync(userData.UserId);
+					//else: ban them if they're on the server - implement if the ID pre-ban doesn't work.
+
+					userData.BannedUntil = DateTime.MinValue;
+					save = true;
+				}
+
+				//Unmute
+				IRole role;
+				if( userData.MutedUntil > DateTime.MinValue && userData.MutedUntil < DateTime.UtcNow &&
+				    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
+				    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null)
+				{
+					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					await user?.RemoveRoleAsync(role);
+
+					userData.MutedUntil = DateTime.MinValue;
+					save = true;
+				}
+				} catch(Exception exception)
+				{
+					await this.HandleException(exception, "Update Moderation", userData.ServerId);
+				}
+			}
+
+			if( save )
+				dbContext.SaveChanges();
+			dbContext.Dispose();
 		}
 
 
