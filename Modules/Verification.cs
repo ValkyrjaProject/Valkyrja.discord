@@ -36,8 +36,6 @@ namespace Botwinder.secure
 
         public const string UserNotFound = "I couldn't find them :(";
 
-	    private string LastVerifyMessage = "";
-
 	    private readonly ConcurrentDictionary<string, HashedValue> HashedValues = new ConcurrentDictionary<string, HashedValue>();
 
         public async Task<List<Command<TUser>>> Init<TUser>(IBotwinderClient<TUser> iClient)
@@ -68,11 +66,6 @@ namespace Botwinder.secure
 	            // GlobalAdmin verified someone somewhere.
 				if( e.MessageArgs != null && e.MessageArgs.Length == 3 && client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					if( e.Message.Content == this.LastVerifyMessage )
-						return;
-
-					this.LastVerifyMessage = e.Message.Content;
-
 					await VerifyUser(user, client.GetServerData(serverID), (e.MessageArgs[2] == "force" ? null : e.MessageArgs[2]));
 					await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
 					return;
@@ -81,11 +74,6 @@ namespace Botwinder.secure
 				// Admin verified someone.
 				if( e.MessageArgs != null && e.MessageArgs.Length == 2 && server.IsAdmin(e.Message.Author as SocketGuildUser) )
 				{
-					if( e.Message.Content == this.LastVerifyMessage )
-						return;
-
-					this.LastVerifyMessage = e.Message.Content;
-
 					guid id;
 					if( (e.Message.MentionedUsers.Count() != 1 || (user = e.Message.MentionedUsers.ElementAt(0)) == null) &&
 					    (!guid.TryParse(e.MessageArgs[0], out id) || (user = e.Server.Guild.GetUser(id)) == null) )
