@@ -63,15 +63,6 @@ namespace Botwinder.secure
                 SocketUser user = null;
                 Server<UserData> server = e.Server as Server<UserData>;
 
-	            // GlobalAdmin verified someone somewhere.
-				if( e.MessageArgs != null && e.MessageArgs.Length == 3 && client.IsGlobalAdmin(e.Message.Author.Id) )
-				{
-					await VerifyUser(user, client.GetServerData(serverID), (e.MessageArgs[2] == "force" ? null : e.MessageArgs[2]));
-					await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
-					return;
-				}
-
-				// Admin verified someone.
 				if( e.MessageArgs != null && e.MessageArgs.Length == 2 && server.IsAdmin(e.Message.Author as SocketGuildUser) )
 				{
 					guid id;
