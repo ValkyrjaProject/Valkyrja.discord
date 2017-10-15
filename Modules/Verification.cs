@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord.Net;
+using Discord.Net.Queue;
 using Discord.WebSocket;
 using guid = System.UInt64;
 
@@ -56,7 +57,7 @@ namespace Botwinder.secure
                 if ((!e.Server.Config.VerificationEnabled || e.Server.Config.VerifyRoleId == 0) &&
                     !client.IsGlobalAdmin(e.Message.Author.Id))
                 {
-                    await e.Message.Channel.SendMessageSafe("Verification is disabled on this server.");
+                    await client.SendMessageToChannel(e.Channel, "Verification is disabled on this server.");
                     return;
                 }
 
@@ -69,12 +70,12 @@ namespace Botwinder.secure
 					if( (e.Message.MentionedUsers.Count() != 1 || (user = e.Message.MentionedUsers.ElementAt(0)) == null) &&
 					    (!guid.TryParse(e.MessageArgs[0], out id) || (user = e.Server.Guild.GetUser(id)) == null) )
 					{
-						await e.Message.Channel.SendMessageSafe(UserNotFound);
+						await client.SendMessageToChannel(e.Channel, UserNotFound);
 						return;
 					}
 
 					await VerifyUser(user, server, (e.MessageArgs[1] == "force" ? null : e.MessageArgs[1]));
-					await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
+					await client.SendMessageToChannel(e.Channel, string.Format(VerifyDone, user.Id));
 					return;
 				}
 
@@ -92,14 +93,14 @@ namespace Botwinder.secure
 
 				if( user == null )
 				{
-					await e.Message.Channel.SendMessageSafe(VerifyError);
+					await client.SendMessageToChannel(e.Channel, VerifyError);
 				}
 				else
 				{
 					if( await VerifyUserPM(user, server) )
-						await e.Message.Channel.SendMessageSafe(string.Format(VerifyDone, user.Id));
+						await client.SendMessageToChannel(e.Channel, "Done.");
 					else
-						await e.Message.Channel.SendMessageSafe(string.Format(VerifySent, user.Id));
+						await client.SendMessageToChannel(e.Channel, "Ok.");
 				}
 
             };
