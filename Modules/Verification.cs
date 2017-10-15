@@ -15,13 +15,6 @@ namespace Botwinder.secure
 {
     public class Verification : IModule
     {
-        protected static Verification Instance = null;
-
-        public static Verification Get()
-        {
-            return Instance;
-        }
-
         private class HashedValue
         {
             public guid UserId;
