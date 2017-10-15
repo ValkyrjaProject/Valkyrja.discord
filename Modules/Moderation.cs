@@ -8,9 +8,10 @@ using Botwinder.core;
 using Botwinder.entities;
 using Discord;
 using Discord.WebSocket;
+
 using guid = System.UInt64;
 
-namespace Botwinder.secure
+namespace Botwinder.modules
 {
 	public class Moderation: IModule
 	{
@@ -30,7 +31,7 @@ namespace Botwinder.secure
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 
-		public async Task<List<Command>> Init(IBotwinderClient iClient)
+		public List<Command> Init(IBotwinderClient iClient)
 		{
 			BotwinderClient client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
