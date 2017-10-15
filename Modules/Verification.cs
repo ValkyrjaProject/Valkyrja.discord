@@ -108,12 +108,6 @@ namespace Botwinder.secure
             return commands;
         }
 
-        public Task Update<TUser>(IBotwinderClient<TUser> iClient) where TUser : UserData, new()
-        {
-            BotwinderClient<TUser> client = iClient as BotwinderClient<TUser>;
-            throw new NotImplementedException();
-        }
-
 	    //Returns true if the user is already verified.
 		public async Task<bool> VerifyUserPM<TUser>(SocketUser user, Server<TUser> server) where TUser : UserData, new()
 		{
