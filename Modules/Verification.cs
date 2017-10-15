@@ -15,10 +15,6 @@ namespace Botwinder.secure
 {
     public class Verification : IModule
     {
-        public Func<Exception, string, guid, Task> HandleException{ get; set; }
-
-        public bool UpdateInProgress{ get; set; } = false;
-
         protected static Verification Instance = null;
 
         public static Verification Get()
