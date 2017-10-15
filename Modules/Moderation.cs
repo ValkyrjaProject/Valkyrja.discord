@@ -35,8 +35,10 @@ namespace Botwinder.secure
 			BotwinderClient client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
 
+			client.Events.BanUser += Ban;
 			client.Events.BanUsers += Ban;
 			client.Events.UnBanUsers += UnBan;
+			client.Events.MuteUser += Mute;
 			client.Events.MuteUsers += Mute;
 			client.Events.UnMuteUsers += UnMute;
 
@@ -878,6 +880,55 @@ namespace Botwinder.secure
 			return response;
 		}
 
+		public async Task Ban(Server server, UserData userData, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false)
+		{
+			DateTime bannedUntil = DateTime.MaxValue;
+			if( duration.TotalHours >= 1 )
+				bannedUntil = DateTime.UtcNow + duration;
+			else
+				duration = TimeSpan.Zero;
+
+			StringBuilder durationString = new StringBuilder();
+			if( duration == TimeSpan.Zero )
+				durationString.Append("permanently");
+			else
+			{
+				durationString.Append("for ");
+				if( duration.Days > 0 )
+				{
+					durationString.Append(duration.Days);
+					durationString.Append(duration.Days == 1 ? " day" : " days");
+					if( duration.Hours > 0 )
+						durationString.Append(" and ");
+				}
+				if( duration.Hours > 0 )
+				{
+					durationString.Append(duration.Hours);
+					durationString.Append(duration.Hours == 1 ? " hour" : " hours");
+				}
+			}
+
+			SocketGuildUser user;
+			if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
+			{
+				try
+				{
+					await user.SendMessageSafe(string.Format(BanPmString,
+						durationString.ToString(), server.Guild.Name, reason));
+					await Task.Delay(500);
+				}
+				catch(Exception) { }
+			}
+
+			//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+
+			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
+			userData.BannedUntil = bannedUntil;
+			userData.AddWarning($"Banned {durationString.ToString()} with reason: {reason}");
+
+			//client.Events.UserBanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+		}
+
 		public async Task<string> UnBan(Server server, List<UserData> users)
 		{
 			string response = "";
@@ -912,6 +963,43 @@ namespace Botwinder.secure
 
 
 // Mute
+		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
+		{
+			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
+
+			StringBuilder durationString = new StringBuilder();
+			durationString.Append("for ");
+			if( duration.Days > 0 )
+			{
+				durationString.Append(duration.Days);
+				durationString.Append(duration.Days == 1 ? " day" : " days");
+				if( duration.Hours > 0 || duration.Minutes > 0 )
+					durationString.Append(" and ");
+			}
+			if( duration.Hours > 0 )
+			{
+				durationString.Append(duration.Hours);
+				durationString.Append(duration.Hours == 1 ? " hour" : " hours");
+				if( duration.Minutes > 0 )
+					durationString.Append(" and ");
+			}
+			if( duration.Minutes > 0 )
+			{
+				durationString.Append(duration.Minutes);
+				durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
+			}
+
+			List<guid> muted = new List<guid>();
+				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+				await user.AddRoleAsync(role);
+
+				userData.MutedUntil = mutedUntil;
+				userData.AddWarning($"Muted for {durationString.ToString()}");
+				muted.Add(userData.UserId);
+
+				//client.Events.UserMuted(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+		}
+
 		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
