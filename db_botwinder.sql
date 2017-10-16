@@ -72,6 +72,7 @@ CREATE TABLE `server_config` (
 	`command_prefix` VARCHAR(255) NOT NULL DEFAULT '!',
 	`command_prefix_alt` VARCHAR(255) NOT NULL,
 	`execute_on_edit` BOOLEAN NOT NULL DEFAULT '1',
+	`antispam_priority` BOOLEAN NOT NULL DEFAULT '0',
 	`antispam_invites` BOOLEAN NOT NULL DEFAULT '0',
 	`antispam_invites_ban` BOOLEAN NOT NULL DEFAULT '0',
 	`antispam_duplicate` BOOLEAN NOT NULL DEFAULT '0',
