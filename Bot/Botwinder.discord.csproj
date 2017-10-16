@@ -20,6 +20,9 @@
     <Compile Include="..\Config.cs">
       <Link>Config.cs</Link>
     </Compile>
+    <Compile Include="..\GlobalConfig.cs">
+      <Link>GlobalConfig.cs</Link>
+    </Compile>
     <Compile Include="..\UserData.cs">
       <Link>UserData.cs</Link>
     </Compile>
