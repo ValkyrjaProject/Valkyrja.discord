@@ -24,9 +24,12 @@ namespace Botwinder.modules
 		private const string KickNotFoundString = "I couldn't find them :(";
 		private const string KickPmString = "Hello!\nYou have been kicked out of the **{0} server** by its Moderators for the following reason:\n{1}";
 		private const string WarningNotFoundString = "I couldn't find them :(";
+		private const string WarningPmString = "Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}";
 		private const string MuteConfirmString = "*Silence!!  ò_ó\n...\nI keel u, {0}!!*  Ò_Ó";
 		private const string UnmuteConfirmString = "Speak {0}!";
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
+		private const string InvalidArgumentsString = "Invalid arguments.\n";
+		private const string RoleNotFoundString = "The Muted role is not configured - head to <http://botwinder.info/config>";
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -91,7 +94,7 @@ namespace Botwinder.modules
 // !mute
 			newCommand = new Command("mute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Temporarily mute mentioned members from both the chat and voice. Use with parameters `@user time` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or 1h30m - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
+			newCommand.Description = "Temporarily mute mentioned members from both the chat and voice. Use with parameters `@user time` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -101,9 +104,15 @@ namespace Botwinder.modules
 				}
 
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
-				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
+				if( role == null )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(RoleNotFoundString);
+					return;
+				}
+
+				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
+				{
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -127,7 +136,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -139,7 +148,7 @@ namespace Botwinder.modules
 
 				if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out muteDurationMinutes) )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -183,7 +192,7 @@ namespace Botwinder.modules
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
 				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -199,7 +208,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -259,7 +268,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count +1 > e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -308,7 +317,7 @@ namespace Botwinder.modules
 				}
 				else if( string.IsNullOrEmpty(response) )
 				{
-					response = "I've fired them railguns at " + usernames.ToString() + ".";
+					response = "I've fired them railguns at " + usernames.ToNames() + ".";
 					dbContext.SaveChanges();
 				}
 
@@ -325,7 +334,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( e.MessageArgs == null || e.MessageArgs.Length < 3 )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -355,7 +364,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count + 2 > e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -373,7 +382,7 @@ namespace Botwinder.modules
 
 				if( !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out banDurationHours) )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -418,7 +427,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -434,7 +443,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -464,7 +473,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -480,7 +489,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -526,7 +535,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await iClient.SendMessageToChannel(e.Channel, InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -548,7 +557,7 @@ namespace Botwinder.modules
 						{
 							SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
 							if( user != null )
-								await user.SendMessageSafe(string.Format("Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}",
+								await user.SendMessageSafe(string.Format(WarningPmString,
 									e.Server.Guild.Name, warning.ToString()));
 						}
 						catch(Exception) { }
@@ -592,7 +601,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe("Invalid arguments.\n" + e.Command.Description);
+					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -876,7 +885,7 @@ namespace Botwinder.modules
 			}
 
 			if( banned.Any() )
-				response = string.Format(BanConfirmString, banned.ToString());
+				response = string.Format(BanConfirmString, banned.ToMentions());
 
 			return response;
 		}
@@ -957,7 +966,7 @@ namespace Botwinder.modules
 			}
 
 			if( unbanned.Any() )
-				response = string.Format(UnbanConfirmString, unbanned.ToString());
+				response = string.Format(UnbanConfirmString, unbanned.ToMentions());
 
 			return response;
 		}
@@ -1052,7 +1061,7 @@ namespace Botwinder.modules
 			}
 
 			if( muted.Any() )
-				response = string.Format(MuteConfirmString, muted.ToString());
+				response = string.Format(MuteConfirmString, muted.ToMentions());
 
 			return response;
 		}
@@ -1082,7 +1091,7 @@ namespace Botwinder.modules
 			}
 
 			if( unmuted.Any() )
-				response = string.Format(UnmuteConfirmString, unmuted.ToString());
+				response = string.Format(UnmuteConfirmString, unmuted.ToMentions());
 
 			return response;
 		}

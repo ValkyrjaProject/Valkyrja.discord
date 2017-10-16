@@ -85,7 +85,7 @@ namespace Botwinder.modules
 					}
 
 					await VerifyUsers(e.Server, mentionedUsers); // actually verify people
-					response = string.Format(VerifiedString, mentionedUsers.Select(u => u.UserId).ToString());
+					response = string.Format(VerifiedString, mentionedUsers.Select(u => u.UserId).ToMentions());
 					dbContext.SaveChanges();
 				}
 				else if( string.IsNullOrEmpty(e.TrimmedMessage) ) // Verify the author.
