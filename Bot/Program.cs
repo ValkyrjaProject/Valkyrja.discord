@@ -34,10 +34,11 @@ namespace Botwinder.discord
 		{
 			while( true )
 			{
+				this.Bot = new BotwinderClient();
+				InitModules();
+
 				try
 				{
-					this.Bot = new BotwinderClient();
-					InitModules();
 					await this.Bot.Connect();
 					await Task.Delay(-1);
 				}
