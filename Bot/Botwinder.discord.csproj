@@ -16,4 +16,15 @@
     <PackageReference Include="Discord.Net.Rest" Version="2.0.0-alpha-build-00006" />
     <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-alpha-build-00006" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Config.cs">
+      <Link>Config.cs</Link>
+    </Compile>
+    <Compile Include="..\UserData.cs">
+      <Link>UserData.cs</Link>
+    </Compile>
+    <Compile Include="..\UserDatabase.cs">
+      <Link>UserDatabase.cs</Link>
+    </Compile>
+  </ItemGroup>
 </Project>
