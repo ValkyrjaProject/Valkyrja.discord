@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
-//using Botwinder.modules; //todo - doesn't exist yet...
+using Botwinder.modules;
 #if UsingBotwinderSecure
 using Botwinder.secure;
 #endif
@@ -37,6 +37,7 @@ namespace Botwinder.discord
 				try
 				{
 					this.Bot = new BotwinderClient();
+					InitModules();
 					await this.Bot.Connect();
 					await Task.Delay(-1);
 				}
@@ -46,6 +47,13 @@ namespace Botwinder.discord
 					this.Bot.Dispose();
 				}
 			}
+		}
+
+		private void InitModules()
+		{
+			this.Bot.Modules.Add(new Antispam());
+			this.Bot.Modules.Add(new Moderation());
+			this.Bot.Modules.Add(new Verification());
 		}
 	}
 }
