@@ -253,24 +253,26 @@ namespace Botwinder.discord
 								} catch(Exception ex) { Console.WriteLine(ex.Message); }
 
 								Console.WriteLine("Database: " + pair.Value.Id.ToString());
-								Botwinder.old.UserDatabase oldDatabase = Botwinder.old.UserDatabase.Load(Path.Combine("config", pair.Value.Id.ToString()));
-								if( oldDatabase != null )
-									await oldDatabase.ForEach(async u => {
-										try
-										{
-											UserData userData = new UserData{
-												ServerId = pair.Value.Id,
-												UserId = u.ID,
-												Verified = u.Verified,
-												WarningCount = u.WarningCount,
-												KarmaCount = u.KarmaCount
-											};
-											if( u.Bans != null && u.Bans.Length > 0 )
-												userData.BannedUntil = u.Bans[0].BannedUntil.DateTime;
+								try{
+									Botwinder.old.UserDatabase oldDatabase = Botwinder.old.UserDatabase.Load(Path.Combine("config", pair.Value.Id.ToString()));
+									if( oldDatabase != null )
+										await oldDatabase.ForEach(async u => {
+											try
+											{
+												UserData userData = new UserData{
+													ServerId = pair.Value.Id,
+													UserId = u.ID,
+													Verified = u.Verified,
+													WarningCount = u.WarningCount,
+													KarmaCount = u.KarmaCount
+												};
+												if( u.Bans != null && u.Bans.Length > 0 )
+													userData.BannedUntil = u.Bans[0].BannedUntil.DateTime;
 
-											dbContext.UserDatabase.Add(userData);
-										} catch(Exception ex) { Console.WriteLine(ex.Message); }
-									});
+												dbContext.UserDatabase.Add(userData);
+											} catch(Exception ex) { Console.WriteLine(ex.Message); }
+										});
+								} catch(Exception ex) { Console.WriteLine(ex.Message); }
 							}
 
 							Console.WriteLine("Saving servers.");
