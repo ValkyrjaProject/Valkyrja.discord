@@ -157,104 +157,111 @@ namespace Botwinder.discord
 									newConfig.VerifyMessage = oldConfig.VerifyPM;
 
 									Console.WriteLine("Roles & channels: " + pair.Value.Id.ToString());
-									for( int i = 0; i < oldConfig.ModChannelIgnore.Length; i++ )
-									{
-										ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ChannelId == oldConfig.ModChannelIgnore[i]);
-										if( channel == null )
+									if( oldConfig.ModChannelIgnore != null )
+										for( int i = 0; i < oldConfig.ModChannelIgnore.Length; i++ )
 										{
-											channel = new ChannelConfig{
-												ServerId = pair.Value.Id,
-												ChannelId = oldConfig.ModChannelIgnore[i]
-											};
-											dbContext.Channels.Add(channel);
+											ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ChannelId == oldConfig.ModChannelIgnore[i]);
+											if( channel == null )
+											{
+												channel = new ChannelConfig{
+													ServerId = pair.Value.Id,
+													ChannelId = oldConfig.ModChannelIgnore[i]
+												};
+												dbContext.Channels.Add(channel);
+											}
+											channel.Ignored = true;
 										}
-										channel.Ignored = true;
-									}
-									for( int i = 0; i < oldConfig.RoleIDsAdmin.Length; i++ )
-									{
-										RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsAdmin[i]);
-										if( role == null )
+									if( oldConfig.RoleIDsAdmin != null )
+										for( int i = 0; i < oldConfig.RoleIDsAdmin.Length; i++ )
 										{
-											role = new RoleConfig{
-												ServerId = pair.Value.Id,
-												RoleId = oldConfig.RoleIDsAdmin[i]
-											};
-											dbContext.Roles.Add(role);
+											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsAdmin[i]);
+											if( role == null )
+											{
+												role = new RoleConfig{
+													ServerId = pair.Value.Id,
+													RoleId = oldConfig.RoleIDsAdmin[i]
+												};
+												dbContext.Roles.Add(role);
+											}
+											role.PermissionLevel = RolePermissionLevel.Admin;
 										}
-										role.PermissionLevel = RolePermissionLevel.Admin;
-									}
-									for( int i = 0; i < oldConfig.RoleIDsModerator.Length; i++ )
-									{
-										RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsModerator[i]);
-										if( role == null )
+									if( oldConfig.RoleIDsModerator != null )
+										for( int i = 0; i < oldConfig.RoleIDsModerator.Length; i++ )
 										{
-											role = new RoleConfig{
-												ServerId = pair.Value.Id,
-												RoleId = oldConfig.RoleIDsModerator[i]
-											};
-											dbContext.Roles.Add(role);
+											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsModerator[i]);
+											if( role == null )
+											{
+												role = new RoleConfig{
+													ServerId = pair.Value.Id,
+													RoleId = oldConfig.RoleIDsModerator[i]
+												};
+												dbContext.Roles.Add(role);
+											}
+											role.PermissionLevel = RolePermissionLevel.Moderator;
 										}
-										role.PermissionLevel = RolePermissionLevel.Moderator;
-									}
-									for( int i = 0; i < oldConfig.RoleIDsSubModerator.Length; i++ )
-									{
-										RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsSubModerator[i]);
-										if( role == null )
+									if( oldConfig.RoleIDsSubModerator != null )
+										for( int i = 0; i < oldConfig.RoleIDsSubModerator.Length; i++ )
 										{
-											role = new RoleConfig{
-												ServerId = pair.Value.Id,
-												RoleId = oldConfig.RoleIDsSubModerator[i]
-											};
-											dbContext.Roles.Add(role);
+											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsSubModerator[i]);
+											if( role == null )
+											{
+												role = new RoleConfig{
+													ServerId = pair.Value.Id,
+													RoleId = oldConfig.RoleIDsSubModerator[i]
+												};
+												dbContext.Roles.Add(role);
+											}
+											role.PermissionLevel = RolePermissionLevel.SubModerator;
 										}
-										role.PermissionLevel = RolePermissionLevel.SubModerator;
-									}
-									for( int i = 0; i < oldConfig.RoleIDsMember.Length; i++ )
-									{
-										RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsMember[i]);
-										if( role == null )
+									if( oldConfig.RoleIDsMember != null )
+										for( int i = 0; i < oldConfig.RoleIDsMember.Length; i++ )
 										{
-											role = new RoleConfig{
-												ServerId = pair.Value.Id,
-												RoleId = oldConfig.RoleIDsMember[i]
-											};
-											dbContext.Roles.Add(role);
+											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsMember[i]);
+											if( role == null )
+											{
+												role = new RoleConfig{
+													ServerId = pair.Value.Id,
+													RoleId = oldConfig.RoleIDsMember[i]
+												};
+												dbContext.Roles.Add(role);
+											}
+											role.PermissionLevel = RolePermissionLevel.Member;
 										}
-										role.PermissionLevel = RolePermissionLevel.Member;
-									}
-									for( int i = 0; i < oldConfig.PublicRoleIDs.Length; i++ )
-									{
-										RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.PublicRoleIDs[i]);
-										if( role == null )
+									if( oldConfig.PublicRoleIDs != null )
+										for( int i = 0; i < oldConfig.PublicRoleIDs.Length; i++ )
 										{
-											role = new RoleConfig{
-												ServerId = pair.Value.Id,
-												RoleId = oldConfig.PublicRoleIDs[i]
-											};
-											dbContext.Roles.Add(role);
+											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.PublicRoleIDs[i]);
+											if( role == null )
+											{
+												role = new RoleConfig{
+													ServerId = pair.Value.Id,
+													RoleId = oldConfig.PublicRoleIDs[i]
+												};
+												dbContext.Roles.Add(role);
+											}
+											role.PermissionLevel = RolePermissionLevel.Public;
 										}
-										role.PermissionLevel = RolePermissionLevel.Public;
-									}
 								} catch(Exception ex) { Console.WriteLine(ex.Message); }
 
 								Console.WriteLine("Database: " + pair.Value.Id.ToString());
 								Botwinder.old.UserDatabase oldDatabase = Botwinder.old.UserDatabase.Load(Path.Combine("config", pair.Value.Id.ToString()));
-								await oldDatabase.ForEach(async u => {
-									try
-									{
-										UserData userData = new UserData{
-											ServerId = pair.Value.Id,
-											UserId = u.ID,
-											Verified = u.Verified,
-											WarningCount = u.WarningCount,
-											KarmaCount = u.KarmaCount
-										};
-										if( u.Bans != null && u.Bans.Length > 0 )
-											userData.BannedUntil = u.Bans[0].BannedUntil.DateTime;
+								if( oldDatabase != null )
+									await oldDatabase.ForEach(async u => {
+										try
+										{
+											UserData userData = new UserData{
+												ServerId = pair.Value.Id,
+												UserId = u.ID,
+												Verified = u.Verified,
+												WarningCount = u.WarningCount,
+												KarmaCount = u.KarmaCount
+											};
+											if( u.Bans != null && u.Bans.Length > 0 )
+												userData.BannedUntil = u.Bans[0].BannedUntil.DateTime;
 
-										dbContext.UserDatabase.Add(userData);
-									} catch(Exception ex) { Console.WriteLine(ex.Message); }
-								});
+											dbContext.UserDatabase.Add(userData);
+										} catch(Exception ex) { Console.WriteLine(ex.Message); }
+									});
 							}
 
 							Console.WriteLine("Saving servers.");
