@@ -46,7 +46,10 @@ namespace Botwinder.discord
 					this.Bot.Events.Connected += async () => {
 						try
 						{
-							await Task.Delay(300000);
+							while( this.Bot.Servers == null || this.Bot.Servers.Count < 420 )
+							{
+								await Task.Delay(60000);
+							}
 							GlobalContext globalContext = GlobalContext.Create(this.Bot.DbConfig.GetDbConnectionString());
 							Botwinder.old.GlobalConfig oldGlobalConfig = Botwinder.old.GlobalConfig.Load();
 
