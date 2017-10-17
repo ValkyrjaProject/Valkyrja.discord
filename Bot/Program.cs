@@ -55,13 +55,17 @@ namespace Botwinder.discord
 
 							Console.WriteLine("Porting subscribers.");
 							for( int i = 0; i < oldGlobalConfig.PartneredUserIDs.Length; i++ )
-								if( !globalContext.Subscribers.Any(s => s.UserId == oldGlobalConfig.PartneredUserIDs[i]) )
-									globalContext.Subscribers.Add(new Subscriber{UserId = oldGlobalConfig.PartneredUserIDs[i]});
+								try{
+									if( !globalContext.Subscribers.Any(s => s.UserId == oldGlobalConfig.PartneredUserIDs[i]) )
+										globalContext.Subscribers.Add(new Subscriber{UserId = oldGlobalConfig.PartneredUserIDs[i]});
+								} catch(Exception ex) { Console.WriteLine(ex.Message); }
 
 							Console.WriteLine("Porting partners.");
 							for( int i = 0; i < oldGlobalConfig.PartneredServerIDs.Length; i++ )
-								if( !globalContext.PartneredServers.Any(s => s.ServerId == oldGlobalConfig.PartneredServerIDs[i]) )
-									globalContext.PartneredServers.Add(new PartneredServer{ServerId = oldGlobalConfig.PartneredServerIDs[i]});
+								try{
+									if( !globalContext.PartneredServers.Any(s => s.ServerId == oldGlobalConfig.PartneredServerIDs[i]) )
+										globalContext.PartneredServers.Add(new PartneredServer{ServerId = oldGlobalConfig.PartneredServerIDs[i]});
+								} catch(Exception ex) { Console.WriteLine(ex.Message); }
 
 							Console.WriteLine("Saving global.");
 							globalContext.SaveChanges();
