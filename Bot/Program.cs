@@ -95,8 +95,8 @@ namespace Botwinder.discord
 
 									newConfig.IgnoreBots = oldConfig.IgnoreBots;
 									newConfig.IgnoreEveryone = oldConfig.IgnoreEveryone;
-									newConfig.CommandPrefix = oldConfig.CommandCharacter;
-									newConfig.CommandPrefixAlt = oldConfig.AltCommandPrefix;
+									newConfig.CommandPrefix = oldConfig.CommandCharacter ?? "";
+									newConfig.CommandPrefixAlt = oldConfig.AltCommandPrefix ?? "";
 									newConfig.ExecuteOnEdit = oldConfig.ExecuteCommandsOnEditedMessages;
 									newConfig.AntispamPriority = oldConfig.PrioritizeAntispam;
 									newConfig.AntispamInvites = oldConfig.RemoveDiscordInvites;
@@ -126,17 +126,17 @@ namespace Botwinder.discord
 									newConfig.AntispamIgnoreMembers = oldConfig.MembersIgnoreAntispam;
 									newConfig.OperatorRoleId = oldConfig.RoleIDOperator;
 									newConfig.QuickbanDuration = oldConfig.QuickbanDuration;
-									newConfig.QuickbanReason = oldConfig.QuickbanReason;
+									newConfig.QuickbanReason = oldConfig.QuickbanReason ?? "";
 									newConfig.MuteRoleId = oldConfig.MuteRole;
 									newConfig.MuteIgnoreChannelId = oldConfig.MuteIgnoreChannel;
 									newConfig.KarmaEnabled = oldConfig.KarmaEnabled;
 									newConfig.KarmaLimitMentions = oldConfig.KarmaLimitMentions;
 									newConfig.KarmaLimitMinutes = oldConfig.KarmaLimitMinutes;
 									newConfig.KarmaLimitResponse = oldConfig.KarmaLimitResponse;
-									newConfig.KarmaCurrency = oldConfig.KarmaCurrency;
-									newConfig.KarmaCurrencySingular = oldConfig.KarmaCurrencySingular;
-									newConfig.KarmaConsumeCommand = oldConfig.KarmaConsumeCommand;
-									newConfig.KarmaConsumeVerb = oldConfig.KarmaConsumeVerb;
+									newConfig.KarmaCurrency = oldConfig.KarmaCurrency ?? "";
+									newConfig.KarmaCurrencySingular = oldConfig.KarmaCurrencySingular ?? "";
+									newConfig.KarmaConsumeCommand = oldConfig.KarmaConsumeCommand ?? "";
+									newConfig.KarmaConsumeVerb = oldConfig.KarmaConsumeVerb ?? "";
 									newConfig.LogChannelId = oldConfig.ModChannel;
 									newConfig.ModChannelId = oldConfig.ModChannelBans;
 									newConfig.LogBans = oldConfig.ModChannelLogBans;
@@ -146,18 +146,18 @@ namespace Botwinder.discord
 									newConfig.ActivityChannelId = oldConfig.UserActivityChannel;
 									newConfig.LogJoin = oldConfig.UserActivityLogJoined;
 									newConfig.LogLeave = oldConfig.UserActivityLogLeft;
-									newConfig.LogMessageJoin = oldConfig.UserActivityMessageJoined;
-									newConfig.LogMessageLeave = oldConfig.UserActivityMessageLeft;
+									newConfig.LogMessageJoin = oldConfig.UserActivityMessageJoined ?? "";
+									newConfig.LogMessageLeave = oldConfig.UserActivityMessageLeft ?? "";
 									newConfig.LogMentionJoin = oldConfig.UserActivityMention;
 									newConfig.LogMentionLeave = oldConfig.UserActivityMentionLeft;
 									newConfig.WelcomeMessageEnabled = oldConfig.WelcomeMessageEnabled;
-									newConfig.WelcomeMessage = oldConfig.WelcomeMessage;
+									newConfig.WelcomeMessage = oldConfig.WelcomeMessage ?? "";
 									newConfig.WelcomeRoleId = oldConfig.WelcomeRoleID;
 									newConfig.VerificationEnabled = oldConfig.VerifyEnabled;
 									newConfig.VerifyOnWelcome = oldConfig.VerifyOnWelcome;
 									newConfig.VerifyRoleId = oldConfig.VerifyRoleID;
 									newConfig.VerifyKarma = oldConfig.VerifyKarma;
-									newConfig.VerifyMessage = oldConfig.VerifyPM;
+									newConfig.VerifyMessage = oldConfig.VerifyPM ?? "";
 
 									Console.WriteLine("Roles & channels: " + pair.Value.Id.ToString());
 									if( oldConfig.ModChannelIgnore != null )
