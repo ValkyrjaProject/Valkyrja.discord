@@ -70,6 +70,9 @@ namespace Botwinder.discord
 							Console.WriteLine("Saving global.");
 							globalContext.SaveChanges();
 
+							List<ChannelConfig> channels = new List<ChannelConfig>();
+							List<RoleConfig> roles = new List<RoleConfig>();
+
 							Console.WriteLine("Porting servers.");
 							ServerContext dbContext = ServerContext.Create(this.Bot.DbConfig.GetDbConnectionString());
 							foreach( KeyValuePair<guid, Server> pair in this.Bot.Servers )
@@ -160,13 +163,14 @@ namespace Botwinder.discord
 									if( oldConfig.ModChannelIgnore != null )
 										for( int i = 0; i < oldConfig.ModChannelIgnore.Length; i++ )
 										{
-											ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ChannelId == oldConfig.ModChannelIgnore[i]);
+											ChannelConfig channel = channels.FirstOrDefault(c => c.ChannelId == oldConfig.ModChannelIgnore[i]);
 											if( channel == null )
 											{
 												channel = new ChannelConfig{
 													ServerId = pair.Value.Id,
 													ChannelId = oldConfig.ModChannelIgnore[i]
 												};
+												channels.Add(channel);
 												dbContext.Channels.Add(channel);
 											}
 											channel.Ignored = true;
@@ -174,13 +178,14 @@ namespace Botwinder.discord
 									if( oldConfig.RoleIDsAdmin != null )
 										for( int i = 0; i < oldConfig.RoleIDsAdmin.Length; i++ )
 										{
-											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsAdmin[i]);
+											RoleConfig role = roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsAdmin[i]);
 											if( role == null )
 											{
 												role = new RoleConfig{
 													ServerId = pair.Value.Id,
 													RoleId = oldConfig.RoleIDsAdmin[i]
 												};
+												roles.Add(role);
 												dbContext.Roles.Add(role);
 											}
 											role.PermissionLevel = RolePermissionLevel.Admin;
@@ -188,13 +193,14 @@ namespace Botwinder.discord
 									if( oldConfig.RoleIDsModerator != null )
 										for( int i = 0; i < oldConfig.RoleIDsModerator.Length; i++ )
 										{
-											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsModerator[i]);
+											RoleConfig role = roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsModerator[i]);
 											if( role == null )
 											{
 												role = new RoleConfig{
 													ServerId = pair.Value.Id,
 													RoleId = oldConfig.RoleIDsModerator[i]
 												};
+												roles.Add(role);
 												dbContext.Roles.Add(role);
 											}
 											role.PermissionLevel = RolePermissionLevel.Moderator;
@@ -202,13 +208,14 @@ namespace Botwinder.discord
 									if( oldConfig.RoleIDsSubModerator != null )
 										for( int i = 0; i < oldConfig.RoleIDsSubModerator.Length; i++ )
 										{
-											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsSubModerator[i]);
+											RoleConfig role = roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsSubModerator[i]);
 											if( role == null )
 											{
 												role = new RoleConfig{
 													ServerId = pair.Value.Id,
 													RoleId = oldConfig.RoleIDsSubModerator[i]
 												};
+												roles.Add(role);
 												dbContext.Roles.Add(role);
 											}
 											role.PermissionLevel = RolePermissionLevel.SubModerator;
@@ -216,13 +223,14 @@ namespace Botwinder.discord
 									if( oldConfig.RoleIDsMember != null )
 										for( int i = 0; i < oldConfig.RoleIDsMember.Length; i++ )
 										{
-											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsMember[i]);
+											RoleConfig role = roles.FirstOrDefault(r => r.RoleId == oldConfig.RoleIDsMember[i]);
 											if( role == null )
 											{
 												role = new RoleConfig{
 													ServerId = pair.Value.Id,
 													RoleId = oldConfig.RoleIDsMember[i]
 												};
+												roles.Add(role);
 												dbContext.Roles.Add(role);
 											}
 											role.PermissionLevel = RolePermissionLevel.Member;
@@ -230,13 +238,14 @@ namespace Botwinder.discord
 									if( oldConfig.PublicRoleIDs != null )
 										for( int i = 0; i < oldConfig.PublicRoleIDs.Length; i++ )
 										{
-											RoleConfig role = dbContext.Roles.FirstOrDefault(r => r.RoleId == oldConfig.PublicRoleIDs[i]);
+											RoleConfig role = roles.FirstOrDefault(r => r.RoleId == oldConfig.PublicRoleIDs[i]);
 											if( role == null )
 											{
 												role = new RoleConfig{
 													ServerId = pair.Value.Id,
 													RoleId = oldConfig.PublicRoleIDs[i]
 												};
+												roles.Add(role);
 												dbContext.Roles.Add(role);
 											}
 											role.PermissionLevel = RolePermissionLevel.Public;
