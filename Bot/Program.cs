@@ -50,7 +50,7 @@ namespace Botwinder.discord
 							{
 								await Task.Delay(60000);
 							}
-							GlobalContext globalContext = GlobalContext.Create(this.Bot.DbConfig.GetDbConnectionString());
+							/*GlobalContext globalContext = GlobalContext.Create(this.Bot.DbConfig.GetDbConnectionString());
 							Botwinder.old.GlobalConfig oldGlobalConfig = Botwinder.old.GlobalConfig.Load();
 
 							Console.WriteLine("Porting subscribers.");
@@ -71,13 +71,14 @@ namespace Botwinder.discord
 							globalContext.SaveChanges();
 
 							List<ChannelConfig> channels = new List<ChannelConfig>();
-							List<RoleConfig> roles = new List<RoleConfig>();
+							List<RoleConfig> roles = new List<RoleConfig>();*/
+							List<UserData> users = new List<UserData>();
 
 							Console.WriteLine("Porting servers.");
 							ServerContext dbContext = ServerContext.Create(this.Bot.DbConfig.GetDbConnectionString());
 							foreach( KeyValuePair<guid, Server> pair in this.Bot.Servers )
 							{
-								try
+								/*try
 								{
 									Console.WriteLine("Server: " + pair.Value.Id.ToString());
 									Botwinder.old.ServerConfig oldConfig = Botwinder.old.ServerConfig.Load("config", pair.Value.Id, pair.Value.Guild.Name);
@@ -250,28 +251,34 @@ namespace Botwinder.discord
 											}
 											role.PermissionLevel = RolePermissionLevel.Public;
 										}
-								} catch(Exception ex) { Console.WriteLine(ex.Message); }
+								} catch(Exception ex) { Console.WriteLine(ex.Message); }*/
 
 								Console.WriteLine("Database: " + pair.Value.Id.ToString());
 								try{
 									Botwinder.old.UserDatabase oldDatabase = Botwinder.old.UserDatabase.Load(Path.Combine("config", pair.Value.Id.ToString()));
-									if( oldDatabase != null )
-										await oldDatabase.ForEach(async u => {
-											try
-											{
-												UserData userData = new UserData{
-													ServerId = pair.Value.Id,
-													UserId = u.ID,
-													Verified = u.Verified,
-													WarningCount = u.WarningCount,
-													KarmaCount = u.KarmaCount
-												};
-												if( u.Bans != null && u.Bans.Length > 0 )
-													userData.BannedUntil = u.Bans[0].BannedUntil.DateTime;
+									int count = 0;
+									foreach( Botwinder.old.UserData oldData in oldDatabase._UserData)
+									{
+										try
+										{
+											if( users.Any(u => u.ServerId == pair.Value.Id && u.UserId == oldData.ID) )
+												continue;
+											UserData userData = new UserData{
+												ServerId = pair.Value.Id,
+												UserId = oldData.ID,
+												Verified = oldData.Verified,
+												WarningCount = oldData.WarningCount,
+												KarmaCount = oldData.KarmaCount
+											};
+											if( oldData.Bans != null && oldData.Bans.Length > 0 )
+												userData.BannedUntil = oldData.Bans[0].BannedUntil.DateTime;
 
-												dbContext.UserDatabase.Add(userData);
-											} catch(Exception ex) { Console.WriteLine(ex.Message); }
-										});
+											count++;
+											users.Add(userData);
+											dbContext.UserDatabase.Add(userData);
+										} catch(Exception ex) { Console.WriteLine(ex.Message); }
+									}
+									Console.WriteLine("Users added: " + count);
 								} catch(Exception ex) { Console.WriteLine(ex.Message); }
 							}
 
@@ -280,7 +287,7 @@ namespace Botwinder.discord
 
 							Console.WriteLine("Done.");
 							await Task.Delay(3000);
-							globalContext.Dispose();
+							//globalContext.Dispose();
 							dbContext.Dispose();
 						}
 						catch(Exception e)
