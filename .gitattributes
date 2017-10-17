@@ -4,6 +4,7 @@
 *.gif binary
 *.jpg binary
 *.png binary
+*.nupkg binary
 
 # Custom for Visual Studio
 *.cs     diff=csharp
