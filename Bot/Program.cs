@@ -79,6 +79,14 @@ namespace Botwinder.discord
 									Console.WriteLine("Server: " + pair.Value.Id.ToString());
 									Botwinder.old.ServerConfig oldConfig = Botwinder.old.ServerConfig.Load("config", pair.Value.Id, pair.Value.Guild.Name);
 									ServerConfig newConfig = dbContext.ServerConfigurations.FirstOrDefault(s => s.ServerId == pair.Value.Id);
+
+									if( newConfig == null )
+									{
+										newConfig = new ServerConfig{
+											ServerId = pair.Value.Id
+										};
+										dbContext.ServerConfigurations.Add(newConfig);
+									}
 									if( newConfig == null || oldConfig == null )
 										continue;
 
