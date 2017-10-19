@@ -18,7 +18,7 @@ namespace Botwinder.modules
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanNotFoundString = "I couldn't find them :(";
-		private const string BanConfirmString = "_\\*fires them railguns at <@{0}>*_  Ò_Ó";
+		private const string BanConfirmString = "_\\*fires them railguns at {0}*_  Ò_Ó";
 		private const string UnbanConfirmString = "I've unbanned {0}... ó_ò";
 		private const string KickArgsString = "I'm supposed to shoot... who?\n";
 		private const string KickNotFoundString = "I couldn't find them :(";
