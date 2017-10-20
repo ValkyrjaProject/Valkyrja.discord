@@ -803,7 +803,8 @@ namespace Botwinder.modules
 				    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null)
 				{
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-					await user?.RemoveRoleAsync(role);
+					if( user != null )
+						await user.RemoveRoleAsync(role);
 
 					userData.MutedUntil = DateTime.MinValue;
 					save = true;
