@@ -124,7 +124,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -196,7 +196,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -256,7 +256,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -352,7 +352,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -431,7 +431,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -477,7 +477,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -523,7 +523,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -589,7 +589,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -676,7 +676,7 @@ namespace Botwinder.modules
 				}
 
 				string response = "I found too many, please be more specific.";
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 
 				if( foundUserIds.Count <= 5 )
 				{
@@ -717,7 +717,7 @@ namespace Botwinder.modules
 
 				string response = "I found too many, please be more specific.";
 				string expression = e.TrimmedMessage.ToLower();
-				ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<Username> foundUsernames = dbContext.Usernames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
 				List<Nickname> foundNicknames = dbContext.Nicknames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
 				List<guid> foundUserIds = new List<guid>();
@@ -777,7 +777,7 @@ namespace Botwinder.modules
 		public async Task Update(IBotwinderClient iClient)
 		{
 			BotwinderClient client = iClient as BotwinderClient;
-			ServerContext dbContext = ServerContext.Create(client.DbConfig.GetDbConnectionString());
+			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 			bool save = false;
 
 			foreach( UserData userData in dbContext.UserDatabase )

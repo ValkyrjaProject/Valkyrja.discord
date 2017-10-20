@@ -68,7 +68,7 @@ namespace Botwinder.modules
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
 			newCommand.OnExecute += async e => {
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConfig.GetDbConnectionString());
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 				string response = InvalidParametersString;
 
@@ -229,7 +229,7 @@ namespace Botwinder.modules
 
 			Server server = this.Client.Servers[this.HashedValues[hashCode].ServerId];
 
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConfig.GetDbConnectionString());
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 			UserData userData = dbContext.GetOrAddUser(server.Id, userId);
 
 			if( await VerifyUsers(server, new List<UserData>{userData}) )
