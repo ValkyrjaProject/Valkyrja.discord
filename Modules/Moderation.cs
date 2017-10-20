@@ -683,17 +683,19 @@ namespace Botwinder.modules
 					StringBuilder whoisStrings = new StringBuilder();
 					for( int i = 0; i < foundUserIds.Count; i++ )
 					{
-						UserData userData = dbContext.UserDatabase.FirstOrDefault(u => u.ServerId == e.Server.Id && u.UserId == foundUserIds[i]);
+						UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundUserIds[i]);
 						if( userData != null )
-							whoisStrings.AppendLine(userData.GetWhoisString(dbContext));
+						{
+							SocketGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
+							whoisStrings.AppendLine(userData.GetWhoisString(dbContext, user));
+						}
 					}
 
+					response = whoisStrings.ToString();
 					if( string.IsNullOrEmpty(response) )
 					{
 						response = "I did not find anyone.";
 					}
-
-					response = whoisStrings.ToString();
 				}
 
 				dbContext.Dispose();
@@ -704,7 +706,7 @@ namespace Botwinder.modules
 // !find
 			newCommand = new Command("find");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Find a User in the database."; //todo - improve desc.
+			newCommand.Description = "Find a User in the database based on ID, or an expression search through all their previous usernames and nicknames.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
@@ -746,9 +748,12 @@ namespace Botwinder.modules
 					StringBuilder whoisStrings = new StringBuilder();
 					for( int i = 0; i < foundUserIds.Count; i++ )
 					{
-						UserData userData = dbContext.UserDatabase.FirstOrDefault(u => u.ServerId == e.Server.Id && u.UserId == foundUserIds[i]);
+						UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundUserIds[i]);
 						if( userData != null )
-							whoisStrings.AppendLine(userData.GetWhoisString(dbContext));
+						{
+							SocketGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
+							whoisStrings.AppendLine(userData.GetWhoisString(dbContext, user));
+						}
 					}
 
 					response = whoisStrings.ToString();
