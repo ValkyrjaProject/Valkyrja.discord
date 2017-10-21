@@ -3,7 +3,13 @@
 As a contributor you can directly commit to the project. Please create a new branch for everything, and then submit pull-request. This is done easily right here on the page if you're not awesome enough in the CLI.
 
 Clone the repository recursively to include the Core project:
-* `git clone -b dev --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
+* Fork this repository, and then clone it recursively to get the Core library as well: `git clone --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
+* Nuke your nuget cache `rm -rf ~/.nuget/packages/discord.net*` (google the location for windows...)
+
+Fix the project to exclude the private code:
+* Remove `Botwinder.secure` project reference from the `.sln` file
+* Comment out the `#define UsingBotwinderSecure` in `Program.cs`
+* Do not submit any of these changes, otherwise you will screw up our build!
 
 1. Create a new branch. This can be done easily on github. [e.g.](https://i.imgur.com/EDtnZ56.png)
   1. Naming convention: `<type of branch>-<name of your contribution>` where
@@ -35,12 +41,6 @@ Clone the repository recursively to include the Core project:
 The workflow for outside contribution is recommended to be the same, we don't bite :P
 
 The only difference is that you would first fork the repository, then follow all the other stuff and eventually submit a PR from your fork, into our appropriate branch.
-
-## Solution file
-
-* The solution as-is won't compile for you, unless you have `Botwinder.core` repository cloned into your `Botwinder.discord/Core` directory.
-* Further you have to kick the missing Secure project out of the solution file, remove the dependency in `Bot/Botwinder.discord.csproj`, and comment out the `#define UsingBotwinderSecure` in `Bot/Program.cs`
-* Do not submit any of these changes, otherwise you will screw up our build!
 
 ## Code style and Naming Conventions
 

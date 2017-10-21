@@ -52,7 +52,10 @@ namespace Botwinder.discord
 
 		private void InitModules()
 		{
+			#if UsingBotwinderSecure
 			this.Bot.Modules.Add(new Antispam());
+			#endif
+
 			this.Bot.Modules.Add(new Moderation());
 			this.Bot.Modules.Add(new Verification());
 		}

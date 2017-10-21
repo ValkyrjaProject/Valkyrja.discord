@@ -12,7 +12,10 @@ Please take a look at our website to see what's the bot about, full list of feat
 ## Contributors:
 
 * Please read the [Contributing file](CONTRIBUTING.md) before you start =)
-* Fork this repository, and then clone it recursively to get the Core library as well: `git clone -b dev --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
+* Fork this repository, and then clone it recursively to get the Core library as well: `git clone --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
+* Nuke your nuget cache `rm -rf ~/.nuget/packages/discord.net*` (google the location for windows...)
+* Remove `Botwinder.secure` project reference from the `.sln` file
+* Comment out the `#define UsingBotwinderSecure` in `Program.cs`
 
 ## Project structure
 
