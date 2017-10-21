@@ -9,8 +9,8 @@
     <ProjectReference Include="..\Core\Botwinder.core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Core" Version="2.0.0-alpha-build-00006" />
-    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-alpha-build-00006" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-alpha-build-00006" />
+    <PackageReference Include="Discord.Net.Core" Version="2.0.0-alpha-build-00009" />
+    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-alpha-build-00009" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-alpha-build-00009" />
   </ItemGroup>
 </Project>
