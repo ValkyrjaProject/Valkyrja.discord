@@ -18,7 +18,14 @@ namespace Botwinder.discord
 	{
 		static void Main(string[] args)
 		{
-			(new Client()).RunAndWait().GetAwaiter().GetResult();
+			int shardIdOverride = -1;
+			if( args != null && args.Length > 0 && !int.TryParse(args[0], out shardIdOverride) )
+			{
+				Console.WriteLine("Invalid parameter.");
+				return;
+			}
+
+			(new Client()).RunAndWait(shardIdOverride).GetAwaiter().GetResult();
 		}
 	}
 
@@ -30,11 +37,11 @@ namespace Botwinder.discord
 		public Client()
 		{}
 
-		public async Task RunAndWait()
+		public async Task RunAndWait(int shardIdOverride = - 1)
 		{
 			while( true )
 			{
-				this.Bot = new BotwinderClient();
+				this.Bot = new BotwinderClient(shardIdOverride);
 				InitModules();
 
 				try
