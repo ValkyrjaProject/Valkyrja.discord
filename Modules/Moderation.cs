@@ -661,10 +661,16 @@ namespace Botwinder.modules
 					return;
 				}
 
+				if( e.Server?.Guild?.Users == null )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "Encountered unexpected D.Net library error.");
+					return;
+				}
+
 				string expression = e.TrimmedMessage.ToLower();
 				List<guid> foundUserIds = e.Server.Guild.Users
-					.Where(u => u.Username.ToLower().Contains(expression) ||
-					            (u.Nickname != null && u.Nickname.Contains(expression)))
+					.Where(u => u != null && (u.Username.ToLower().Contains(expression) ||
+					            (u.Nickname != null && u.Nickname.Contains(expression))))
 					.Select(u => u.Id).ToList();
 
 				foundUserIds.AddRange(e.Message.MentionedUsers.Select(u => u.Id));
