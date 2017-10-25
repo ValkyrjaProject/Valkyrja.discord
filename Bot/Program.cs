@@ -65,6 +65,7 @@ namespace Botwinder.discord
 
 			this.Bot.Modules.Add(new Moderation());
 			this.Bot.Modules.Add(new Verification());
+			this.Bot.Modules.Add(new RoleAssignment());
 		}
 	}
 }
