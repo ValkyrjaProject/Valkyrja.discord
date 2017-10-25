@@ -54,6 +54,7 @@ namespace Botwinder.modules
 
 				await iClient.SendMessageToChannel(e.Channel, response.ToString());
 			};
+			commands.Add(newCommand);
 
 // !publicRoles
 			newCommand = new Command("publicRoles");
@@ -113,6 +114,50 @@ namespace Botwinder.modules
 				}
 
 				await iClient.SendMessageToChannel(e.Channel, responseBuilder.ToString());
+			};
+			commands.Add(newCommand);
+
+// !op
+			newCommand = new Command("op");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <http://botwinder.info/config>)";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
+				if( role == null )
+				{
+					await iClient.SendMessageToChannel(e.Channel, string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.Config.CommandPrefix));
+					return;
+				}
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I don't have `ManageRoles` permission.");
+					return;
+				}
+
+				string response = "";
+				try
+				{
+					SocketGuildUser user = e.Message.Author as SocketGuildUser;
+					if( user.Roles.Any(r => r.Id == e.Server.Config.OperatorRoleId) )
+					{
+						await user.RemoveRoleAsync(role);
+						response = "All done?";
+					}
+					else
+					{
+						await user.AddRoleAsync(role);
+						response = "Go get em tiger!";
+					}
+				}
+				catch(Exception exception)
+				{
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+					else
+						throw;
+				}
+				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
 
