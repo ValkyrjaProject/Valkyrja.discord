@@ -94,7 +94,7 @@ namespace Botwinder.modules
 // !mute
 			newCommand = new Command("mute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Temporarily mute mentioned members from both the chat and voice. Use with parameters `@user time` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
+			newCommand.Description = "Temporarily mute mentioned members from the chat. Use with parameters `@user time` where `@user` = user mention or id; `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
