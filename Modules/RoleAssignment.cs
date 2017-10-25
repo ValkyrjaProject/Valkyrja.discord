@@ -178,6 +178,9 @@ namespace Botwinder.modules
 					{
 						foreach( guid id in idsToLeave )
 						{
+							if( user.Roles.All(r => r.Id != id) )
+								continue;
+
 							SocketRole roleToLeave = e.Server.Guild.GetRole(id);
 							if( roleToLeave == null )
 								continue;
