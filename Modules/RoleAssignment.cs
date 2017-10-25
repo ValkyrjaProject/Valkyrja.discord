@@ -105,7 +105,7 @@ namespace Botwinder.modules
 					hadGroup = true;
 					responseBuilder.Append($"\n\n**Group #{group.Key}:** ");
 
-					responseBuilder.Append(group.Value);
+					responseBuilder.Append(GetRoleNames(group.Value));
 				}
 
 				if( hadGroup )
