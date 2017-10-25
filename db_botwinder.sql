@@ -155,8 +155,8 @@ CREATE TABLE `roles` (
 );
 
 CREATE TABLE `custom_commands` (
-	`serverid` BIGINT UNSIGNED NOT NULL UNIQUE,
-	`commandid` VARCHAR(255) NOT NULL,
+	`serverid` BIGINT UNSIGNED NOT NULL,
+	`commandid` VARCHAR(127) NOT NULL,
 	`response` TEXT NOT NULL,
 	`description` TEXT NOT NULL,
 	PRIMARY KEY (`serverid`,`commandid`)
@@ -190,7 +190,7 @@ CREATE TABLE `users` (
 );
 
 CREATE TABLE `custom_aliases` (
-	`serverid` BIGINT UNSIGNED NOT NULL UNIQUE,
+	`serverid` BIGINT UNSIGNED NOT NULL,
 	`commandid` VARCHAR(255) NOT NULL,
 	`alias` VARCHAR(255) NOT NULL,
 	PRIMARY KEY (`serverid`,`alias`)
