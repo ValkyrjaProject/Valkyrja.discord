@@ -6,9 +6,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
-using Discord;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+
 using guid = System.UInt64;
 
 namespace Botwinder.modules
@@ -23,8 +22,41 @@ namespace Botwinder.modules
 			BotwinderClient client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
 
+// !getRole
+			Command newCommand = new Command("getRole");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Get a name, id and color of `roleID` or `roleName` parameter.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				guid id = 0;
+				SocketRole roleFromId = null;
+				List<SocketRole> roles = null;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) ||
+				    (!(guid.TryParse(e.TrimmedMessage, out id) && (roleFromId = e.Server.Guild.GetRole(id)) != null) &&
+				     !(roles = e.Server.Guild.Roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower())).ToList()).Any()) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "Role not found.");
+					return;
+				}
+
+				if( roleFromId != null )
+				{
+					roles = new List<SocketRole>();
+					roles.Add(roleFromId);
+				}
+
+				StringBuilder response = new StringBuilder();
+				foreach(SocketRole role in roles)
+				{
+					string hex = BitConverter.ToString(new byte[]{role.Color.R, role.Color.G, role.Color.B}).Replace("-", "");
+					response.AppendLine($"Role: `{role.Name}`\n  Id: `{role.Id}`\n  Position: `{role.Position}`\n  Color: `rgb({role.Color.R},{role.Color.G},{role.Color.B})` | `hex(#{hex})`");
+				}
+
+				await iClient.SendMessageToChannel(e.Channel, response.ToString());
+			};
+
 // !publicRoles
-			Command newCommand = new Command("publicRoles");
+			newCommand = new Command("publicRoles");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "See what Public Roles can you join on this server.";
 			newCommand.RequiredPermissions = PermissionType.Everyone;
@@ -83,7 +115,6 @@ namespace Botwinder.modules
 				await iClient.SendMessageToChannel(e.Channel, responseBuilder.ToString());
 			};
 			commands.Add(newCommand);
-
 
 			return commands;
 		}
