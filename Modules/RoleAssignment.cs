@@ -147,7 +147,7 @@ namespace Botwinder.modules
 				IEnumerable<SocketRole> foundRoles = null;
 				if( !(foundRoles = roles.Where(r => r.Name == e.TrimmedMessage)).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
-				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() )
+				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower()))).Any() )
 				{
 					await iClient.SendMessageToChannel(e.Channel, "I did not find a role based on that expression.");
 					return;
@@ -208,6 +208,73 @@ namespace Botwinder.modules
 
 				if( removed )
 					response += "\n_(I've removed the other exclusive roles from the same role group.)_";
+
+				await iClient.SendMessageToChannel(e.Channel, response);
+			};
+			commands.Add(newCommand);
+
+// !leave
+			newCommand = new Command("leave");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Use with parameter, name of a Role that you wish to leave.";
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I don't have `ManageRoles` permission.");
+					return;
+				}
+
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
+					return;
+				}
+
+				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
+				if( publicRoles == null || publicRoles.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I'm sorry, but there are no public roles on this server.");
+					return;
+				}
+
+				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => publicRoles.Any(rc => rc.RoleId == r.Id));
+				IEnumerable<SocketRole> foundRoles = null;
+				if( !(foundRoles = roles.Where(r => r.Name == e.TrimmedMessage)).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower()))).Any() )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I did not find a role based on that expression.");
+					return;
+				}
+
+				if( foundRoles.Count() > 1 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I found more than one role with that expression, please be more specific.");
+					return;
+				}
+
+				string response = "Done!";
+				try
+				{
+					await (e.Message.Author as SocketGuildUser).RemoveRoleAsync(foundRoles.First());
+				} catch(Exception exception)
+				{
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
+					else
+					{
+						await client.LogException(exception, e);
+						response = "Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+					}
+				}
+
+				//todo - logging
+				/*if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
+				{
+					string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
+					await logChannel.SendMessageSafe(message);
+				}*/
 
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
