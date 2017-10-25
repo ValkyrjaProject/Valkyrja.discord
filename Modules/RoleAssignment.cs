@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
+using Discord.Net;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -117,46 +118,69 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
-// !op
-			newCommand = new Command("op");
+// !join
+			newCommand = new Command("join");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <http://botwinder.info/config>)";
-			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.Description = "Use with parameter, name of a Role that you wish to join.";
+			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
-				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
-				if( role == null )
-				{
-					await iClient.SendMessageToChannel(e.Channel, string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.Config.CommandPrefix));
-					return;
-				}
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
 					await iClient.SendMessageToChannel(e.Channel, "I don't have `ManageRoles` permission.");
 					return;
 				}
 
-				string response = "";
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
+					return;
+				}
+
+				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
+				if( publicRoles == null || publicRoles.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I'm sorry, but there are no public roles on this server.");
+					return;
+				}
+
+				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => publicRoles.Any(rc => rc.RoleId == r.Id));
+				IEnumerable<SocketRole> foundRoles = null;
+				if( !(foundRoles = roles.Where(r => r.Name == e.TrimmedMessage)).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I did not find a role based on that expression.");
+					return;
+				}
+
+				if( foundRoles.Count() > 1 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "I found more than one role with that expression, please be more specific.");
+					return;
+				}
+
+				string response = "Done!";
 				try
 				{
-					SocketGuildUser user = e.Message.Author as SocketGuildUser;
-					if( user.Roles.Any(r => r.Id == e.Server.Config.OperatorRoleId) )
-					{
-						await user.RemoveRoleAsync(role);
-						response = "All done?";
-					}
-					else
-					{
-						await user.AddRoleAsync(role);
-						response = "Go get em tiger!";
-					}
-				}
-				catch(Exception exception)
+					await (e.Message.Author as SocketGuildUser).AddRoleAsync(foundRoles.First());
+				} catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
 					else
-						throw;
+					{
+						await client.LogException(exception, e);
+						response = "Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+					}
 				}
+
+				//todo - logging
+				/*if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
+				{
+					string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
+					await logChannel.SendMessageSafe(message);
+				}*/
+
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
