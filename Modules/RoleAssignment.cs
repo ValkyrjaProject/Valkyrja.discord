@@ -168,6 +168,7 @@ namespace Botwinder.modules
 					idsToLeave = publicRoles.Where(r => r.PublicRoleGroupId == groupId).Select(r => r.RoleId);
 				}
 
+				bool removed = false;
 				string response = "Done!";
 				try
 				{
@@ -182,6 +183,7 @@ namespace Botwinder.modules
 								continue;
 
 							await user.RemoveRoleAsync(roleToLeave);
+							removed = true;
 						}
 					}
 
@@ -203,6 +205,9 @@ namespace Botwinder.modules
 					string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
 					await logChannel.SendMessageSafe(message);
 				}*/
+
+				if( removed )
+					response += "\n_(I've removed the other exclusive roles from the same role group.)_";
 
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
