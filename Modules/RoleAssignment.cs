@@ -159,10 +159,33 @@ namespace Botwinder.modules
 					return;
 				}
 
+				IEnumerable<guid> idsToLeave = null;
+				SocketRole roleToAssign = foundRoles.First();
+				Int64 groupId = publicRoles.First(r => r.RoleId == roleToAssign.Id).PublicRoleGroupId;
+
+				if( groupId != 0 )
+				{
+					idsToLeave = publicRoles.Where(r => r.PublicRoleGroupId == groupId).Select(r => r.RoleId);
+				}
+
 				string response = "Done!";
 				try
 				{
-					await (e.Message.Author as SocketGuildUser).AddRoleAsync(foundRoles.First());
+					SocketGuildUser user = (e.Message.Author as SocketGuildUser);
+
+					if( idsToLeave != null )
+					{
+						foreach( guid id in idsToLeave )
+						{
+							SocketRole roleToLeave = e.Server.Guild.GetRole(id);
+							if( roleToLeave == null )
+								continue;
+
+							await user.RemoveRoleAsync(roleToLeave);
+						}
+					}
+
+					await user.AddRoleAsync(roleToAssign);
 				} catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
