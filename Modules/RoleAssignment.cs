@@ -16,12 +16,19 @@ namespace Botwinder.modules
 	public class RoleAssignment: IModule
 	{
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
+		private static string ErrorNoRoles = "I'm sorry, but there are no public roles on this server.";
+
+		private BotwinderClient Client;
+
+
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 
 		public List<Command> Init(IBotwinderClient iClient)
 		{
-			BotwinderClient client = iClient as BotwinderClient;
+			this.Client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
+
+			this.Client.Events.UserJoined += OnUserJoined;
 
 // !getRole
 			Command newCommand = new Command("getRole");
@@ -66,7 +73,7 @@ namespace Botwinder.modules
 				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
 				if( publicRoles == null || publicRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "I'm sorry, but there are no public roles on this server.");
+					await iClient.SendMessageToChannel(e.Channel, ErrorNoRoles);
 					return;
 				}
 
@@ -111,7 +118,7 @@ namespace Botwinder.modules
 
 				if( hadGroup )
 				{
-					responseBuilder.AppendLine("\n\n_(Where `Group` roles are exclusive - joining a `Group` role will remove any other role out of that group, that you already have.)_");
+					responseBuilder.AppendLine("\n\n_(Where the `Group` roles are mutually exclusive - joining a `Group` role will remove any other role out of that group, that you already have.)_");
 				}
 
 				await iClient.SendMessageToChannel(e.Channel, responseBuilder.ToString());
@@ -197,7 +204,7 @@ namespace Botwinder.modules
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
 					else
 					{
-						await client.LogException(exception, e);
+						await this.Client.LogException(exception, e);
 						response = "Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
 					}
 				}
@@ -267,7 +274,7 @@ namespace Botwinder.modules
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
 					else
 					{
-						await client.LogException(exception, e);
+						await this.Client.LogException(exception, e);
 						response = "Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
 					}
 				}
@@ -284,6 +291,22 @@ namespace Botwinder.modules
 			commands.Add(newCommand);
 
 			return commands;
+		}
+
+		private async Task OnUserJoined(SocketGuildUser user)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
+				return;
+
+			SocketRole role;
+			if( server.Config.WelcomeRoleId != 0 && (role = server.Guild.GetRole(server.Config.WelcomeRoleId)) != null )
+			{
+				try
+				{
+					await user.AddRoleAsync(role);
+				} catch(Exception) { }
+			}
 		}
 
 		public Task Update(IBotwinderClient iClient)
