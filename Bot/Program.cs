@@ -46,12 +46,12 @@ namespace Botwinder.discord
 			while( true )
 			{
 				this.Bot = new BotwinderClient(shardIdOverride);
-				this.Bot.Events.Initialize += InitCommands;
 				InitModules();
 
 				try
 				{
 					await this.Bot.Connect();
+					this.Bot.Events.Initialize += InitCommands;
 					await Task.Delay(-1);
 				}
 				catch(Exception e)
