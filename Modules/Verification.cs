@@ -58,6 +58,7 @@ namespace Botwinder.modules
 			this.Client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
 
+			this.Client.Events.UserJoined += OnUserJoined;
 			this.Client.Events.MessageReceived += async message => {
 				if( message.Channel is IDMChannel )
 					await VerifyUserHash(message.Author.Id, message.Content);
@@ -236,6 +237,24 @@ namespace Botwinder.modules
 				dbContext.SaveChanges();
 
 			dbContext.Dispose();
+		}
+
+		private async Task OnUserJoined(SocketGuildUser user)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
+				return;
+
+			if( server.Config.VerifyOnWelcome )
+			{
+				await Task.Delay(3000);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+
+				UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
+				await VerifyUsersPm(server, new List<UserData>{userData});
+
+				dbContext.Dispose();
+			}
 		}
 
 		public Task Update(IBotwinderClient iClient)
