@@ -85,6 +85,30 @@ namespace Botwinder.discord
 			};
 			this.Bot.Commands.Add(newCommand.Id, newCommand);
 
+// !bunneh
+			newCommand = new Command("bunneh");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "The best command of all time.";
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				if( Directory.Exists(GlobalConfig.DataFolder) && Directory.Exists(Path.Combine(GlobalConfig.DataFolder, BunnehDataFolder)) )
+				{
+					Regex validExtensions = new Regex(".*(jpg|png|gif).*");
+					DirectoryInfo folder = new DirectoryInfo(Path.Combine(GlobalConfig.DataFolder, BunnehDataFolder));
+					FileInfo[] files = folder.GetFiles();
+					for( int i = 0; files != null && i < 5; i++ )
+					{
+						int index = Utils.Random.Next(0, files.Length);
+						if( validExtensions.Match(files[index].Extension).Success )
+						{
+							await e.Channel.SendFileAsync(files[index].FullName, "");
+							break;
+						}
+					}
+				}
+			};
+			this.Bot.Commands.Add(newCommand.Id, newCommand);
+
 			return Task.CompletedTask;
 		}
 	}
