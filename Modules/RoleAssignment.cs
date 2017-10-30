@@ -17,7 +17,8 @@ namespace Botwinder.modules
 	public class RoleAssignment: IModule
 	{
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
-		private static string ErrorNoRoles = "I'm sorry, but there are no public roles on this server.";
+		private static string ErrorNoPublicRoles = "I'm sorry, but there are no public roles on this server.";
+		private static string ErrorNoMemberRoles = "I'm sorry, but there are no member roles on this server.";
 
 		private BotwinderClient Client;
 
@@ -92,7 +93,7 @@ namespace Botwinder.modules
 				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
 				if( publicRoles == null || publicRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoRoles);
+					await iClient.SendMessageToChannel(e.Channel, ErrorNoPublicRoles);
 					return;
 				}
 
@@ -308,6 +309,30 @@ namespace Botwinder.modules
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
+
+// !memberRoles
+			newCommand = new Command("memberRoles");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "See what Member Roles you can assign to others.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
+				if( memberRoles == null || memberRoles.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorNoPublicRoles);
+					return;
+				}
+
+				string response = string.Format("You can use `{0}promote` and `{0}demote` commands with these Member Roles: {1}",
+					e.Server.Config.CommandPrefix,
+					e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc.RoleId == r.Id)).Select(r => r.Name).ToNames()
+				);
+
+				await iClient.SendMessageToChannel(e.Channel, response);
+			};
+			commands.Add(newCommand);
+
+			// Use with parameters `@user` mention(s) or ID(s) and then the name of the role.";
 
 			return commands;
 		}
