@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord.Net;
+using Discord.Rest;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -61,6 +62,24 @@ namespace Botwinder.modules
 				}
 
 				await iClient.SendMessageToChannel(e.Channel, response.ToString());
+			};
+			commands.Add(newCommand);
+
+// !createRole
+			Command newCommand = new Command("createRole");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Create a role with specified name.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await iClient.SendMessageToChannel(e.Channel, "What role? Name? Do you want me to come up with something silly or what?");
+					return;
+				}
+
+				RestRole role = await e.Server.Guild.CreateRoleAsync(e.TrimmedMessage);
+				string response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`";
+				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
 
