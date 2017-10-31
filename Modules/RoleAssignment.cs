@@ -227,7 +227,7 @@ namespace Botwinder.modules
 					else
 					{
 						await this.Client.LogException(exception, e);
-						response = "Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 					}
 				}
 
@@ -297,7 +297,7 @@ namespace Botwinder.modules
 					else
 					{
 						await this.Client.LogException(exception, e);
-						response = "Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 					}
 				}
 
@@ -360,11 +360,13 @@ namespace Botwinder.modules
 					return;
 				}
 
+				string expression = e.TrimmedMessage.Substring(e.TrimmedMessage.IndexOf(e.MessageArgs[users.Count]));
+
 				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc.RoleId == r.Id));
 				IEnumerable<SocketRole> foundRoles = null;
-				if( !(foundRoles = roles.Where(r => r.Name == e.TrimmedMessage)).Any() &&
-				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
-				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower()))).Any() )
+				if( !(foundRoles = roles.Where(r => r.Name == expression)).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(expression.ToLower()))).Any() )
 				{
 					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
 					return;
@@ -388,7 +390,78 @@ namespace Botwinder.modules
 					else
 					{
 						await this.Client.LogException(exception, e);
-						response = "Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					}
+				}
+
+				//todo - logging
+				/*if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
+				{
+					string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
+					await logChannel.SendMessageSafe(message);
+				}*/
+
+				await iClient.SendMessageToChannel(e.Channel, response);
+			};
+			commands.Add(newCommand);
+
+// !demote
+			newCommand = new Command("demote");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Remove a member role from someone. Use with parameters `@user` mention(s) or ID(s) and then the name of the role.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					return;
+				}
+
+				List<SocketGuildUser> users;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any())
+				{
+					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
+					return;
+				}
+
+				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
+				if( memberRoles == null || memberRoles.Count == 0 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorNoMemberRoles);
+					return;
+				}
+
+				string expression = e.TrimmedMessage.Substring(e.TrimmedMessage.IndexOf(e.MessageArgs[users.Count]));
+
+				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc.RoleId == r.Id));
+				IEnumerable<SocketRole> foundRoles = null;
+				if( !(foundRoles = roles.Where(r => r.Name == expression)).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(expression.ToLower()))).Any() )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
+					return;
+				}
+
+				if( foundRoles.Count() > 1 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorTooManyFound);
+					return;
+				}
+
+				string response = "Done!";
+				try
+				{
+					foreach( SocketGuildUser user in users )
+						await user.RemoveRoleAsync(foundRoles.First());
+				} catch(Exception exception)
+				{
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
+					else
+					{
+						await this.Client.LogException(exception, e);
+						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 					}
 				}
 
