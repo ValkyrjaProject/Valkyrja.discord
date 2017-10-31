@@ -431,6 +431,12 @@ namespace Botwinder.modules
 					return;
 				}
 
+				if( string.IsNullOrEmpty(e.Server.Config.QuickbanReason) )
+				{
+					await e.Message.Channel.SendMessageSafe("This command has to be first configured via `config` or <http://botwinder.info/config>.");
+					return;
+				}
+
 				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
 
