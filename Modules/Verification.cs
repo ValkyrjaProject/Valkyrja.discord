@@ -69,6 +69,12 @@ namespace Botwinder.modules
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
 			newCommand.OnExecute += async e => {
+				if( !e.Server.Config.VerificationEnabled )
+				{
+					await this.Client.SendMessageToChannel(e.Channel, "Verification is disabled on this server.");
+					return;
+				}
+
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 				string response = InvalidParametersString;
