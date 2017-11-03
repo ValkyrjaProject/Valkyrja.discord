@@ -794,36 +794,39 @@ namespace Botwinder.modules
 
 			foreach( UserData userData in dbContext.UserDatabase )
 			{
-				try{
-				Server server;
-
-				//Unban
-				if( userData.BannedUntil > DateTime.MinValue && userData.BannedUntil < DateTime.UtcNow &&
-				    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
+				try
 				{
-					await server.Guild.RemoveBanAsync(userData.UserId);
-					//else: ban them if they're on the server - implement if the ID pre-ban doesn't work.
+					Server server;
 
-					userData.BannedUntil = DateTime.MinValue;
-					save = true;
+					//Unban
+					if( userData.BannedUntil > DateTime.MinValue && userData.BannedUntil < DateTime.UtcNow &&
+					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
+					{
+						await server.Guild.RemoveBanAsync(userData.UserId);
+						//else: ban them if they're on the server - implement if the ID pre-ban doesn't work.
+
+						userData.BannedUntil = DateTime.MinValue;
+						save = true;
+					}
+
+					//Unmute
+					IRole role;
+					if( userData.MutedUntil > DateTime.MinValue && userData.MutedUntil < DateTime.UtcNow &&
+					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
+					    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null )
+					{
+						SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+						if( user != null )
+							await user.RemoveRoleAsync(role);
+
+						userData.MutedUntil = DateTime.MinValue;
+						save = true;
+					}
 				}
-
-				//Unmute
-				IRole role;
-				if( userData.MutedUntil > DateTime.MinValue && userData.MutedUntil < DateTime.UtcNow &&
-				    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
-				    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null)
+				catch(Exception exception)
 				{
-					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-					if( user != null )
-						await user.RemoveRoleAsync(role);
-
-					userData.MutedUntil = DateTime.MinValue;
-					save = true;
-				}
-				} catch(Exception exception)
-				{
-					await this.HandleException(exception, "Update Moderation", userData.ServerId);
+					if( !(exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden) )
+						await this.HandleException(exception, "Update Moderation", userData.ServerId);
 				}
 			}
 
