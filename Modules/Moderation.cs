@@ -889,9 +889,10 @@ namespace Botwinder.modules
 				{
 					//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
 
-					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
+					string logMessage = $"Banned {durationString.ToString()} with reason: {reason}";
+					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
 					userData.BannedUntil = bannedUntil;
-					userData.AddWarning($"Banned {durationString.ToString()} with reason: {reason}");
+					userData.AddWarning(logMessage);
 					banned.Add(userData.UserId);
 
 					//client.Events.UserBanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
