@@ -189,14 +189,17 @@ namespace Botwinder.modules
 					await msg.ModifyAsync(m => m.Content = "There was an error while downloading messages, you can try again but if it doesn't work, then it's a bug - please tell Rhea :<");
 				else
 				{
-					if( !e.Message.Deleted )
-						await e.Message.DeleteAsync();
+					try
+					{
+						if( !e.Message.Deleted )
+							await e.Message.DeleteAsync();
 
-					await msg.ModifyAsync(m => m.Content = $"~~{msg.Content}~~\n\nDone! _(This message will self-destruct in 10 seconds.)_");
-					await Task.Delay(TimeSpan.FromSeconds(10f));
-					await msg.ModifyAsync(m => m.Content = "BOOM!!");
-					await Task.Delay(TimeSpan.FromSeconds(2f));
-					await msg.DeleteAsync();
+						await msg.ModifyAsync(m => m.Content = $"~~{msg.Content}~~\n\nDone! _(This message will self-destruct in 10 seconds.)_");
+						await Task.Delay(TimeSpan.FromSeconds(10f));
+						await msg.ModifyAsync(m => m.Content = "BOOM!!");
+						await Task.Delay(TimeSpan.FromSeconds(2f));
+						await msg.DeleteAsync();
+					} catch(Exception) { }
 				}
 			};
 			commands.Add(newCommand);
