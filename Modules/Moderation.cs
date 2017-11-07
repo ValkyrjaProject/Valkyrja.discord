@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -47,8 +48,163 @@ namespace Botwinder.modules
 			client.Events.UnMuteUsers += UnMute;
 
 
+// !clear
+			Command newCommand = new Command("clear");
+			newCommand.Type = CommandType.Operation;
+			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <http://botwinder.info/config>)";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageMessages )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
+
+				int n = 0;
+				RestUserMessage msg = null;
+				List<guid> userIDs = client.GetMentionedUserIds(e);
+
+				if( userIDs.Count == 0 && e.MessageArgs != null && (e.MessageArgs.Length > 1 || (e.MessageArgs.Length == 1 && e.Command.Id == "nuke")) )
+				{
+					await e.Message.Channel.SendMessageSafe("I can see that you're trying to use more parameters, but I did not find any IDs or mentions.");
+					return;
+				}
+
+				bool clearLinks = e.Command.Id.ToLower() == "clearlinks";
+				if( clearLinks && userIDs.Any() )
+				{
+					//todo - why not?
+					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}clearLinks` does not take `@user` mentions as parameter.");
+					return;
+				}
+
+				if( e.Command.Id == "nuke" )
+				{
+					n = int.MaxValue - 1;
+					if( userIDs.Count > 0 )
+						msg = await e.Message.Channel.SendMessageAsync("Deleting all the messages by specified users.");
+					else
+						msg = await e.Message.Channel.SendMessageAsync("Nuking the channel, I'll tell you when I'm done (large channels may take up to half an hour...)");
+				}
+				else if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[0], out n) )
+				{
+					await e.Message.Channel.SendMessageSafe("Please tell me how many messages should I delete!");
+					return;
+				}
+				else if( userIDs.Count > 0 )
+				{
+					msg = await e.Message.Channel.SendMessageAsync("Deleting " + n.ToString() + " messages by specified users.");
+				}
+				else
+					msg = await e.Message.Channel.SendMessageAsync("Deleting " + (clearLinks ? "attachments and embeds in " : "") + n.ToString() + " messages.");
+
+				int exceptions = 0;
+				int userCount = userIDs.Count();
+				guid lastRemoved = e.Message.Id;
+
+				bool IsWithinTwoWeeks(IMessage m){
+					if( DateTime.UtcNow - Utils.GetTimeFromId(m.Id) < TimeSpan.FromDays(13.9f) )
+						return true;
+					return false;
+				}
+
+				List<guid> idsToDelete = new List<guid>();
+
+				bool canceled = await e.Operation.While(() => n > 0, async () => {
+					IMessage[] messages = null;
+
+					try
+					{
+						messages = (await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten()).ToArray();
+					}
+					catch(Exception exception)
+					{
+						await client.LogException(exception, e);
+						lastRemoved = 0;
+						return true;
+					}
+
+					List<guid> ids = null;
+					if( messages == null || messages.Length == 0 ||
+						(clearLinks && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => (m.Attachments != null && m.Attachments.Any()) || (m.Embeds != null && m.Embeds.Any())).Select(m => m.Id).ToList()).Any()) ||
+						(!clearLinks && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Select(m => m.Id).ToList()).Any()) ||
+						(userCount > 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => (m?.Author != null && userIDs.Contains(m.Author.Id))).Select(m => m.Id).ToList()).Any()) )
+					{
+						lastRemoved = e.Message.Id;
+						return true;
+					}
+
+					if( ids.Count > n )
+						ids = ids.Take(n).ToList();
+
+					n -= ids.Count;
+					if( messages.Length < 100 ) //this was the last pull
+						n = 0;
+
+					idsToDelete.AddRange(ids);
+					lastRemoved = ids.Last();
+
+					return false;
+				});
+
+				if( canceled )
+					return;
+
+				if( !client.ClearedMessageIDs.ContainsKey(e.Server.Id) )
+					client.ClearedMessageIDs.Add(e.Server.Id, new List<guid>());
+
+				client.ClearedMessageIDs[e.Server.Id].AddRange(idsToDelete);
+
+				int i = 0;
+				guid[] chunk = new guid[100];
+				guid[] idsToDeleteArray = idsToDelete.ToArray();
+				canceled = await e.Operation.While(() => i < (idsToDeleteArray.Length + 99) / 100, async () => {
+					try
+					{
+						Array.Copy(idsToDeleteArray, i * 100, chunk, 0, Math.Min(idsToDeleteArray.Length - (100 * i), 100));
+						await e.Channel.DeleteMessagesAsync(chunk);
+						i++;
+					} catch(Exception)
+					{
+						if( ++exceptions > 10 )
+							return true;
+						//Continue if it this fails.
+					}
+
+					return false;
+				});
+
+				if( canceled )
+					return;
+
+				if( lastRemoved == 0 )
+					await msg.ModifyAsync(m => m.Content = "There was an error while downloading messages, you can try again but if it doesn't work, then it's a bug - please tell Rhea :<");
+				else
+				{
+					if( !e.Message.Deleted )
+						await e.Message.DeleteAsync();
+
+					await msg.ModifyAsync(m => m.Content = $"~~{msg.Content}~~\n\nDone! _(This message will self-destruct in 10 seconds.)_");
+					await Task.Delay(TimeSpan.FromSeconds(10f));
+					await msg.ModifyAsync(m => m.Content = "BOOM!!");
+					await Task.Delay(TimeSpan.FromSeconds(2f));
+					await msg.DeleteAsync();
+				}
+			};
+			commands.Add(newCommand);
+
+			newCommand = newCommand.CreateCopy("nuke");
+			newCommand.Description = "Nuke the whole channel. You can also mention a user to delete all of their messages. (Within the last two weeks.)";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			commands.Add(newCommand);
+
+			newCommand = newCommand.CreateCopy("clearLinks");
+			newCommand.Description = "Delete only messages that contain links. Use with the same parameters as regular _clear_ - number of messages";
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("clearlinks"));
+
 // !op
-			Command newCommand = new Command("op");
+			newCommand = new Command("op");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <http://botwinder.info/config>)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
@@ -61,7 +217,7 @@ namespace Botwinder.modules
 				}
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "I don't have `ManageRoles` permission.");
+					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
 					return;
 				}
 
