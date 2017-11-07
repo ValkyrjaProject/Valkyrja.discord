@@ -98,7 +98,6 @@ namespace Botwinder.modules
 				else
 					msg = await e.Message.Channel.SendMessageAsync("Deleting " + (clearLinks ? "attachments and embeds in " : "") + n.ToString() + " messages.");
 
-				int exceptions = 0;
 				int userCount = userIDs.Count();
 				guid lastRemoved = e.Message.Id;
 
