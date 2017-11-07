@@ -51,7 +51,7 @@ namespace Botwinder.modules
 // !clear
 			Command newCommand = new Command("clear");
 			newCommand.Type = CommandType.Operation;
-			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <http://botwinder.info/config>)";
+			newCommand.Description = "Deletes specified amount of messages (within two weeks.) If you mention someone as well, it will remove only their messages. Use with paremeters: _[@users] n_ - optional _@user_ mentions or ID's (this parameter has to be first, if specified.) And mandatory _n_ parameter, the count of how many messages to remove.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageMessages )
@@ -161,14 +161,23 @@ namespace Botwinder.modules
 				canceled = await e.Operation.While(() => i < (idsToDeleteArray.Length + 99) / 100, async () => {
 					try
 					{
-						Array.Copy(idsToDeleteArray, i * 100, chunk, 0, Math.Min(idsToDeleteArray.Length - (100 * i), 100));
-						await e.Channel.DeleteMessagesAsync(chunk);
+						if( idsToDeleteArray.Length <= 100 )
+							await e.Channel.DeleteMessagesAsync(idsToDeleteArray);
+						else
+						{
+							int chunkSize = idsToDeleteArray.Length - (100 * i);
+							Array.Copy(idsToDeleteArray, i * 100, chunk, 0, Math.Min(chunkSize, 100));
+							if( chunkSize < 100 )
+								Array.Resize(ref chunk, chunkSize);
+							await e.Channel.DeleteMessagesAsync(chunk);
+						}
 						i++;
-					} catch(Exception)
+					}
+					catch(Discord.Net.HttpException) { }
+					catch(Exception exception)
 					{
-						if( ++exceptions > 10 )
-							return true;
-						//Continue if it this fails.
+						await client.LogException(exception, e);
+						return true;
 					}
 
 					return false;
@@ -199,7 +208,7 @@ namespace Botwinder.modules
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearLinks");
-			newCommand.Description = "Delete only messages that contain links. Use with the same parameters as regular _clear_ - number of messages";
+			newCommand.Description = "Delete only messages that contain links. Use with a peremter, a number of messages to delete.";
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("clearlinks"));
 
