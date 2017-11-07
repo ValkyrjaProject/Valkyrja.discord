@@ -86,7 +86,7 @@ namespace Botwinder.modules
 					else
 						msg = await e.Message.Channel.SendMessageAsync("Nuking the channel, I'll tell you when I'm done (large channels may take up to half an hour...)");
 				}
-				else if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[0], out n) )
+				else if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[e.MessageArgs.Length - 1], out n) )
 				{
 					await e.Message.Channel.SendMessageSafe("Please tell me how many messages should I delete!");
 					return;
