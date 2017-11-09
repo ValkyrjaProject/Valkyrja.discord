@@ -185,11 +185,11 @@ namespace Botwinder.modules
 				if( canceled )
 					return;
 
-				if( lastRemoved == 0 )
-					await msg.ModifyAsync(m => m.Content = "There was an error while downloading messages, you can try again but if it doesn't work, then it's a bug - please tell Rhea :<");
-				else
+				try
 				{
-					try
+					if( lastRemoved == 0 )
+						await msg.ModifyAsync(m => m.Content = "There was an error while downloading messages, you can try again but if it doesn't work, then it's a bug - please tell Rhea :<");
+					else
 					{
 						if( !e.Message.Deleted )
 							await e.Message.DeleteAsync();
@@ -199,8 +199,9 @@ namespace Botwinder.modules
 						await msg.ModifyAsync(m => m.Content = "BOOM!!");
 						await Task.Delay(TimeSpan.FromSeconds(2f));
 						await msg.DeleteAsync();
-					} catch(Exception) { }
+					}
 				}
+				catch(Exception) { }
 			};
 			commands.Add(newCommand);
 
