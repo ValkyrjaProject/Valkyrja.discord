@@ -203,7 +203,12 @@ namespace Botwinder.modules
 		{
 			IRole role = server.Guild.GetRole(server.Config.VerifyRoleId);
 			if( role == null )
+			{
+				if( this.Client.GlobalConfig.LogDebug )
+					Console.WriteLine("Verification: Role not set.");
+
 				return false;
+			}
 
 			bool verified = false;
 			foreach( UserData userData in users )
@@ -216,14 +221,24 @@ namespace Botwinder.modules
 				{
 					await user.SendMessageSafe(string.Format(PmVerifiedString, server.Guild.Name));
 					await user.AddRoleAsync(role);
+					if( this.Client.GlobalConfig.LogDebug )
+						Console.WriteLine("Verification: Verified " + user.Username);
 
 					if( !userData.Verified && server.Config.VerifyKarma < int.MaxValue / 2f )
 						userData.KarmaCount += server.Config.VerifyKarma;
 
 					userData.Verified = true;
 					verified = true;
-				} catch(Exception) { }
+				}
+				catch(Exception e)
+				{
+					if( this.Client.GlobalConfig.LogDebug && !verified )
+						Console.WriteLine("Verification: Exception: " + e.Message);
+				}
 			}
+
+			if( this.Client.GlobalConfig.LogDebug && !verified )
+				Console.WriteLine("Verification: Not verified.");
 
 			return verified;
 		}
@@ -232,7 +247,19 @@ namespace Botwinder.modules
 		private async Task VerifyUserHash(guid userId, string hashCode)
 		{
 			if( !this.HashedValues.ContainsKey(hashCode) || this.HashedValues[hashCode].UserId != userId || !this.Client.Servers.ContainsKey(this.HashedValues[hashCode].ServerId) )
+			{
+				if( this.Client.GlobalConfig.LogDebug )
+				{
+					if( !this.HashedValues.ContainsKey(hashCode) )
+						Console.WriteLine("Verification: Received PM `${hashCode}` - not in the dictionary.");
+					else if( this.HashedValues[hashCode].UserId != userId )
+						Console.WriteLine("Verification: Found a hashCode, but the userid does not fit.");
+					else if( !this.Client.Servers.ContainsKey(this.HashedValues[hashCode].ServerId) )
+						Console.WriteLine("Verification: Server for the hashCode does not exist.");
+				}
+
 				return;
+			}
 
 			Server server = this.Client.Servers[this.HashedValues[hashCode].ServerId];
 
