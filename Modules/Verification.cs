@@ -59,10 +59,12 @@ namespace Botwinder.modules
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.UserJoined += OnUserJoined;
-			this.Client.Events.MessageReceived += async message => {
+
+			// Replaced by cluster solution in the Update.
+			/* this.Client.Events.MessageReceived += async message => {
 				if( message.Channel is IDMChannel )
 					await VerifyUserHash(message.Author.Id, message.Content);
-			};
+			}; */
 
 // !verify
 			Command newCommand = new Command("verify");
@@ -290,9 +292,14 @@ namespace Botwinder.modules
 			}
 		}
 
-		public Task Update(IBotwinderClient iClient)
+		public async Task Update(IBotwinderClient iClient)
 		{
-			return Task.CompletedTask;
+			GlobalContext dbContext = GlobalContext.Create(this.Client.DbConnectionString);
+			DateTime aDayAgo = DateTime.UtcNow - TimeSpan.FromDays(1);
+			foreach( LogEntry entry in dbContext.Log.Where(e => e.Type == LogType.Pm && e.DateTime > aDayAgo) )
+			{
+				await VerifyUserHash(entry.UserId, entry.Message);
+			}
 		}
 	}
 }
