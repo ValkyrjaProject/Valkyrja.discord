@@ -221,7 +221,9 @@ namespace Botwinder.modules
 
 				try
 				{
-					await user.SendMessageSafe(string.Format(PmVerifiedString, server.Guild.Name));
+					if( !userData.Verified )
+						await user.SendMessageSafe(string.Format(PmVerifiedString, server.Guild.Name));
+
 					await user.AddRoleAsync(role);
 					if( this.Client.GlobalConfig.LogDebug )
 						Console.WriteLine("Verification: Verified " + user.Username);
