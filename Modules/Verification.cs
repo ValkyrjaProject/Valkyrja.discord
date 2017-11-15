@@ -295,11 +295,14 @@ namespace Botwinder.modules
 		public async Task Update(IBotwinderClient iClient)
 		{
 			GlobalContext dbContext = GlobalContext.Create(this.Client.DbConnectionString);
+
 			DateTime aDayAgo = DateTime.UtcNow - TimeSpan.FromDays(1);
 			foreach( LogEntry entry in dbContext.Log.Where(e => e.Type == LogType.Pm && e.DateTime > aDayAgo) )
 			{
 				await VerifyUserHash(entry.UserId, entry.Message);
 			}
+
+			dbContext.Dispose();
 		}
 	}
 }
