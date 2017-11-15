@@ -49,6 +49,7 @@ namespace Botwinder.modules
 
 		private BotwinderClient Client;
 		private readonly ConcurrentDictionary<string, HashedValue> HashedValues = new ConcurrentDictionary<string, HashedValue>();
+		private readonly Dictionary<guid, guid> RecentlyProcessedPms = new Dictionary<guid, guid>();
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -301,7 +302,11 @@ namespace Botwinder.modules
 			DateTime aDayAgo = DateTime.UtcNow - TimeSpan.FromDays(1);
 			foreach( LogEntry entry in dbContext.Log.Where(e => e.Type == LogType.Pm && e.DateTime > aDayAgo) )
 			{
-				await VerifyUserHash(entry.UserId, entry.Message);
+				if( !this.RecentlyProcessedPms.ContainsKey(entry.MessageId) )
+				{
+					await VerifyUserHash(entry.UserId, entry.Message);
+					this.RecentlyProcessedPms.Add(entry.MessageId, entry.UserId);
+				}
 			}
 
 			dbContext.Dispose();
