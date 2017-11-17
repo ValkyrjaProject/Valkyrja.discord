@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord;
-using Discord.Net;
-using Discord.Rest;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -32,6 +28,17 @@ namespace Botwinder.modules
 			this.Client.Events.UserVoiceStateUpdated += OnUserVoice;
 			this.Client.Events.MessageDeleted += OnMessageDeleted;
 			this.Client.Events.MessageUpdated += OnMessageUpdated;
+
+			this.Client.Events.LogBan += LogBan;
+			this.Client.Events.LogUnban += LogUnban;
+			this.Client.Events.LogKick += LogKick;
+			this.Client.Events.LogMute += LogMute;
+			this.Client.Events.LogUnmute += LogUnmute;
+
+			this.Client.Events.LogPublicRoleJoin += LogPublicRoleJoin;
+			this.Client.Events.LogPublicRoleLeave += LogPublicRoleLeave;
+			this.Client.Events.LogPromote += LogPromote;
+			this.Client.Events.LogDemote += LogDemote;
 
 			return new List<Command>();
 		}
@@ -119,6 +126,54 @@ namespace Botwinder.modules
 					GetLogMessage("Message Edited", "#" + channel.Name, updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(), "Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"), "After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
 			}
 		}
+
+
+		private async Task LogBan(Server server, SocketGuildUser user, string reason, string duration, SocketGuildUser issuedBy)
+		{
+			throw new NotImplementedException();
+		}
+
+		private async Task LogUnban(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
+		{
+			throw new NotImplementedException();
+		}
+
+		private async Task LogKick(Server server, SocketGuildUser user, string reason, SocketGuildUser issuedBy)
+		{
+			throw new NotImplementedException();
+		}
+
+		private async Task LogMute(Server server, SocketGuildUser user, string duration, SocketGuildUser issuedBy)
+		{
+			throw new NotImplementedException();
+		}
+
+		private async Task LogUnmute(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
+		{
+			throw new NotImplementedException();
+		}
+
+
+		private async Task LogPublicRoleJoin(Server server, SocketGuildUser user, string roleName)
+		{
+			throw new NotImplementedException();
+		}
+
+		private async Task LogPublicRoleLeave(Server server, SocketGuildUser user, string roleName)
+		{
+			throw new NotImplementedException();
+		}
+
+		private async Task LogPromote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
+		{
+			throw new NotImplementedException();
+		}
+
+		private async Task LogDemote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
+		{
+			throw new NotImplementedException();
+		}
+
 
 		public static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 		{
