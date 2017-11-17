@@ -268,7 +268,11 @@ namespace Botwinder.modules
 
 		private async Task LogPublicRoleLeave(Server server, SocketGuildUser user, string roleName)
 		{
-			throw new NotImplementedException();
+			SocketTextChannel logChannel;
+			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
+				return;
+
+			await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
 		}
 
 		private async Task LogPromote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)

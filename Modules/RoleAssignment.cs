@@ -297,14 +297,10 @@ namespace Botwinder.modules
 					}
 				}
 
-				//todo - logging
-				/*if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
-				{
-					string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
-					await logChannel.SendMessageSafe(message);
-				}*/
-
 				await iClient.SendMessageToChannel(e.Channel, response);
+
+				if( this.Client.Events.LogPublicRoleLeave != null )
+					await this.Client.Events.LogPublicRoleLeave(e.Server, e.Message.Author as SocketGuildUser, foundRoles.First().Name);
 			};
 			commands.Add(newCommand);
 
@@ -389,13 +385,6 @@ namespace Botwinder.modules
 						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 					}
 				}
-
-				//todo - logging
-				/*if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
-				{
-					string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
-					await logChannel.SendMessageSafe(message);
-				}*/
 
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
