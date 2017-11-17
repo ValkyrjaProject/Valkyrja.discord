@@ -246,7 +246,14 @@ namespace Botwinder.modules
 
 		private async Task LogUnmute(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
 		{
-			throw new NotImplementedException();
+			SocketTextChannel logChannel;
+			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+				return;
+
+			await logChannel.SendMessageSafe(
+				GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					user.GetUsername(), user.Id.ToString(),
+					Utils.GetTimestamp()));
 		}
 
 
