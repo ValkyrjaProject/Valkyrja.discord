@@ -100,7 +100,24 @@ namespace Botwinder.modules
 
 		private async Task OnMessageUpdated(SocketMessage originalMessage, SocketMessage updatedMessage, ISocketMessageChannel c)
 		{
-			throw new NotImplementedException();
+			if( !(c is SocketTextChannel channel) )
+				return;
+
+			Server server;
+			if( !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
+			    (server = this.Client.Servers[channel.Guild.Id]) == null ||
+			    server.Config.IgnoreBots && updatedMessage.Author.IsBot ||
+			    !(updatedMessage.Author is SocketGuildUser user) )
+				return;
+
+			SocketTextChannel logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId);
+			if( server.Config.LogEditedMessages && logChannel != null && !(
+				 server.IgnoredChannels.Contains(channel.Id) ||
+				 server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId)) ) )
+			{
+				await logChannel.SendMessageSafe(
+					GetLogMessage("Message Edited", "#" + channel.Name, updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(), "Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"), "After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+			}
 		}
 
 		public static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
