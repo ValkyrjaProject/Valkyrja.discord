@@ -51,7 +51,16 @@ namespace Botwinder.modules
 
 		private async Task OnUserLeft(SocketGuildUser user)
 		{
-			throw new NotImplementedException();
+			Server server;
+			if( !this.Client.Servers.ContainsKey(user.Guild.Id) ||
+			    (server = this.Client.Servers[user.Guild.Id]) == null )
+				return;
+
+			SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
+			if( server.Config.LogLeave && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
+				await this.Client.SendMessageToChannel(channel,
+					string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
+						server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
 		}
 
 		private async Task OnUserVoice(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
