@@ -71,9 +71,44 @@ namespace Botwinder.modules
 						server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
 		}
 
-		private Task OnUserVoice(SocketUser user, SocketVoiceState originalState, SocketVoiceState newState)
+		private async Task OnUserVoice(SocketUser u, SocketVoiceState originalState, SocketVoiceState newState)
 		{
-			return Task.CompletedTask;
+			Server server;
+			guid id = newState.VoiceChannel?.Guild.Id ?? originalState.VoiceChannel?.Guild.Id ?? 0;
+			if( id == 0 ||
+			    !this.Client.Servers.ContainsKey(id) ||
+			    (server = this.Client.Servers[id]) == null ||
+			    !(u is SocketGuildUser user) )
+				return;
+
+			SocketTextChannel channel;
+			if( server.Config.VoiceChannelId != 0 &&
+			    (channel = server.Guild.GetTextChannel(server.Config.VoiceChannelId)) != null )
+			{
+				if( originalState.VoiceChannel == null && newState.VoiceChannel == null )
+					throw new NotImplementedException("Logging.VoiceState.VoiceChannel(s) are null.");
+
+				int change = originalState.VoiceChannel == null ? 1 :
+					newState.VoiceChannel == null ? -1 : 0;
+
+				string message = "";
+				switch(change)
+				{
+					case -1:
+						message = $"**{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
+						break;
+					case 1:
+						message = $"**{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
+						break;
+					case 0:
+						message = $"**{user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				await channel.SendMessageSafe(message);
+			}
 		}
 
 		private async Task OnMessageDeleted(SocketMessage message, ISocketMessageChannel c)
