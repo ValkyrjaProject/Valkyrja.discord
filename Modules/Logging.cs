@@ -64,9 +64,9 @@ namespace Botwinder.modules
 						server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
 		}
 
-		private async Task OnUserVoice(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
+		private Task OnUserVoice(SocketUser user, SocketVoiceState originalState, SocketVoiceState newState)
 		{
-			throw new NotImplementedException();
+			return Task.CompletedTask;
 		}
 
 		private async Task OnMessageDeleted(SocketMessage message, ISocketMessageChannel c)
