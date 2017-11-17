@@ -440,11 +440,17 @@ namespace Botwinder.modules
 					return;
 				}
 
+				SocketRole role = foundRoles.First();
 				string response = "Done!";
 				try
 				{
 					foreach( SocketGuildUser user in users )
-						await user.RemoveRoleAsync(foundRoles.First());
+					{
+						await user.RemoveRoleAsync(role);
+
+						if( this.Client.Events.LogDemote != null )
+							await this.Client.Events.LogDemote(e.Server, user, role.Name, e.Message.Author as SocketGuildUser);
+					}
 				} catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
@@ -455,13 +461,6 @@ namespace Botwinder.modules
 						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 					}
 				}
-
-				//todo - logging
-				/*if( e.Server.ServerConfig.ModChannelLogMembers && (logChannel = e.Message.Server.GetChannel(e.Server.ServerConfig.ModChannel)) != null )
-				{
-					string message = string.Format("`{0}`: __{1}__ joined _{2}_.", Utils.GetTimestamp(), e.Message.User.Name, (role == null ? e.TrimmedMessage : role.Name));
-					await logChannel.SendMessageSafe(message);
-				}*/
 
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
