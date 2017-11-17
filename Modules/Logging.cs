@@ -37,7 +37,16 @@ namespace Botwinder.modules
 
 		private async Task OnUserJoined(SocketGuildUser user)
 		{
-			throw new NotImplementedException();
+			Server server;
+			if( !this.Client.Servers.ContainsKey(user.Guild.Id) ||
+			    (server = this.Client.Servers[user.Guild.Id]) == null )
+				return;
+
+			SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
+			if( server.Config.LogJoin && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
+				await this.Client.SendMessageToChannel(channel,
+					string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
+						server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
 		}
 
 		private async Task OnUserLeft(SocketGuildUser user)
