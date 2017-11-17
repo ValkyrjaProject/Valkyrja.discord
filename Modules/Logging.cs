@@ -221,7 +221,15 @@ namespace Botwinder.modules
 
 		private async Task LogKick(Server server, string userName, guid userId, string reason, SocketGuildUser issuedBy)
 		{
-			throw new NotImplementedException();
+			SocketTextChannel logChannel;
+			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+				return;
+
+			await logChannel.SendMessageSafe(
+				GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					userName ?? "", userId.ToString(),
+					Utils.GetTimestamp(),
+					"Reason", reason));
 		}
 
 		private async Task LogMute(Server server, SocketGuildUser user, string duration, SocketGuildUser issuedBy)
