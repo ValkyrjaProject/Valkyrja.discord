@@ -371,10 +371,16 @@ namespace Botwinder.modules
 				}
 
 				string response = "Done!";
+				SocketRole role = foundRoles.First();
 				try
 				{
 					foreach( SocketGuildUser user in users )
-						await user.AddRoleAsync(foundRoles.First());
+					{
+						await user.AddRoleAsync(role);
+
+						if( this.Client.Events.LogPromote != null )
+							await this.Client.Events.LogPromote(e.Server, user, role.Name, e.Message.Author as SocketGuildUser);
+					}
 				} catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
