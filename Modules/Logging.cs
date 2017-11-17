@@ -16,6 +16,8 @@ namespace Botwinder.modules
 	{
 		private BotwinderClient Client;
 
+		private readonly List<guid> RecentlyBannedUserIDs = new List<ulong>();
+
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 
@@ -28,6 +30,14 @@ namespace Botwinder.modules
 			this.Client.Events.UserVoiceStateUpdated += OnUserVoice;
 			this.Client.Events.MessageDeleted += OnMessageDeleted;
 			this.Client.Events.MessageUpdated += OnMessageUpdated;
+			this.Client.Events.UserBanned += async (user, guild) => {
+				Server server;
+				if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
+				    this.RecentlyBannedUserIDs.Contains(user.Id) )
+					return;
+
+				await LogBan(server, user.GetUsername(), user.Id, "unknown", "permanently", null);
+			};
 
 			this.Client.Events.LogBan += LogBan;
 			this.Client.Events.LogUnban += LogUnban;
@@ -123,8 +133,8 @@ namespace Botwinder.modules
 			    !(message.Author is SocketGuildUser user) )
 				return;
 
-			SocketTextChannel logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId);
-			if( server.Config.LogDeletedMessages && logChannel != null && !(
+			SocketTextChannel logChannel;
+			if( server.Config.LogDeletedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
 			     (this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id)) ||
 			     server.IgnoredChannels.Contains(channel.Id) ||
 			     server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId)) ) )
@@ -136,7 +146,11 @@ namespace Botwinder.modules
 							attachment.AppendLine(a.Url);
 
 				await logChannel.SendMessageSafe(
-					GetLogMessage("Message Deleted", "#" + channel.Name, message.Author.GetUsername(), message.Author.Id.ToString(), "Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"), message.Attachments.Any() ? "Files" : "", attachment.ToString()));
+					GetLogMessage("Message Deleted", "#" + channel.Name,
+						message.Author.GetUsername(), message.Author.Id.ToString(),
+						message.Id,
+						"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+						message.Attachments.Any() ? "Files" : "", attachment.ToString()));
 			}
 		}
 
@@ -152,20 +166,34 @@ namespace Botwinder.modules
 			    !(updatedMessage.Author is SocketGuildUser user) )
 				return;
 
-			SocketTextChannel logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId);
-			if( server.Config.LogEditedMessages && logChannel != null && !(
+			SocketTextChannel logChannel;
+			if( server.Config.LogEditedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId))!= null && !(
 				 server.IgnoredChannels.Contains(channel.Id) ||
 				 server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId)) ) )
 			{
 				await logChannel.SendMessageSafe(
-					GetLogMessage("Message Edited", "#" + channel.Name, updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(), "Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"), "After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+					GetLogMessage("Message Edited", "#" + channel.Name,
+						updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+						updatedMessage.Id,
+						"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+						"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
 			}
 		}
 
 
-		private async Task LogBan(Server server, SocketGuildUser user, string reason, string duration, SocketGuildUser issuedBy)
+		private async Task LogBan(Server server, string userName, guid userId, string reason, string duration, SocketGuildUser issuedBy)
 		{
-			throw new NotImplementedException();
+			SocketTextChannel logChannel;
+			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+				return;
+
+			this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
+
+			await logChannel.SendMessageSafe(
+				GetLogMessage("User Banned " + duration, issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername(),
+					userName ?? "", userId.ToString(),
+					Utils.GetTimestamp(),
+					"Reason", reason));
 		}
 
 		private async Task LogUnban(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
@@ -210,11 +238,17 @@ namespace Botwinder.modules
 		}
 
 
-		public static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
+		public static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen,
+			guid timestampId, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
+			=> GetLogMessage(titleRed, infoGreen, nameGold, idGreen,
+				Utils.GetTimestamp(Utils.GetTimeFromId(timestampId)),
+				tag1, msg1, tag2, msg2);
+
+		public static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen,
+			string timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 		{
 			msg1 = msg1.Replace('`', '\'');
 			msg2 = msg2.Replace('`', '\'');
-			string timestamp = Utils.GetTimestamp();
 			int length = titleRed.Length + infoGreen.Length + nameGold.Length + idGreen.Length + msg1.Length + msg2.Length + timestamp.Length + 100;
 			int messageLimit = 1500;
 			while( length >= GlobalConfig.MessageCharacterLimit )

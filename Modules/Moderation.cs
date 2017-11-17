@@ -32,20 +32,22 @@ namespace Botwinder.modules
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <http://botwinder.info/config>";
 
+		private BotwinderClient Client;
+
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 
 		public List<Command> Init(IBotwinderClient iClient)
 		{
-			BotwinderClient client = iClient as BotwinderClient;
+			this.Client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
 
-			client.Events.BanUser += Ban;
-			client.Events.BanUsers += Ban;
-			client.Events.UnBanUsers += UnBan;
-			client.Events.MuteUser += Mute;
-			client.Events.MuteUsers += Mute;
-			client.Events.UnMuteUsers += UnMute;
+			this.Client.Events.BanUser += Ban;
+			this.Client.Events.BanUsers += Ban;
+			this.Client.Events.UnBanUsers += UnBan;
+			this.Client.Events.MuteUser += Mute;
+			this.Client.Events.MuteUsers += Mute;
+			this.Client.Events.UnMuteUsers += UnMute;
 
 
 // !clear
@@ -62,7 +64,7 @@ namespace Botwinder.modules
 
 				int n = 0;
 				RestUserMessage msg = null;
-				List<guid> userIDs = client.GetMentionedUserIds(e);
+				List<guid> userIDs = this.Client.GetMentionedUserIds(e);
 
 				if( userIDs.Count == 0 && e.MessageArgs != null && (e.MessageArgs.Length > 1 || (e.MessageArgs.Length == 1 && e.Command.Id == "nuke")) )
 				{
@@ -118,7 +120,7 @@ namespace Botwinder.modules
 					}
 					catch(Exception exception)
 					{
-						await client.LogException(exception, e);
+						await this.Client.LogException(exception, e);
 						lastRemoved = 0;
 						return true;
 					}
@@ -149,10 +151,10 @@ namespace Botwinder.modules
 				if( canceled )
 					return;
 
-				if( !client.ClearedMessageIDs.ContainsKey(e.Server.Id) )
-					client.ClearedMessageIDs.Add(e.Server.Id, new List<guid>());
+				if( !this.Client.ClearedMessageIDs.ContainsKey(e.Server.Id) )
+					this.Client.ClearedMessageIDs.Add(e.Server.Id, new List<guid>());
 
-				client.ClearedMessageIDs[e.Server.Id].AddRange(idsToDelete);
+				this.Client.ClearedMessageIDs[e.Server.Id].AddRange(idsToDelete);
 
 				int i = 0;
 				guid[] chunk = new guid[100];
@@ -175,7 +177,7 @@ namespace Botwinder.modules
 					catch(Discord.Net.HttpException) { }
 					catch(Exception exception)
 					{
-						await client.LogException(exception, e);
+						await this.Client.LogException(exception, e);
 						return true;
 					}
 
@@ -286,14 +288,14 @@ namespace Botwinder.modules
 
 				SocketRole roleOp = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
 				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
-				    !client.IsGlobalAdmin(e.Message.Author.Id) )
+				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -336,8 +338,8 @@ namespace Botwinder.modules
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
-					await client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				dbContext.Dispose();
@@ -364,8 +366,8 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -389,8 +391,8 @@ namespace Botwinder.modules
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
-					await client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				dbContext.Dispose();
@@ -412,7 +414,7 @@ namespace Botwinder.modules
 
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
 				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
-				    !client.IsGlobalAdmin(e.Message.Author.Id) )
+				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
 					return;
@@ -424,8 +426,8 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -514,14 +516,14 @@ namespace Botwinder.modules
 
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
 				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
-				    !client.IsGlobalAdmin(e.Message.Author.Id) )
+				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -570,8 +572,8 @@ namespace Botwinder.modules
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
-					await client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				dbContext.Dispose();
@@ -605,8 +607,8 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -630,8 +632,8 @@ namespace Botwinder.modules
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
-					await client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				dbContext.Dispose();
@@ -651,8 +653,8 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -676,8 +678,8 @@ namespace Botwinder.modules
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
-					await client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{client.GlobalConfig.AdminUserId}> to take a look x_x";
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				dbContext.Dispose();
@@ -697,8 +699,8 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -763,8 +765,8 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-				List<UserData> mentionedUsers = client.GetMentionedUsersData(dbContext, e);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
 				{
@@ -856,7 +858,7 @@ namespace Botwinder.modules
 				}
 
 				string response = "I found too many, please be more specific.";
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 				if( foundUserIds.Count <= 5 )
 				{
@@ -897,7 +899,7 @@ namespace Botwinder.modules
 
 				string response = "I found too many, please be more specific.";
 				string expression = e.TrimmedMessage.ToLower();
-				ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				List<Username> foundUsernames = dbContext.Usernames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
 				List<Nickname> foundNicknames = dbContext.Nicknames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
 				List<guid> foundUserIds = new List<guid>();
@@ -1041,7 +1043,7 @@ namespace Botwinder.modules
 			List<guid> banned = new List<guid>();
 			foreach( UserData userData in users )
 			{
-				SocketGuildUser user;
+				SocketGuildUser user = null;
 				if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
 				{
 					try
@@ -1055,15 +1057,13 @@ namespace Botwinder.modules
 
 				try
 				{
-					//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+					await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
 
-					string logMessage = $"Banned {durationString.ToString()} with reason: {reason}";
+					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
 					userData.BannedUntil = bannedUntil;
 					userData.AddWarning(logMessage);
 					banned.Add(userData.UserId);
-
-					//client.Events.UserBanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
 				}
 				catch(Exception exception)
 				{
