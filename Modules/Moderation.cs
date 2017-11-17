@@ -471,6 +471,9 @@ namespace Botwinder.modules
 						await user.KickAsync(warning.ToString());
 						userData.AddWarning(warning.ToString());
 						usernames.Add(user.GetUsername());
+
+						if( this.Client.Events.LogKick != null )
+							await this.Client.Events.LogKick(e.Server, user?.GetUsername(), userData.UserId, warning.ToString(), e.Message.Author as SocketGuildUser);
 					}
 				}
 				catch(Exception exception)
@@ -1057,7 +1060,8 @@ namespace Botwinder.modules
 
 				try
 				{
-					await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
+					if( this.Client.Events.LogBan != null )
+						await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
 
 					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
@@ -1108,7 +1112,7 @@ namespace Botwinder.modules
 				}
 			}
 
-			SocketGuildUser user;
+			SocketGuildUser user = null;
 			if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
 			{
 				try
@@ -1120,16 +1124,15 @@ namespace Botwinder.modules
 				catch(Exception) { }
 			}
 
-			//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+			if( this.Client.Events.LogBan != null )
+				await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
 
 			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
 			userData.BannedUntil = bannedUntil;
 			userData.AddWarning($"Banned {durationString.ToString()} with reason: {reason}");
-
-			//client.Events.UserBanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
 		}
 
-		public async Task<string> UnBan(Server server, List<UserData> users)
+		public async Task<string> UnBan(Server server, List<UserData> users, SocketGuildUser unbannedBy = null)
 		{
 			string response = "";
 			List<guid> unbanned = new List<guid>();
@@ -1137,11 +1140,10 @@ namespace Botwinder.modules
 			{
 				try
 				{
-					//this.RecentlyBannedUserIDs.Add(user.Id); //Don't trigger the on-event log message as well as this custom one.
+					if( this.Client.Events.LogUnban != null )
+						await this.Client.Events.LogUnban(server, null, userData.UserId, unbannedBy);
 
 					await server.Guild.RemoveBanAsync(userData.UserId);
-
-					//UserUnbanned(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
 
 					userData.BannedUntil = DateTime.MinValue;
 					unbanned.Add(userData.UserId);

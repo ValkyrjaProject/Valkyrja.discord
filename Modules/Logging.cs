@@ -16,7 +16,8 @@ namespace Botwinder.modules
 	{
 		private BotwinderClient Client;
 
-		private readonly List<guid> RecentlyBannedUserIDs = new List<ulong>();
+		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
+		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -37,6 +38,14 @@ namespace Botwinder.modules
 					return;
 
 				await LogBan(server, user.GetUsername(), user.Id, "unknown", "permanently", null);
+			};
+			this.Client.Events.UserUnbanned += async (user, guild) => {
+				Server server;
+				if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
+				    this.RecentlyUnbannedUserIDs.Contains(user.Id) )
+					return;
+
+				await LogUnban(server, user.GetUsername(), user.Id, null);
 			};
 
 			this.Client.Events.LogBan += LogBan;
@@ -190,18 +199,27 @@ namespace Botwinder.modules
 			this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
 			await logChannel.SendMessageSafe(
-				GetLogMessage("User Banned " + duration, issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername(),
+				GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 					userName ?? "", userId.ToString(),
 					Utils.GetTimestamp(),
 					"Reason", reason));
 		}
 
-		private async Task LogUnban(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
+		private async Task LogUnban(Server server, string userName, guid userId, SocketGuildUser issuedBy)
 		{
-			throw new NotImplementedException();
+			SocketTextChannel logChannel;
+			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+				return;
+
+			this.RecentlyUnbannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
+
+			await logChannel.SendMessageSafe(
+				GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					userName ?? "", userId.ToString(),
+					Utils.GetTimestamp()));
 		}
 
-		private async Task LogKick(Server server, SocketGuildUser user, string reason, SocketGuildUser issuedBy)
+		private async Task LogKick(Server server, string userName, guid userId, string reason, SocketGuildUser issuedBy)
 		{
 			throw new NotImplementedException();
 		}
@@ -288,6 +306,9 @@ namespace Botwinder.modules
 
 		public Task Update(IBotwinderClient iClient)
 		{
+			this.RecentlyBannedUserIDs.Clear();
+			this.RecentlyUnbannedUserIDs.Clear();
+
 			return Task.CompletedTask;
 		}
 	}
