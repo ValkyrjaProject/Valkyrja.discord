@@ -387,7 +387,7 @@ namespace Botwinder.modules
 
 				try
 				{
-					response = await UnMute(e.Server, mentionedUsers, role);
+					response = await UnMute(e.Server, mentionedUsers, role, e.Message.Author as SocketGuildUser);
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
@@ -677,7 +677,7 @@ namespace Botwinder.modules
 
 				try
 				{
-					response = await UnBan(e.Server, mentionedUsers);
+					response = await UnBan(e.Server, mentionedUsers, e.Message.Author as SocketGuildUser);
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
@@ -1191,15 +1191,14 @@ namespace Botwinder.modules
 				durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
 			}
 
-			List<guid> muted = new List<guid>();
 				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 				await user.AddRoleAsync(role);
 
 				userData.MutedUntil = mutedUntil;
-				userData.AddWarning($"Muted for {durationString.ToString()}");
-				muted.Add(userData.UserId);
+				userData.AddWarning($"Muted {durationString.ToString()}");
 
-				//client.Events.UserMuted(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+				if( this.Client.Events.LogMute != null )
+					await this.Client.Events.LogMute(server, user, durationString.ToString(), mutedBy);
 		}
 
 		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
@@ -1238,10 +1237,11 @@ namespace Botwinder.modules
 					await user.AddRoleAsync(role);
 
 					userData.MutedUntil = mutedUntil;
-					userData.AddWarning($"Muted for {durationString.ToString()}");
+					userData.AddWarning($"Muted {durationString.ToString()}");
 					muted.Add(userData.UserId);
 
-					//client.Events.UserMuted(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+					if( this.Client.Events.LogMute != null )
+						await this.Client.Events.LogMute(server, user, durationString.ToString(), mutedBy);
 				}
 				catch(Exception exception)
 				{
@@ -1258,7 +1258,7 @@ namespace Botwinder.modules
 			return response;
 		}
 
-		public async Task<string> UnMute(Server server, List<UserData> users, IRole role)
+		public async Task<string> UnMute(Server server, List<UserData> users, IRole role, SocketGuildUser unmutedBy = null)
 		{
 			string response = "";
 			List<guid> unmuted = new List<guid>();
@@ -1271,7 +1271,9 @@ namespace Botwinder.modules
 
 					userData.MutedUntil = DateTime.MinValue;
 					unmuted.Add(userData.UserId);
-					//UserUnmuted(user, s.DiscordServer, bannedUntil, reason, bannedBy: bannedBy); //todo - log channel
+
+					if( this.Client.Events.LogUnmute != null )
+						await this.Client.Events.LogUnmute(server, user, unmutedBy);
 				}
 				catch(Exception exception)
 				{
