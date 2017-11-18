@@ -19,6 +19,12 @@ namespace Botwinder.modules
 		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
 		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
 
+		private guid RecentVoiceActivityId = 0;
+		private int RecentVoiceActivityCount = 0;
+		private const int RecentVoiceActivityThreshold = 6;
+		private readonly TimeSpan UpdateDelay = TimeSpan.FromMinutes(2);
+		private DateTime LastUpdateTime = DateTime.UtcNow;
+
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 
@@ -97,7 +103,8 @@ namespace Botwinder.modules
 			if( id == 0 ||
 			    !this.Client.Servers.ContainsKey(id) ||
 			    (server = this.Client.Servers[id]) == null ||
-			    !(u is SocketGuildUser user) )
+			    !(u is SocketGuildUser user) ||
+			    originalState.VoiceChannel == newState.VoiceChannel )
 				return;
 
 			SocketTextChannel channel;
@@ -126,7 +133,39 @@ namespace Botwinder.modules
 						throw new ArgumentOutOfRangeException();
 				}
 
-				await channel.SendMessageSafe(message);
+				if( this.RecentVoiceActivityId == user.Id && ++this.RecentVoiceActivityCount >= RecentVoiceActivityThreshold )
+				{
+					if( this.RecentVoiceActivityCount == RecentVoiceActivityThreshold )
+						message = $"<@{user.Id}> stop spamming me or face the consequences.";
+					if( this.RecentVoiceActivityCount == RecentVoiceActivityThreshold + 1 )
+					{
+						message = "";
+						try
+						{
+							await user.SendMessageSafe(string.Format("You're one voice channel switch away from getting banned on the `{0}` server. Do not spam-switch please :<", server.Guild.Name));
+						}
+						catch(Exception) { }
+					}
+					if( this.RecentVoiceActivityCount == RecentVoiceActivityThreshold + 2 )
+					{
+						message = "";
+						try
+						{
+							UserData userData = ServerContext.Create(this.Client.DbConnectionString).GetOrAddUser(server.Id, user.Id);
+							await this.Client.Events.BanUser(server, userData, TimeSpan.FromHours(1), "Excessive spamming - voice chat switching (by Botwinder)", server.Guild.CurrentUser, false, true);
+						}
+						catch(Exception) { }
+					}
+				}
+
+				if( this.RecentVoiceActivityId != user.Id )
+				{
+					this.RecentVoiceActivityId = user.Id;
+					this.RecentVoiceActivityCount = 1;
+				}
+
+				if( string.IsNullOrEmpty(message) )
+					await channel.SendMessageSafe(message);
 			}
 		}
 
@@ -344,6 +383,12 @@ namespace Botwinder.modules
 
 		public Task Update(IBotwinderClient iClient)
 		{
+			if( this.LastUpdateTime + this.UpdateDelay > DateTime.UtcNow )
+				return Task.CompletedTask;
+
+			this.LastUpdateTime = DateTime.UtcNow;
+
+			this.RecentVoiceActivityId = 0;
 			this.RecentlyBannedUserIDs.Clear();
 			this.RecentlyUnbannedUserIDs.Clear();
 
