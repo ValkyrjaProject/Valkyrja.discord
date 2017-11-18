@@ -114,13 +114,13 @@ namespace Botwinder.modules
 				switch(change)
 				{
 					case -1:
-						message = $"`{Utils.GetTimestamp()}`: **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
+						message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
 						break;
 					case 1:
-						message = $"`{Utils.GetTimestamp()}`: **{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
+						message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
 						break;
 					case 0:
-						message = $"**`{Utils.GetTimestamp()}`: {user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
+						message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
