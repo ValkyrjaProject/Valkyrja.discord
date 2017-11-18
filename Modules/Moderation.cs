@@ -26,6 +26,7 @@ namespace Botwinder.modules
 		private const string KickPmString = "Hello!\nYou have been kicked out of the **{0} server** by its Moderators for the following reason:\n{1}";
 		private const string WarningNotFoundString = "I couldn't find them :(";
 		private const string WarningPmString = "Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}";
+		private const string MuteIgnoreChannelString = "{0}, you've been muted.";
 		private const string MuteConfirmString = "*Silence!!  ò_ó\n...\nI keel u, {0}!!*  Ò_Ó";
 		private const string UnmuteConfirmString = "Speak {0}!";
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
@@ -1191,14 +1192,18 @@ namespace Botwinder.modules
 				durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
 			}
 
-				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-				await user.AddRoleAsync(role);
+			SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+			await user.AddRoleAsync(role);
 
-				userData.MutedUntil = mutedUntil;
-				userData.AddWarning($"Muted {durationString.ToString()}");
+			userData.MutedUntil = mutedUntil;
+			userData.AddWarning($"Muted {durationString.ToString()}");
 
-				if( this.Client.Events.LogMute != null )
-					await this.Client.Events.LogMute(server, user, durationString.ToString(), mutedBy);
+			SocketTextChannel logChannel;
+			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
+				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, $"<@{userData.UserId}>"));
+
+			if( this.Client.Events.LogMute != null )
+				await this.Client.Events.LogMute(server, user, durationString.ToString(), mutedBy);
 		}
 
 		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
@@ -1252,8 +1257,13 @@ namespace Botwinder.modules
 				}
 			}
 
+			string mentions = muted.ToMentions();
 			if( muted.Any() )
-				response = string.Format(MuteConfirmString, muted.ToMentions());
+				response = string.Format(MuteConfirmString, mentions);
+
+			SocketTextChannel logChannel;
+			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
+				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, mentions));
 
 			return response;
 		}
