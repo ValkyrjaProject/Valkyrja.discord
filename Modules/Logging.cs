@@ -204,7 +204,9 @@ namespace Botwinder.modules
 
 		private async Task OnMessageUpdated(SocketMessage originalMessage, SocketMessage updatedMessage, ISocketMessageChannel c)
 		{
-			if( !(c is SocketTextChannel channel) )
+			if( originalMessage == null || updatedMessage == null ||
+			    originalMessage.Content == updatedMessage.Content ||
+			    !(c is SocketTextChannel channel) )
 				return;
 
 			Server server;
