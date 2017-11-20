@@ -164,7 +164,7 @@ namespace Botwinder.modules
 					this.RecentVoiceActivityCount = 1;
 				}
 
-				if( string.IsNullOrEmpty(message) )
+				if( !string.IsNullOrEmpty(message) )
 					await channel.SendMessageSafe(message);
 			}
 		}
