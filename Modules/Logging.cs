@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Botwinder.core;
@@ -21,6 +22,8 @@ namespace Botwinder.modules
 
 		private readonly TimeSpan UpdateDelay = TimeSpan.FromMinutes(2);
 		private DateTime LastUpdateTime = DateTime.UtcNow;
+
+		private readonly Color DefaultColor = new Color(255, 0, 255);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -77,7 +80,12 @@ namespace Botwinder.modules
 			{
 				if( server.Config.ActivityChannelEmbeds )
 				{
-					throw new NotImplementedException();
+					await channel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.ActivityChannelColor),
+							string.Format(server.Config.LogMessageJoin, server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
+							"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow));
 				}
 				else
 				{
@@ -100,7 +108,12 @@ namespace Botwinder.modules
 			{
 				if( server.Config.ActivityChannelEmbeds )
 				{
-					throw new NotImplementedException();
+					await channel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.ActivityChannelColor),
+							string.Format(server.Config.LogMessageLeave, server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
+							"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow));
 				}
 				else
 				{
@@ -127,14 +140,43 @@ namespace Botwinder.modules
 			    (channel = server.Guild.GetTextChannel(server.Config.VoiceChannelId)) != null )
 			{
 				if( originalState.VoiceChannel == null && newState.VoiceChannel == null )
-					throw new NotImplementedException("Logging.VoiceState.VoiceChannel(s) are null.");
+					throw new ArgumentNullException("Logging.VoiceState.VoiceChannel(s) are null.");
 
 				int change = originalState.VoiceChannel == null ? 1 :
 					newState.VoiceChannel == null ? -1 : 0;
 
 				if( server.Config.VoiceChannelEmbeds )
 				{
-					throw new NotImplementedException();
+					switch(change)
+					{
+						case -1:
+							await channel.SendMessageAsync("", embed:
+								GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User left Voice Channel",
+									"🎤", "❌",
+									user.GetUsername(), user.Id.ToString(),
+									DateTime.UtcNow,
+									"Channel:", originalState.VoiceChannel.Name));
+							break;
+						case 1:
+							await channel.SendMessageAsync("", embed:
+								GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User joined Voice Channel",
+									"🎤", "✔️",
+									user.GetUsername(), user.Id.ToString(),
+									DateTime.UtcNow,
+									"Channel:", newState.VoiceChannel.Name));
+							break;
+						case 0:
+							await channel.SendMessageAsync("", embed:
+								GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User switched Voice Channels",
+									"🎤", "🔈",
+									user.GetUsername(), user.Id.ToString(),
+									DateTime.UtcNow,
+									"From:", originalState.VoiceChannel.Name,
+									"To:", newState.VoiceChannel.Name));
+							break;
+						default:
+							throw new ArgumentOutOfRangeException();
+					}
 					return;
 				}
 
@@ -184,7 +226,12 @@ namespace Botwinder.modules
 
 				if( server.Config.LogChannelEmbeds )
 				{
-					throw new NotImplementedException();
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.LogMessagesColor), "Message Deleted", "Channel:", "#" + channel.Name,
+							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Id,
+							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							message.Attachments.Any() ? "Files" : "", attachment.ToString()));
 				}
 				else
 				{
@@ -220,7 +267,12 @@ namespace Botwinder.modules
 
 				if( server.Config.LogChannelEmbeds )
 				{
-					throw new NotImplementedException();
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.LogMessagesColor), "Message Edited", "Channel:", "#" + channel.Name,
+							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+							updatedMessage.Id,
+							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
 				}
 				else
 				{
@@ -246,7 +298,11 @@ namespace Botwinder.modules
 
 			if( server.Config.ModChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Banned " + duration, "Banned by:", issuedBy?.GetUsername() ?? "<unknown>",
+						userName ?? "<unknown>", userId.ToString(),
+						DateTime.UtcNow,
+						"Reason", reason));
 			}
 			else
 			{
@@ -268,7 +324,10 @@ namespace Botwinder.modules
 
 			if( server.Config.ModChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unbanned", "Unbanned by:", issuedBy?.GetUsername() ?? "<unknown>",
+						userName ?? "<unknown>", userId.ToString(),
+						DateTime.UtcNow));
 			}
 			else
 			{
@@ -287,7 +346,11 @@ namespace Botwinder.modules
 
 			if( server.Config.ModChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Kicked", "Kicked by:", issuedBy?.GetUsername() ?? "<unknown>",
+						userName ?? "<unknown>", userId.ToString(),
+						DateTime.UtcNow,
+						"Reason", reason));
 			}
 			else
 			{
@@ -307,7 +370,10 @@ namespace Botwinder.modules
 
 			if( server.Config.ModChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.ModChannelColor), "User muted " + duration, "Muted by:", issuedBy?.GetUsername() ?? "<unknown>",
+						user.GetUsername(), user.Id.ToString(),
+						DateTime.UtcNow));
 			}
 			else
 			{
@@ -326,7 +392,10 @@ namespace Botwinder.modules
 
 			if( server.Config.ModChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unmuted", "Unmuted by:", issuedBy?.GetUsername() ?? "<unknown>",
+						user.GetUsername(), user.Id.ToString(),
+						DateTime.UtcNow));
 			}
 			else
 			{
@@ -346,7 +415,10 @@ namespace Botwinder.modules
 
 			if( server.Config.LogChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.LogChannelColor), "Joined publicRole", "Role:", roleName,
+						user.GetUsername(), user.Id.ToString(),
+						DateTime.UtcNow));
 			}
 			else
 			{
@@ -362,7 +434,10 @@ namespace Botwinder.modules
 
 			if( server.Config.LogChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.LogChannelColor), "Left publicRole", "Role:", roleName,
+						user.GetUsername(), user.Id.ToString(),
+						DateTime.UtcNow));
 			}
 			else
 			{
@@ -378,7 +453,11 @@ namespace Botwinder.modules
 
 			if( server.Config.LogChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.LogChannelColor), "Promoted to memberRole", "Role:", roleName,
+						user.GetUsername(), user.Id.ToString(),
+						DateTime.UtcNow,
+						"Promoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
 			}
 			else
 			{
@@ -394,7 +473,11 @@ namespace Botwinder.modules
 
 			if( server.Config.LogChannelEmbeds )
 			{
-				throw new NotImplementedException();
+				await logChannel.SendMessageAsync("", embed:
+					GetLogEmbed(new Color(server.Config.LogChannelColor), "Demoted from memberRole", "Role:", roleName,
+						user.GetUsername(), user.Id.ToString(),
+						DateTime.UtcNow,
+						"Demoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
 			}
 			else
 			{
@@ -450,6 +533,45 @@ namespace Botwinder.modules
 
 			return string.Format("```md\n# {0}\n[{1}]({2})\n< {3} ={4}>\n{5}\n```", titleRed, timestamp, infoGreen, nameGold, idGreen, message);
 		}
+
+
+		public static Embed GetLogEmbed(Color color, string title, string mainName, string mainValue, string userName, string userId,
+			guid timestampId, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
+			=> GetLogEmbed(color, title, mainName, mainValue, userName, userId,
+				Utils.GetTimeFromId(timestampId),
+				tag1, msg1, tag2, msg2);
+
+		public static Embed GetLogEmbed(Color color, string title, string mainName, string mainValue, string userName, string userId,
+			DateTime timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
+		{
+			if( msg1.Length > 1000 )
+				msg1 = msg1.Substring(0, 1000) + "**...**";
+			if( msg2.Length > 1000 )
+				msg2 = msg2.Substring(0, 1000) + "**...**";
+
+			msg1 = msg1.Replace('`', '\'');
+			msg2 = msg2.Replace('`', '\'');
+
+			EmbedBuilder embedBuilder = new EmbedBuilder{
+				Color = color,
+				Timestamp = timestamp,
+				ThumbnailUrl = "http://botwinder.info/img/empty.png??"
+			};
+
+			embedBuilder.AddField(title, Utils.GetTimestamp(timestamp), true);
+			embedBuilder.AddField(mainName, mainValue, true);
+
+			embedBuilder.AddField("Username", userName, true);
+			embedBuilder.AddField("UserId", userId, true);
+
+			if( !string.IsNullOrEmpty(tag1) && !string.IsNullOrEmpty(msg1) )
+				embedBuilder.AddField(tag1, msg1, false);
+			if( !string.IsNullOrEmpty(tag2) && !string.IsNullOrEmpty(msg2) )
+				embedBuilder.AddField(tag2, msg2, false);
+
+			return embedBuilder.Build();
+		}
+
 
 		public Task Update(IBotwinderClient iClient)
 		{
