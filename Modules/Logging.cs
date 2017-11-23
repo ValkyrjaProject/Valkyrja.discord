@@ -555,7 +555,8 @@ namespace Botwinder.modules
 			EmbedBuilder embedBuilder = new EmbedBuilder{
 				Color = color,
 				Timestamp = timestamp,
-				ThumbnailUrl = "http://botwinder.info/img/empty.png??"
+				ThumbnailUrl = "http://botwinder.info/img/empty.png???",
+				Footer = new EmbedFooterBuilder().WithText("Localised timestamp")
 			};
 
 			embedBuilder.AddField(title, Utils.GetTimestamp(timestamp), true);
