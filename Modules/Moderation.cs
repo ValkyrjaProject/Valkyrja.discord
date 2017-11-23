@@ -327,9 +327,9 @@ namespace Botwinder.modules
 				if( minuteMatch.Success )
 					muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
 				if( hourMatch.Success )
-					muteDurationMinutes = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+					muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
 				if( dayMatch.Success )
-					muteDurationMinutes += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+					muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
 
 				string response = "ò_ó";
 
