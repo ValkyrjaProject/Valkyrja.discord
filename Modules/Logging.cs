@@ -74,9 +74,18 @@ namespace Botwinder.modules
 
 			SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
 			if( server.Config.LogJoin && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
-				await this.Client.SendMessageToChannel(channel,
-					string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
-						server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+			{
+				if( server.Config.ActivityChannelEmbeds )
+				{
+					throw new NotImplementedException();
+				}
+				else
+				{
+					await this.Client.SendMessageToChannel(channel,
+						string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
+							server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+				}
+			}
 		}
 
 		private async Task OnUserLeft(SocketGuildUser user)
@@ -88,9 +97,18 @@ namespace Botwinder.modules
 
 			SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
 			if( server.Config.LogLeave && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
-				await this.Client.SendMessageToChannel(channel,
-					string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-						server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+			{
+				if( server.Config.ActivityChannelEmbeds )
+				{
+					throw new NotImplementedException();
+				}
+				else
+				{
+					await this.Client.SendMessageToChannel(channel,
+						string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
+							server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+				}
+			}
 		}
 
 		private async Task OnUserVoice(SocketUser u, SocketVoiceState originalState, SocketVoiceState newState)
@@ -113,6 +131,12 @@ namespace Botwinder.modules
 
 				int change = originalState.VoiceChannel == null ? 1 :
 					newState.VoiceChannel == null ? -1 : 0;
+
+				if( server.Config.VoiceChannelEmbeds )
+				{
+					throw new NotImplementedException();
+					return;
+				}
 
 				string message = "";
 				switch(change)
@@ -158,12 +182,19 @@ namespace Botwinder.modules
 						if( !string.IsNullOrWhiteSpace(a.Url) )
 							attachment.AppendLine(a.Url);
 
-				await logChannel.SendMessageSafe(
-					GetLogMessage("Message Deleted", "#" + channel.Name,
-						message.Author.GetUsername(), message.Author.Id.ToString(),
-						message.Id,
-						"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-						message.Attachments.Any() ? "Files" : "", attachment.ToString()));
+				if( server.Config.LogChannelEmbeds )
+				{
+					throw new NotImplementedException();
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("Message Deleted", "#" + channel.Name,
+							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Id,
+							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							message.Attachments.Any() ? "Files" : "", attachment.ToString()));
+				}
 			}
 		}
 
@@ -186,12 +217,20 @@ namespace Botwinder.modules
 				 server.IgnoredChannels.Contains(channel.Id) ||
 				 server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId)) ) )
 			{
-				await logChannel.SendMessageSafe(
-					GetLogMessage("Message Edited", "#" + channel.Name,
-						updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
-						updatedMessage.Id,
-						"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-						"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+
+				if( server.Config.LogChannelEmbeds )
+				{
+					throw new NotImplementedException();
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("Message Edited", "#" + channel.Name,
+							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+							updatedMessage.Id,
+							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+				}
 			}
 		}
 
@@ -204,11 +243,19 @@ namespace Botwinder.modules
 
 			this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
-			await logChannel.SendMessageSafe(
-				GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-					userName ?? "", userId.ToString(),
-					Utils.GetTimestamp(),
-					"Reason", reason));
+
+			if( server.Config.ModChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe(
+					GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						userName ?? "", userId.ToString(),
+						Utils.GetTimestamp(),
+						"Reason", reason));
+			}
 		}
 
 		private async Task LogUnban(Server server, string userName, guid userId, SocketGuildUser issuedBy)
@@ -219,10 +266,17 @@ namespace Botwinder.modules
 
 			this.RecentlyUnbannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
-			await logChannel.SendMessageSafe(
-				GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-					userName ?? "", userId.ToString(),
-					Utils.GetTimestamp()));
+			if( server.Config.ModChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe(
+					GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						userName ?? "", userId.ToString(),
+						Utils.GetTimestamp()));
+			}
 		}
 
 		private async Task LogKick(Server server, string userName, guid userId, string reason, SocketGuildUser issuedBy)
@@ -231,11 +285,18 @@ namespace Botwinder.modules
 			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 				return;
 
-			await logChannel.SendMessageSafe(
-				GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-					userName ?? "", userId.ToString(),
-					Utils.GetTimestamp(),
-					"Reason", reason));
+			if( server.Config.ModChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe(
+					GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						userName ?? "", userId.ToString(),
+						Utils.GetTimestamp(),
+						"Reason", reason));
+			}
 		}
 
 		private async Task LogMute(Server server, SocketGuildUser user, string duration, SocketGuildUser issuedBy)
@@ -244,10 +305,17 @@ namespace Botwinder.modules
 			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 				return;
 
-			await logChannel.SendMessageSafe(
-				GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-					user.GetUsername(), user.Id.ToString(),
-					Utils.GetTimestamp()));
+			if( server.Config.ModChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe(
+					GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						user.GetUsername(), user.Id.ToString(),
+						Utils.GetTimestamp()));
+			}
 		}
 
 		private async Task LogUnmute(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
@@ -256,10 +324,17 @@ namespace Botwinder.modules
 			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 				return;
 
-			await logChannel.SendMessageSafe(
-				GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-					user.GetUsername(), user.Id.ToString(),
-					Utils.GetTimestamp()));
+			if( server.Config.ModChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe(
+					GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						user.GetUsername(), user.Id.ToString(),
+						Utils.GetTimestamp()));
+			}
 		}
 
 
@@ -269,7 +344,14 @@ namespace Botwinder.modules
 			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 				return;
 
-			await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
+			if( server.Config.LogChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
+			}
 		}
 
 		private async Task LogPublicRoleLeave(Server server, SocketGuildUser user, string roleName)
@@ -278,7 +360,14 @@ namespace Botwinder.modules
 			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 				return;
 
-			await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
+			if( server.Config.LogChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
+			}
 		}
 
 		private async Task LogPromote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
@@ -287,7 +376,14 @@ namespace Botwinder.modules
 			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 				return;
 
-			await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+			if( server.Config.LogChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+			}
 		}
 
 		private async Task LogDemote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
@@ -296,7 +392,14 @@ namespace Botwinder.modules
 			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 				return;
 
-			await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+			if( server.Config.LogChannelEmbeds )
+			{
+				throw new NotImplementedException();
+			}
+			else
+			{
+				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+			}
 		}
 
 
