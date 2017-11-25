@@ -23,7 +23,8 @@ namespace Botwinder.modules
 		private readonly TimeSpan UpdateDelay = TimeSpan.FromMinutes(2);
 		private DateTime LastUpdateTime = DateTime.UtcNow;
 
-		private readonly Color DefaultColor = new Color(255, 0, 255);
+		private readonly Color AntispamColor = new Color(255, 0, 255);
+		private readonly Color AntispamLightColor = new Color(255, 0, 206);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -72,27 +73,34 @@ namespace Botwinder.modules
 		{
 			Server server;
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) ||
-			    (server = this.Client.Servers[user.Guild.Id]) == null )
+				(server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
-			SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
-			if( server.Config.LogJoin && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
+			try
 			{
-				if( server.Config.ActivityChannelEmbeds )
+				SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
+				if( server.Config.LogJoin && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
 				{
-					await channel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.ActivityChannelColor),
-							string.Format(server.Config.LogMessageJoin, server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
-							"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
-							user.GetUsername(), user.Id.ToString(),
-							DateTime.UtcNow));
+					if( server.Config.ActivityChannelEmbeds )
+					{
+						await channel.SendMessageAsync("", embed:
+							GetLogEmbed(new Color(server.Config.ActivityChannelColor),
+								string.Format(server.Config.LogMessageJoin, server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
+								"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
+								user.GetUsername(), user.Id.ToString(),
+								DateTime.UtcNow));
+					}
+					else
+					{
+						await this.Client.SendMessageToChannel(channel,
+							string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
+								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+					}
 				}
-				else
-				{
-					await this.Client.SendMessageToChannel(channel,
-						string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
-							server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
-				}
+			}
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "OnUserJoined", server.Id);
 			}
 		}
 
@@ -103,25 +111,33 @@ namespace Botwinder.modules
 			    (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
-			SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
-			if( server.Config.LogLeave && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
+			try
 			{
-				if( server.Config.ActivityChannelEmbeds )
+				SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
+				if( server.Config.LogLeave && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
 				{
-					await channel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.ActivityChannelColor),
-							string.Format(server.Config.LogMessageLeave, server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
-							"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
-							user.GetUsername(), user.Id.ToString(),
-							DateTime.UtcNow));
-				}
-				else
-				{
-					await this.Client.SendMessageToChannel(channel,
-						string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-							server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+					if( server.Config.ActivityChannelEmbeds )
+					{
+						await channel.SendMessageAsync("", embed:
+							GetLogEmbed(new Color(server.Config.ActivityChannelColor),
+								string.Format(server.Config.LogMessageLeave, server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
+								"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
+								user.GetUsername(), user.Id.ToString(),
+								DateTime.UtcNow));
+					}
+					else
+					{
+						await this.Client.SendMessageToChannel(channel,
+							string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
+								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+					}
 				}
 			}
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "OnUserLeft", server.Id);
+			}
+
 		}
 
 		private async Task OnUserVoice(SocketUser u, SocketVoiceState originalState, SocketVoiceState newState)
@@ -135,69 +151,77 @@ namespace Botwinder.modules
 			    originalState.VoiceChannel == newState.VoiceChannel )
 				return;
 
-			SocketTextChannel channel;
-			if( server.Config.VoiceChannelId != 0 &&
-			    (channel = server.Guild.GetTextChannel(server.Config.VoiceChannelId)) != null )
+			try
 			{
-				if( originalState.VoiceChannel == null && newState.VoiceChannel == null )
-					throw new ArgumentNullException("Logging.VoiceState.VoiceChannel(s) are null.");
-
-				int change = originalState.VoiceChannel == null ? 1 :
-					newState.VoiceChannel == null ? -1 : 0;
-
-				if( server.Config.VoiceChannelEmbeds )
+				SocketTextChannel channel;
+				if( server.Config.VoiceChannelId != 0 &&
+				    (channel = server.Guild.GetTextChannel(server.Config.VoiceChannelId)) != null )
 				{
+					if( originalState.VoiceChannel == null && newState.VoiceChannel == null )
+						throw new ArgumentNullException("Logging.VoiceState.VoiceChannel(s) are null.");
+
+					int change = originalState.VoiceChannel == null ? 1 :
+						newState.VoiceChannel == null ? -1 : 0;
+
+					if( server.Config.VoiceChannelEmbeds )
+					{
+						switch(change)
+						{
+							case -1:
+								await channel.SendMessageAsync("", embed:
+									GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User left Voice Channel",
+										"🎤", "❌",
+										user.GetUsername(), user.Id.ToString(),
+										DateTime.UtcNow,
+										"Channel:", originalState.VoiceChannel.Name));
+								break;
+							case 1:
+								await channel.SendMessageAsync("", embed:
+									GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User joined Voice Channel",
+										"🎤", "✔️",
+										user.GetUsername(), user.Id.ToString(),
+										DateTime.UtcNow,
+										"Channel:", newState.VoiceChannel.Name));
+								break;
+							case 0:
+								await channel.SendMessageAsync("", embed:
+									GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User switched Voice Channels",
+										"🎤", "🔈",
+										user.GetUsername(), user.Id.ToString(),
+										DateTime.UtcNow,
+										"From:", originalState.VoiceChannel.Name,
+										"To:", newState.VoiceChannel.Name));
+								break;
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+						return;
+					}
+
+					string message = "";
 					switch(change)
 					{
 						case -1:
-							await channel.SendMessageAsync("", embed:
-								GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User left Voice Channel",
-									"🎤", "❌",
-									user.GetUsername(), user.Id.ToString(),
-									DateTime.UtcNow,
-									"Channel:", originalState.VoiceChannel.Name));
+							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
 							break;
 						case 1:
-							await channel.SendMessageAsync("", embed:
-								GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User joined Voice Channel",
-									"🎤", "✔️",
-									user.GetUsername(), user.Id.ToString(),
-									DateTime.UtcNow,
-									"Channel:", newState.VoiceChannel.Name));
+							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
 							break;
 						case 0:
-							await channel.SendMessageAsync("", embed:
-								GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User switched Voice Channels",
-									"🎤", "🔈",
-									user.GetUsername(), user.Id.ToString(),
-									DateTime.UtcNow,
-									"From:", originalState.VoiceChannel.Name,
-									"To:", newState.VoiceChannel.Name));
+							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
 							break;
 						default:
 							throw new ArgumentOutOfRangeException();
 					}
-					return;
-				}
 
-				string message = "";
-				switch(change)
-				{
-					case -1:
-						message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
-						break;
-					case 1:
-						message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
-						break;
-					case 0:
-						message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
+					await channel.SendMessageSafe(message);
 				}
-
-				await channel.SendMessageSafe(message);
 			}
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "OnUserVoice", server.Id);
+			}
+
 		}
 
 		private async Task OnMessageDeleted(SocketMessage message, ISocketMessageChannel c)
@@ -212,36 +236,46 @@ namespace Botwinder.modules
 			    !(message.Author is SocketGuildUser user) )
 				return;
 
-			SocketTextChannel logChannel;
-			if( server.Config.LogDeletedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
-			     (this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id)) ||
-			     server.IgnoredChannels.Contains(channel.Id) ||
-			     server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId)) ) )
+			try
 			{
-				StringBuilder attachment = new StringBuilder();
-				if( message.Attachments != null && message.Attachments.Any() )
-					foreach(Attachment a in message.Attachments)
-						if( !string.IsNullOrWhiteSpace(a.Url) )
-							attachment.AppendLine(a.Url);
+				SocketTextChannel logChannel;
+				if( server.Config.LogDeletedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
+					    (this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id)) ||
+					    server.IgnoredChannels.Contains(channel.Id) ||
+					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
+				{
+					StringBuilder attachment = new StringBuilder();
+					if( message.Attachments != null && message.Attachments.Any() )
+						foreach( Attachment a in message.Attachments )
+							if( !string.IsNullOrWhiteSpace(a.Url) )
+								attachment.AppendLine(a.Url);
 
-				if( server.Config.LogChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.LogMessagesColor), "Message Deleted", "Channel:", "#" + channel.Name,
-							message.Author.GetUsername(), message.Author.Id.ToString(),
-							message.Id,
-							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-							message.Attachments.Any() ? "Files" : "", attachment.ToString()));
+					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
+					string title = byAntispam ? "Message Deleted by Antispam" : "Message Deleted";
+					if( server.Config.LogChannelEmbeds )
+					{
+						Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
+						await logChannel.SendMessageAsync("", embed:
+							GetLogEmbed(color, title, "Channel:", "#" + channel.Name,
+								message.Author.GetUsername(), message.Author.Id.ToString(),
+								message.Id,
+								"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+								message.Attachments.Any() ? "Files" : "", attachment.ToString()));
+					}
+					else
+					{
+						await logChannel.SendMessageSafe(
+							GetLogMessage(title, "#" + channel.Name,
+								message.Author.GetUsername(), message.Author.Id.ToString(),
+								message.Id,
+								"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+								message.Attachments.Any() ? "Files" : "", attachment.ToString()));
+					}
 				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("Message Deleted", "#" + channel.Name,
-							message.Author.GetUsername(), message.Author.Id.ToString(),
-							message.Id,
-							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-							message.Attachments.Any() ? "Files" : "", attachment.ToString()));
-				}
+			}
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "OnMessageDeleted", server.Id);
 			}
 		}
 
@@ -259,229 +293,302 @@ namespace Botwinder.modules
 			    !(updatedMessage.Author is SocketGuildUser user) )
 				return;
 
-			SocketTextChannel logChannel;
-			if( server.Config.LogEditedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId))!= null && !(
-				 server.IgnoredChannels.Contains(channel.Id) ||
-				 server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId)) ) )
+			try
 			{
+				SocketTextChannel logChannel;
+				if( server.Config.LogEditedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
+					    server.IgnoredChannels.Contains(channel.Id) ||
+					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
+				{
 
-				if( server.Config.LogChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.LogMessagesColor), "Message Edited", "Channel:", "#" + channel.Name,
-							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
-							updatedMessage.Id,
-							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-							"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+					if( server.Config.LogChannelEmbeds )
+					{
+						await logChannel.SendMessageAsync("", embed:
+							GetLogEmbed(new Color(server.Config.LogMessagesColor), "Message Edited", "Channel:", "#" + channel.Name,
+								updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+								updatedMessage.Id,
+								"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+								"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+					}
+					else
+					{
+						await logChannel.SendMessageSafe(
+							GetLogMessage("Message Edited", "#" + channel.Name,
+								updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+								updatedMessage.Id,
+								"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+								"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+					}
 				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("Message Edited", "#" + channel.Name,
-							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
-							updatedMessage.Id,
-							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-							"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
-				}
+			}
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "OnMessageUpdated", server.Id);
 			}
 		}
 
 
 		private async Task LogBan(Server server, string userName, guid userId, string reason, string duration, SocketGuildUser issuedBy)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
-				return;
-
-			this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
-
-
-			if( server.Config.ModChannelEmbeds )
+			try
 			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Banned " + duration, "Banned by:", issuedBy?.GetUsername() ?? "<unknown>",
-						userName ?? "<unknown>", userId.ToString(),
-						DateTime.UtcNow,
-						"Reason", reason));
+				SocketTextChannel logChannel;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
+
+				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
+
+
+				if( server.Config.ModChannelEmbeds )
+				{
+					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(color, "User Banned " + duration, "Banned by:", issuedBy?.GetUsername() ?? "<unknown>",
+							userName ?? "<unknown>", userId.ToString(),
+							DateTime.UtcNow,
+							"Reason", reason));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							userName ?? "", userId.ToString(),
+							Utils.GetTimestamp(),
+							"Reason", reason));
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe(
-					GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						userName ?? "", userId.ToString(),
-						Utils.GetTimestamp(),
-						"Reason", reason));
+				await this.HandleException(exception, "LogBan", server.Id);
 			}
 		}
 
 		private async Task LogUnban(Server server, string userName, guid userId, SocketGuildUser issuedBy)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
-				return;
-
-			this.RecentlyUnbannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
-
-			if( server.Config.ModChannelEmbeds )
+			try
 			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unbanned", "Unbanned by:", issuedBy?.GetUsername() ?? "<unknown>",
-						userName ?? "<unknown>", userId.ToString(),
-						DateTime.UtcNow));
+				SocketTextChannel logChannel;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
+
+				this.RecentlyUnbannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
+
+				if( server.Config.ModChannelEmbeds )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unbanned", "Unbanned by:", issuedBy?.GetUsername() ?? "<unknown>",
+							userName ?? "<unknown>", userId.ToString(),
+							DateTime.UtcNow));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							userName ?? "", userId.ToString(),
+							Utils.GetTimestamp()));
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe(
-					GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						userName ?? "", userId.ToString(),
-						Utils.GetTimestamp()));
+				await this.HandleException(exception, "LogUnban", server.Id);
 			}
 		}
 
 		private async Task LogKick(Server server, string userName, guid userId, string reason, SocketGuildUser issuedBy)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
-				return;
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
 
-			if( server.Config.ModChannelEmbeds )
-			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Kicked", "Kicked by:", issuedBy?.GetUsername() ?? "<unknown>",
-						userName ?? "<unknown>", userId.ToString(),
-						DateTime.UtcNow,
-						"Reason", reason));
+				if( server.Config.ModChannelEmbeds )
+				{
+					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(color, "User Kicked", "Kicked by:", issuedBy?.GetUsername() ?? "<unknown>",
+							userName ?? "<unknown>", userId.ToString(),
+							DateTime.UtcNow,
+							"Reason", reason));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							userName ?? "", userId.ToString(),
+							Utils.GetTimestamp(),
+							"Reason", reason));
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe(
-					GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						userName ?? "", userId.ToString(),
-						Utils.GetTimestamp(),
-						"Reason", reason));
+				await this.HandleException(exception, "LogKick", server.Id);
 			}
 		}
 
 		private async Task LogMute(Server server, SocketGuildUser user, string duration, SocketGuildUser issuedBy)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
-				return;
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
 
-			if( server.Config.ModChannelEmbeds )
-			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.ModChannelColor), "User muted " + duration, "Muted by:", issuedBy?.GetUsername() ?? "<unknown>",
-						user.GetUsername(), user.Id.ToString(),
-						DateTime.UtcNow));
+				if( server.Config.ModChannelEmbeds )
+				{
+					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(color, "User muted " + duration, "Muted by:", issuedBy?.GetUsername() ?? "<unknown>",
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							user.GetUsername(), user.Id.ToString(),
+							Utils.GetTimestamp()));
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe(
-					GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						user.GetUsername(), user.Id.ToString(),
-						Utils.GetTimestamp()));
+				await this.HandleException(exception, "LogMute", server.Id);
 			}
 		}
 
 		private async Task LogUnmute(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
-				return;
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
 
-			if( server.Config.ModChannelEmbeds )
-			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unmuted", "Unmuted by:", issuedBy?.GetUsername() ?? "<unknown>",
-						user.GetUsername(), user.Id.ToString(),
-						DateTime.UtcNow));
+				if( server.Config.ModChannelEmbeds )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unmuted", "Unmuted by:", issuedBy?.GetUsername() ?? "<unknown>",
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							user.GetUsername(), user.Id.ToString(),
+							Utils.GetTimestamp()));
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe(
-					GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						user.GetUsername(), user.Id.ToString(),
-						Utils.GetTimestamp()));
+				await this.HandleException(exception, "LogUnmute", server.Id);
 			}
 		}
 
 
 		private async Task LogPublicRoleJoin(Server server, SocketGuildUser user, string roleName)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
-				return;
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
+					return;
 
-			if( server.Config.LogChannelEmbeds )
-			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.LogChannelColor), "Joined publicRole", "Role:", roleName,
-						user.GetUsername(), user.Id.ToString(),
-						DateTime.UtcNow));
+				if( server.Config.LogChannelEmbeds )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.LogChannelColor), "Joined publicRole", "Role:", roleName,
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
+				await this.HandleException(exception, "LogPublicRoleJoin", server.Id);
 			}
 		}
 
 		private async Task LogPublicRoleLeave(Server server, SocketGuildUser user, string roleName)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
-				return;
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
+					return;
 
-			if( server.Config.LogChannelEmbeds )
-			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.LogChannelColor), "Left publicRole", "Role:", roleName,
-						user.GetUsername(), user.Id.ToString(),
-						DateTime.UtcNow));
+				if( server.Config.LogChannelEmbeds )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.LogChannelColor), "Left publicRole", "Role:", roleName,
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
+				await this.HandleException(exception, "LogPublicRoleLeave", server.Id);
 			}
 		}
 
 		private async Task LogPromote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
-				return;
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
+					return;
 
-			if( server.Config.LogChannelEmbeds )
-			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.LogChannelColor), "Promoted to memberRole", "Role:", roleName,
-						user.GetUsername(), user.Id.ToString(),
-						DateTime.UtcNow,
-						"Promoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
+				if( server.Config.LogChannelEmbeds )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.LogChannelColor), "Promoted to memberRole", "Role:", roleName,
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow,
+							"Promoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+				await this.HandleException(exception, "LogPromote", server.Id);
 			}
 		}
 
 		private async Task LogDemote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
 		{
-			SocketTextChannel logChannel;
-			if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
-				return;
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
+					return;
 
-			if( server.Config.LogChannelEmbeds )
-			{
-				await logChannel.SendMessageAsync("", embed:
-					GetLogEmbed(new Color(server.Config.LogChannelColor), "Demoted from memberRole", "Role:", roleName,
-						user.GetUsername(), user.Id.ToString(),
-						DateTime.UtcNow,
-						"Demoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
+				if( server.Config.LogChannelEmbeds )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.LogChannelColor), "Demoted from memberRole", "Role:", roleName,
+							user.GetUsername(), user.Id.ToString(),
+							DateTime.UtcNow,
+							"Demoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+				}
 			}
-			else
+			catch(Exception exception)
 			{
-				await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
+				await this.HandleException(exception, "LogDemote", server.Id);
 			}
 		}
 

@@ -976,11 +976,10 @@ namespace Botwinder.modules
 					if( userData.BannedUntil > DateTime.MinValue && userData.BannedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
 					{
-						await server.Guild.RemoveBanAsync(userData.UserId);
-						//else: ban them if they're on the server - implement if the ID pre-ban doesn't work.
-
-						userData.BannedUntil = DateTime.MinValue;
+						await UnBan(server, new List<UserData>{userData}, server.Guild.CurrentUser);
 						save = true;
+
+						//else: ban them if they're on the server - implement if the ID pre-ban doesn't work.
 					}
 
 					//Unmute
@@ -989,11 +988,7 @@ namespace Botwinder.modules
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
 					    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null )
 					{
-						SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-						if( user != null )
-							await user.RemoveRoleAsync(role);
-
-						userData.MutedUntil = DateTime.MinValue;
+						await UnMute(server, new List<UserData>{userData}, role, server.Guild.CurrentUser);
 						save = true;
 					}
 				}
