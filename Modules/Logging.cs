@@ -108,7 +108,8 @@ namespace Botwinder.modules
 		{
 			Server server;
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) ||
-			    (server = this.Client.Servers[user.Guild.Id]) == null )
+			    (server = this.Client.Servers[user.Guild.Id]) == null||
+			    this.RecentlyBannedUserIDs.Contains(user.Id) )
 				return;
 
 			try
@@ -401,6 +402,8 @@ namespace Botwinder.modules
 				SocketTextChannel logChannel;
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
+
+				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
 				if( server.Config.ModChannelEmbeds )
 				{
