@@ -83,12 +83,12 @@ namespace Botwinder.modules
 				{
 					if( server.Config.ActivityChannelEmbeds )
 					{
+						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 						await channel.SendMessageAsync("", embed:
-							GetLogEmbed(new Color(server.Config.ActivityChannelColor),
+							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
 								string.Format(server.Config.LogMessageJoin, server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
-								"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
-								user.GetUsername(), user.Id.ToString(),
-								DateTime.UtcNow));
+								user.GetAvatarUrl(), $"UserId: {user.Id}",
+								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
 					}
 					else
 					{
@@ -119,12 +119,12 @@ namespace Botwinder.modules
 				{
 					if( server.Config.ActivityChannelEmbeds )
 					{
+						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 						await channel.SendMessageAsync("", embed:
-							GetLogEmbed(new Color(server.Config.ActivityChannelColor),
+							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
 								string.Format(server.Config.LogMessageLeave, server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"),
-								"Account created at:", Utils.GetTimestamp(Utils.GetTimeFromId(user.Id)),
-								user.GetUsername(), user.Id.ToString(),
-								DateTime.UtcNow));
+								user.GetAvatarUrl(), $"UserId: {user.Id}",
+								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
 					}
 					else
 					{
@@ -170,28 +170,24 @@ namespace Botwinder.modules
 						{
 							case -1:
 								await channel.SendMessageAsync("", embed:
-									GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User left Voice Channel",
-										"🎤", "❌",
-										user.GetUsername(), user.Id.ToString(),
-										DateTime.UtcNow,
-										"Channel:", originalState.VoiceChannel.Name));
+									GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
+										user.GetUsername() + " left the voice channel:",
+										user.GetAvatarUrl(), $"{originalState.VoiceChannel.Name}",
+										Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 								break;
 							case 1:
 								await channel.SendMessageAsync("", embed:
-									GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User joined Voice Channel",
-										"🎤", "✔️",
-										user.GetUsername(), user.Id.ToString(),
-										DateTime.UtcNow,
-										"Channel:", newState.VoiceChannel.Name));
+									GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
+										user.GetUsername() + " joined the voice channel:",
+										user.GetAvatarUrl(), $"{newState.VoiceChannel.Name}",
+										Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 								break;
 							case 0:
 								await channel.SendMessageAsync("", embed:
-									GetLogEmbed(new Color(server.Config.VoiceChannelColor), "User switched Voice Channels",
-										"🎤", "🔈",
-										user.GetUsername(), user.Id.ToString(),
-										DateTime.UtcNow,
-										"From:", originalState.VoiceChannel.Name,
-										"To:", newState.VoiceChannel.Name));
+									GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
+										user.GetUsername() + " switched voice channels:",
+										user.GetAvatarUrl(), $"From {originalState.VoiceChannel.Name} to {newState.VoiceChannel.Name}",
+										Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 								break;
 							default:
 								throw new ArgumentOutOfRangeException();
@@ -500,9 +496,10 @@ namespace Botwinder.modules
 				if( server.Config.LogChannelEmbeds )
 				{
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.LogChannelColor), "Joined publicRole", "Role:", roleName,
-							user.GetUsername(), user.Id.ToString(),
-							DateTime.UtcNow));
+						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+							user.GetUsername() + " joined a publicRole:",
+							user.GetAvatarUrl(), roleName,
+							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 				}
 				else
 				{
@@ -526,9 +523,10 @@ namespace Botwinder.modules
 				if( server.Config.LogChannelEmbeds )
 				{
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.LogChannelColor), "Left publicRole", "Role:", roleName,
-							user.GetUsername(), user.Id.ToString(),
-							DateTime.UtcNow));
+						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+							user.GetUsername() + " left a publicRole:",
+							user.GetAvatarUrl(), roleName,
+							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 				}
 				else
 				{
@@ -552,10 +550,11 @@ namespace Botwinder.modules
 				if( server.Config.LogChannelEmbeds )
 				{
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.LogChannelColor), "Promoted to memberRole", "Role:", roleName,
-							user.GetUsername(), user.Id.ToString(),
-							DateTime.UtcNow,
-							"Promoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
+						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+							user.GetUsername() + $" was promoted to the {roleName} memberRole.",
+							user.GetAvatarUrl(),
+							"Promoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 				}
 				else
 				{
@@ -579,10 +578,11 @@ namespace Botwinder.modules
 				if( server.Config.LogChannelEmbeds )
 				{
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.LogChannelColor), "Demoted from memberRole", "Role:", roleName,
-							user.GetUsername(), user.Id.ToString(),
-							DateTime.UtcNow,
-							"Demoted by:", issuedBy?.GetUsername() ?? "<unknown>"));
+						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+							user.GetUsername() + $" was demoted from the {roleName} memberRole.",
+							user.GetAvatarUrl(),
+							"Promoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 				}
 				else
 				{
@@ -679,6 +679,18 @@ namespace Botwinder.modules
 				embedBuilder.AddField(tag1, msg1, false);
 			if( !string.IsNullOrEmpty(tag2) && !string.IsNullOrEmpty(msg2) )
 				embedBuilder.AddField(tag2, msg2, false);
+
+			return embedBuilder.Build();
+		}
+
+		public static Embed GetLogSmolEmbed(Color color, string title, string titleIconUrl, string description, string footer, DateTime timestamp)
+		{
+			EmbedBuilder embedBuilder = new EmbedBuilder{
+				Color = color,
+				Description = description,
+				Timestamp = timestamp
+			}.WithAuthor(title, titleIconUrl)
+			 .WithFooter(footer);
 
 			return embedBuilder.Build();
 		}
