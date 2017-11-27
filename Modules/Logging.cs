@@ -253,7 +253,7 @@ namespace Botwinder.modules
 					{
 						Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
 						await logChannel.SendMessageAsync("", embed:
-							GetLogEmbed(color, title, "Channel:", "#" + channel.Name,
+							GetLogEmbed(color, user?.GetAvatarUrl(), title, "in #" + channel.Name,
 								message.Author.GetUsername(), message.Author.Id.ToString(),
 								message.Id,
 								"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
@@ -301,7 +301,8 @@ namespace Botwinder.modules
 					if( server.Config.LogChannelEmbeds )
 					{
 						await logChannel.SendMessageAsync("", embed:
-							GetLogEmbed(new Color(server.Config.LogMessagesColor), "Message Edited", "Channel:", "#" + channel.Name,
+							GetLogEmbed(new Color(server.Config.LogMessagesColor), user?.GetAvatarUrl(),
+								"Message Edited", "in #" + channel.Name,
 								updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
 								updatedMessage.Id,
 								"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
@@ -340,7 +341,8 @@ namespace Botwinder.modules
 				{
 					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, "User Banned " + duration, "Banned by:", issuedBy?.GetUsername() ?? "<unknown>",
+						GetLogEmbed(color, "", "User Banned " + duration,
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 							userName ?? "<unknown>", userId.ToString(),
 							DateTime.UtcNow,
 							"Reason", reason));
@@ -373,7 +375,8 @@ namespace Botwinder.modules
 				if( server.Config.ModChannelEmbeds )
 				{
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unbanned", "Unbanned by:", issuedBy?.GetUsername() ?? "<unknown>",
+						GetLogEmbed(new Color(server.Config.ModChannelColor), "", "User Unbanned",
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 							userName ?? "<unknown>", userId.ToString(),
 							DateTime.UtcNow));
 				}
@@ -405,7 +408,8 @@ namespace Botwinder.modules
 				{
 					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, "User Kicked", "Kicked by:", issuedBy?.GetUsername() ?? "<unknown>",
+						GetLogEmbed(color, "", "User Kicked",
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 							userName ?? "<unknown>", userId.ToString(),
 							DateTime.UtcNow,
 							"Reason", reason));
@@ -437,7 +441,8 @@ namespace Botwinder.modules
 				{
 					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, "User muted " + duration, "Muted by:", issuedBy?.GetUsername() ?? "<unknown>",
+						GetLogEmbed(color, user?.GetAvatarUrl(), "User muted " + duration,
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 							user.GetUsername(), user.Id.ToString(),
 							DateTime.UtcNow));
 				}
@@ -466,7 +471,8 @@ namespace Botwinder.modules
 				if( server.Config.ModChannelEmbeds )
 				{
 					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.ModChannelColor), "User Unmuted", "Unmuted by:", issuedBy?.GetUsername() ?? "<unknown>",
+						GetLogEmbed(new Color(server.Config.ModChannelColor), user?.GetAvatarUrl(), "User Unmuted",
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 							user.GetUsername(), user.Id.ToString(),
 							DateTime.UtcNow));
 				}
@@ -645,13 +651,13 @@ namespace Botwinder.modules
 		}
 
 
-		public static Embed GetLogEmbed(Color color, string title, string mainName, string mainValue, string userName, string userId,
+		public static Embed GetLogEmbed(Color color, string iconUrl, string title, string description, string userName, string userId,
 			guid timestampId, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
-			=> GetLogEmbed(color, title, mainName, mainValue, userName, userId,
+			=> GetLogEmbed(color, iconUrl, title, description, userName, userId,
 				Utils.GetTimeFromId(timestampId),
 				tag1, msg1, tag2, msg2);
 
-		public static Embed GetLogEmbed(Color color, string title, string mainName, string mainValue, string userName, string userId,
+		public static Embed GetLogEmbed(Color color, string iconUrl,string title, string description, string userName, string userId,
 			DateTime timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 		{
 			if( msg1.Length > 1000 )
@@ -663,14 +669,11 @@ namespace Botwinder.modules
 			msg2 = msg2.Replace('`', '\'');
 
 			EmbedBuilder embedBuilder = new EmbedBuilder{
-				Color = color,
-				Timestamp = timestamp,
-				ThumbnailUrl = "http://botwinder.info/img/empty.png???",
-				Footer = new EmbedFooterBuilder().WithText("Localised timestamp")
-			};
-
-			embedBuilder.AddField(title, Utils.GetTimestamp(timestamp), true);
-			embedBuilder.AddField(mainName, mainValue, true);
+					Color = color,
+					Description = description,
+					Timestamp = timestamp
+				}.WithAuthor(title, iconUrl)
+				 .WithFooter(Utils.GetTimestamp(timestamp));
 
 			embedBuilder.AddField("Username", userName, true);
 			embedBuilder.AddField("UserId", userId, true);
@@ -686,11 +689,11 @@ namespace Botwinder.modules
 		public static Embed GetLogSmolEmbed(Color color, string title, string titleIconUrl, string description, string footer, DateTime timestamp)
 		{
 			EmbedBuilder embedBuilder = new EmbedBuilder{
-				Color = color,
-				Description = description,
-				Timestamp = timestamp
-			}.WithAuthor(title, titleIconUrl)
-			 .WithFooter(footer);
+					Color = color,
+					Description = description,
+					Timestamp = timestamp
+				}.WithAuthor(title, titleIconUrl)
+				 .WithFooter(footer);
 
 			return embedBuilder.Build();
 		}
