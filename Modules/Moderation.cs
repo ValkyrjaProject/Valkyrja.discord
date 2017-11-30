@@ -1272,6 +1272,9 @@ namespace Botwinder.modules
 				try
 				{
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					if(user == null)
+						continue;
+
 					await user.RemoveRoleAsync(role);
 
 					userData.MutedUntil = DateTime.MinValue;
