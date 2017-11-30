@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -98,6 +99,7 @@ namespace Botwinder.modules
 					}
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnUserJoined", server.Id);
@@ -134,6 +136,7 @@ namespace Botwinder.modules
 					}
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnUserLeft", server.Id);
@@ -214,6 +217,7 @@ namespace Botwinder.modules
 					await channel.SendMessageSafe(message);
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnUserVoice", server.Id);
@@ -270,6 +274,7 @@ namespace Botwinder.modules
 					}
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnMessageDeleted", server.Id);
@@ -319,6 +324,7 @@ namespace Botwinder.modules
 					}
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnMessageUpdated", server.Id);
@@ -339,7 +345,7 @@ namespace Botwinder.modules
 
 				if( server.Config.ModChannelEmbeds )
 				{
-					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+					Color color = issuedBy?.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(color, "", "User Banned " + duration,
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
@@ -356,6 +362,7 @@ namespace Botwinder.modules
 							"Reason", reason));
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogBan", server.Id);
@@ -388,6 +395,7 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogUnban", server.Id);
@@ -423,6 +431,7 @@ namespace Botwinder.modules
 							"Reason", reason));
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogKick", server.Id);
@@ -454,6 +463,7 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogMute", server.Id);
@@ -484,6 +494,7 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogUnmute", server.Id);
@@ -512,6 +523,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogPublicRoleJoin", server.Id);
@@ -539,6 +551,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogPublicRoleLeave", server.Id);
@@ -567,6 +580,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogPromote", server.Id);
@@ -595,6 +609,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
 				}
 			}
+			catch(HttpException) { }
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogDemote", server.Id);
