@@ -87,7 +87,7 @@ namespace Botwinder.modules
 						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 						await channel.SendMessageAsync("", embed:
 							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
-								string.Format(server.Config.LogMessageJoin, server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"{user.GetUsername()}"),
+								string.Format(server.Config.LogMessageJoin, user.GetUsername()),
 								user.GetAvatarUrl(), $"UserId: {user.Id}",
 								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
 					}
@@ -124,7 +124,7 @@ namespace Botwinder.modules
 						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 						await channel.SendMessageAsync("", embed:
 							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
-								string.Format(server.Config.LogMessageLeave, server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"{user.GetUsername()}"),
+								string.Format(server.Config.LogMessageLeave, user.GetUsername()),
 								user.GetAvatarUrl(), $"UserId: {user.Id}",
 								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
 					}
