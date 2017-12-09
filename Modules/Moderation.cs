@@ -1069,7 +1069,7 @@ namespace Botwinder.modules
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 			bool save = false;
 
-			await dbContext.Channels.Where(c => c.MutedUntil > DateTime.MinValue && c.MutedUntil < DateTime.UtcNow)
+			await dbContext.Channels.Where(c => c.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && c.MutedUntil < DateTime.UtcNow)
 				.ForEachAsync(async c => {
 					try {
 						await UnmuteChannel(c, client.DiscordClient.CurrentUser);
@@ -1343,7 +1343,7 @@ namespace Botwinder.modules
 				IRole role = server.Guild.EveryoneRole;
 				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
 				OverwritePermissions permissions = channel.GetPermissionOverwrite(role) ?? new OverwritePermissions();
-				permissions.Modify(sendMessages: PermValue.Deny);
+				permissions = permissions.Modify(sendMessages: PermValue.Deny);
 				await channel.AddPermissionOverwriteAsync(role, permissions);
 
 				channelConfig.MutedUntil = DateTime.UtcNow + duration;
@@ -1375,7 +1375,7 @@ namespace Botwinder.modules
 				IRole role = server.Guild.EveryoneRole;
 				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
 				OverwritePermissions permissions = channel.GetPermissionOverwrite(role) ?? new OverwritePermissions();
-				permissions.Modify(sendMessages: PermValue.Inherit);
+				permissions = permissions.Modify(sendMessages: PermValue.Inherit);
 				await channel.AddPermissionOverwriteAsync(role, permissions);
 
 				if( this.Client.Events.LogUnmutedChannel != null )

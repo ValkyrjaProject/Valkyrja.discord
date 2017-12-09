@@ -730,13 +730,13 @@ namespace Botwinder.modules
 		}
 
 
-		public static Embed GetLogEmbed(Color color, string iconUrl, string title, string description, string userName, string userId,
+		public static Embed GetLogEmbed(Color color, string iconUrl, string title, string description, string name, string id,
 			guid timestampId, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
-			=> GetLogEmbed(color, iconUrl, title, description, userName, userId,
+			=> GetLogEmbed(color, iconUrl, title, description, name, id,
 				Utils.GetTimeFromId(timestampId),
 				tag1, msg1, tag2, msg2);
 
-		public static Embed GetLogEmbed(Color color, string iconUrl,string title, string description, string userName, string userId,
+		public static Embed GetLogEmbed(Color color, string iconUrl,string title, string description, string name, string id,
 			DateTime timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 		{
 			if( msg1.Length > 1000 )
@@ -754,8 +754,8 @@ namespace Botwinder.modules
 				}.WithAuthor(title, iconUrl)
 				 .WithFooter(Utils.GetTimestamp(timestamp));
 
-			embedBuilder.AddField("Username", userName, true);
-			embedBuilder.AddField("UserId", userId, true);
+			embedBuilder.AddField("Name", name, true);
+			embedBuilder.AddField("Id", id, true);
 
 			if( !string.IsNullOrEmpty(tag1) && !string.IsNullOrEmpty(msg1) )
 				embedBuilder.AddField(tag1, msg1, false);
