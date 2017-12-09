@@ -1129,25 +1129,7 @@ namespace Botwinder.modules
 			else
 				duration = TimeSpan.Zero;
 
-			StringBuilder durationString = new StringBuilder();
-			if( duration == TimeSpan.Zero )
-				durationString.Append("permanently");
-			else
-			{
-				durationString.Append("for ");
-				if( duration.Days > 0 )
-				{
-					durationString.Append(duration.Days);
-					durationString.Append(duration.Days == 1 ? " day" : " days");
-					if( duration.Hours > 0 )
-						durationString.Append(" and ");
-				}
-				if( duration.Hours > 0 )
-				{
-					durationString.Append(duration.Hours);
-					durationString.Append(duration.Hours == 1 ? " hour" : " hours");
-				}
-			}
+			string durationString = GetDurationString(duration);
 
 			string response = "";
 			List<guid> banned = new List<guid>();
@@ -1199,25 +1181,7 @@ namespace Botwinder.modules
 			else
 				duration = TimeSpan.Zero;
 
-			StringBuilder durationString = new StringBuilder();
-			if( duration == TimeSpan.Zero )
-				durationString.Append("permanently");
-			else
-			{
-				durationString.Append("for ");
-				if( duration.Days > 0 )
-				{
-					durationString.Append(duration.Days);
-					durationString.Append(duration.Days == 1 ? " day" : " days");
-					if( duration.Hours > 0 )
-						durationString.Append(" and ");
-				}
-				if( duration.Hours > 0 )
-				{
-					durationString.Append(duration.Hours);
-					durationString.Append(duration.Hours == 1 ? " hour" : " hours");
-				}
-			}
+			string durationString = GetDurationString(duration);
 
 			SocketGuildUser user = null;
 			if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
@@ -1225,18 +1189,18 @@ namespace Botwinder.modules
 				try
 				{
 					await user.SendMessageSafe(string.Format(BanPmString,
-						durationString.ToString(), server.Guild.Name, reason));
+						durationString, server.Guild.Name, reason));
 					await Task.Delay(500);
 				}
 				catch(Exception) { }
 			}
 
 			if( this.Client.Events.LogBan != null )
-				await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
+				await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString, bannedBy);
 
 			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
 			userData.BannedUntil = bannedUntil;
-			userData.AddWarning($"Banned {durationString.ToString()} with reason: {reason}");
+			userData.AddWarning($"Banned {durationString} with reason: {reason}");
 		}
 
 		public async Task<string> UnBan(Server server, List<UserData> users, SocketGuildUser unbannedBy = null)
@@ -1275,68 +1239,26 @@ namespace Botwinder.modules
 		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
-
-			StringBuilder durationString = new StringBuilder();
-			durationString.Append("for ");
-			if( duration.Days > 0 )
-			{
-				durationString.Append(duration.Days);
-				durationString.Append(duration.Days == 1 ? " day" : " days");
-				if( duration.Hours > 0 || duration.Minutes > 0 )
-					durationString.Append(" and ");
-			}
-			if( duration.Hours > 0 )
-			{
-				durationString.Append(duration.Hours);
-				durationString.Append(duration.Hours == 1 ? " hour" : " hours");
-				if( duration.Minutes > 0 )
-					durationString.Append(" and ");
-			}
-			if( duration.Minutes > 0 )
-			{
-				durationString.Append(duration.Minutes);
-				durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
-			}
+			string durationString = GetDurationString(duration);
 
 			SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 			await user.AddRoleAsync(role);
 
 			userData.MutedUntil = mutedUntil;
-			userData.AddWarning($"Muted {durationString.ToString()}");
+			userData.AddWarning($"Muted {durationString}");
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
 				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, $"<@{userData.UserId}>"));
 
 			if( this.Client.Events.LogMute != null )
-				await this.Client.Events.LogMute(server, user, durationString.ToString(), mutedBy);
+				await this.Client.Events.LogMute(server, user, durationString, mutedBy);
 		}
 
 		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
-
-			StringBuilder durationString = new StringBuilder();
-			durationString.Append("for ");
-			if( duration.Days > 0 )
-			{
-				durationString.Append(duration.Days);
-				durationString.Append(duration.Days == 1 ? " day" : " days");
-				if( duration.Hours > 0 || duration.Minutes > 0 )
-					durationString.Append(" and ");
-			}
-			if( duration.Hours > 0 )
-			{
-				durationString.Append(duration.Hours);
-				durationString.Append(duration.Hours == 1 ? " hour" : " hours");
-				if( duration.Minutes > 0 )
-					durationString.Append(" and ");
-			}
-			if( duration.Minutes > 0 )
-			{
-				durationString.Append(duration.Minutes);
-				durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
-			}
+			string durationString = GetDurationString(duration);
 
 			string response = "";
 			List<guid> muted = new List<guid>();
@@ -1348,11 +1270,11 @@ namespace Botwinder.modules
 					await user.AddRoleAsync(role);
 
 					userData.MutedUntil = mutedUntil;
-					userData.AddWarning($"Muted {durationString.ToString()}");
+					userData.AddWarning($"Muted {durationString}");
 					muted.Add(userData.UserId);
 
 					if( this.Client.Events.LogMute != null )
-						await this.Client.Events.LogMute(server, user, durationString.ToString(), mutedBy);
+						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
 				}
 				catch(Exception exception)
 				{
@@ -1409,7 +1331,7 @@ namespace Botwinder.modules
 			return response;
 		}
 
-		public async Task<string> MuteChannel(ChannelConfig channelConfig, TimeSpan duration)
+		public async Task<string> MuteChannel(ChannelConfig channelConfig, TimeSpan duration, SocketGuildUser mutedBy = null)
 		{
 			Server server;
 			if( !this.Client.Servers.ContainsKey(channelConfig.ServerId) || (server = this.Client.Servers[channelConfig.ServerId]) == null )
@@ -1425,6 +1347,9 @@ namespace Botwinder.modules
 				await channel.AddPermissionOverwriteAsync(role, permissions);
 
 				channelConfig.MutedUntil = DateTime.UtcNow + duration;
+
+				if( this.Client.Events.LogMutedChannel != null )
+					await this.Client.Events.LogMutedChannel(server, channel, GetDurationString(duration), mutedBy);
 			}
 			catch(Exception exception)
 			{
@@ -1436,7 +1361,7 @@ namespace Botwinder.modules
 			return response;
 		}
 
-		public async Task<string> UnmuteChannel(ChannelConfig channelConfig)
+		public async Task<string> UnmuteChannel(ChannelConfig channelConfig, SocketGuildUser unmutedBy = null)
 		{
 			Server server;
 			if( !this.Client.Servers.ContainsKey(channelConfig.ServerId) || (server = this.Client.Servers[channelConfig.ServerId]) == null )
@@ -1452,6 +1377,9 @@ namespace Botwinder.modules
 				OverwritePermissions permissions = channel.GetPermissionOverwrite(role) ?? new OverwritePermissions();
 				permissions.Modify(sendMessages: PermValue.Inherit);
 				await channel.AddPermissionOverwriteAsync(role, permissions);
+
+				if( this.Client.Events.LogUnmutedChannel != null )
+					await this.Client.Events.LogUnmutedChannel(server, channel, unmutedBy);
 			}
 			catch(Exception exception)
 			{
@@ -1461,6 +1389,39 @@ namespace Botwinder.modules
 					throw;
 			}
 			return response;
+		}
+
+		private string GetDurationString(TimeSpan duration)
+		{
+			StringBuilder durationString = new StringBuilder();
+
+			if( duration == TimeSpan.Zero )
+				durationString.Append("permanently");
+			else
+			{
+				durationString.Append("for ");
+				if( duration.Days > 0 )
+				{
+					durationString.Append(duration.Days);
+					durationString.Append(duration.Days == 1 ? " day" : " days");
+					if( duration.Hours > 0 || duration.Minutes > 0 )
+						durationString.Append(" and ");
+				}
+				if( duration.Hours > 0 )
+				{
+					durationString.Append(duration.Hours);
+					durationString.Append(duration.Hours == 1 ? " hour" : " hours");
+					if( duration.Minutes > 0 )
+						durationString.Append(" and ");
+				}
+				if( duration.Minutes > 0 )
+				{
+					durationString.Append(duration.Minutes);
+					durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
+				}
+			}
+
+			return durationString.ToString();
 		}
 	}
 }
