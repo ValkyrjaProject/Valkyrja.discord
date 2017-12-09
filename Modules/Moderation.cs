@@ -53,6 +53,8 @@ namespace Botwinder.modules
 			this.Client.Events.MuteUsers += Mute;
 			this.Client.Events.UnMuteUsers += UnMute;
 
+			this.Client.Events.UserJoined += OnUserJoined;
+
 
 // !clear
 			Command newCommand = new Command("clear");
@@ -268,7 +270,7 @@ namespace Botwinder.modules
 // !mute
 			newCommand = new Command("mute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Temporarily mute mentioned members from the chat. Use with parameters `@user time` where `@user` = user mention or id; `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
+			newCommand.Description = "Temporarily mute mentioned members from the chat. Use with parameters `@user time` where `@user` = user mention(s) or id(s); `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -1062,6 +1064,36 @@ namespace Botwinder.modules
 		}
 
 
+		private async Task OnUserJoined(SocketGuildUser user)
+		{
+			IRole role;
+			Server server;
+			if( !this.Client.Servers.ContainsKey(user.Guild.Id) ||
+			    (server = this.Client.Servers[user.Guild.Id]) == null ||
+			    (role = server.Guild.GetRole(server.Config.MuteRoleId)) == null )
+				return;
+
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+			UserData userData = dbContext.GetOrAddUser(user.Guild.Id, user.Id);
+
+			if( userData.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) )
+			{
+				try
+				{
+					if( userData.MutedUntil < DateTime.UtcNow )
+						await UnMute(server, new List<UserData>{userData}, role, server.Guild.CurrentUser);
+					else
+						await user.AddRoleAsync(role);
+				}
+				catch(Exception) { }
+
+				dbContext.SaveChanges();
+			}
+
+			dbContext.Dispose();
+		}
+
+
 //Update
 		public async Task Update(IBotwinderClient iClient)
 		{
@@ -1084,7 +1116,7 @@ namespace Botwinder.modules
 					Server server;
 
 					//Unban
-					if( userData.BannedUntil > DateTime.MinValue && userData.BannedUntil < DateTime.UtcNow &&
+					if( userData.BannedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && userData.BannedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
 					{
 						await UnBan(server, new List<UserData>{userData}, server.Guild.CurrentUser);
@@ -1095,7 +1127,7 @@ namespace Botwinder.modules
 
 					//Unmute
 					IRole role;
-					if( userData.MutedUntil > DateTime.MinValue && userData.MutedUntil < DateTime.UtcNow &&
+					if( userData.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && userData.MutedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
 					    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null )
 					{
