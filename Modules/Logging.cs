@@ -61,6 +61,8 @@ namespace Botwinder.modules
 			this.Client.Events.LogKick += LogKick;
 			this.Client.Events.LogMute += LogMute;
 			this.Client.Events.LogUnmute += LogUnmute;
+			this.Client.Events.LogMutedChannel += LogMutedChannel;
+			this.Client.Events.LogUnmutedChannel += LogUnmutedChannel;
 
 			this.Client.Events.LogPublicRoleJoin += LogPublicRoleJoin;
 			this.Client.Events.LogPublicRoleLeave += LogPublicRoleLeave;
@@ -491,6 +493,68 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe(
 						GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 							user.GetUsername(), user.Id.ToString(),
+							Utils.GetTimestamp()));
+				}
+			}
+			catch(HttpException) { }
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "LogUnmute", server.Id);
+			}
+		}
+		private async Task LogMutedChannel(Server server, SocketGuildChannel channel, string duration, SocketGuildUser issuedBy)
+		{
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
+
+				if( server.Config.ModChannelEmbeds )
+				{
+					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(color, "", "Channel muted " + duration,
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+							"#" + channel.Name, channel.Id.ToString(),
+							DateTime.UtcNow));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("Channel Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							"#" + channel.Name, channel.Id.ToString(),
+							Utils.GetTimestamp()));
+				}
+			}
+			catch(HttpException) { }
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "LogMute", server.Id);
+			}
+		}
+
+		private async Task LogUnmutedChannel(Server server, SocketGuildChannel channel, SocketGuildUser issuedBy)
+		{
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
+
+				if( server.Config.ModChannelEmbeds )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.ModChannelColor), "", "Channel Unmuted",
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+							"#" + channel.Name, channel.Id.ToString(),
+							DateTime.UtcNow));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("Channel Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							"#" + channel.Name, channel.Id.ToString(),
 							Utils.GetTimestamp()));
 				}
 			}
