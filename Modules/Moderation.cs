@@ -404,6 +404,72 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !muteChannel
+			newCommand = new Command("muteChannel");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Temporarily mute the current channel. Use with parameter `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.)";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
+			newCommand.OnExecute += async e => {
+				SocketRole roleOp = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
+				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
+				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
+				{
+					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					return;
+				}
+
+				string responseString = "Invalid parameters...\n" + e.Command.Description;
+				if( e.MessageArgs == null || e.MessageArgs.Length < 1 )
+				{
+					await this.Client.SendMessageToChannel(e.Channel, responseString);
+					return;
+				}
+
+				int muteDurationMinutes = 0;
+				Match dayMatch = Regex.Match(e.MessageArgs[0], "\\d+d", RegexOptions.IgnoreCase);
+				Match hourMatch = Regex.Match(e.MessageArgs[0], "\\d+h", RegexOptions.IgnoreCase);
+				Match minuteMatch = Regex.Match(e.MessageArgs[0], "\\d+m", RegexOptions.IgnoreCase);
+				if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[0], out muteDurationMinutes) )
+				{
+					await this.Client.SendMessageToChannel(e.Channel, responseString);
+					return;
+				}
+
+				if( minuteMatch.Success )
+					muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
+				if( hourMatch.Success )
+					muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+				if( dayMatch.Success )
+					muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
+				if( channel == null )
+				{
+					channel = new ChannelConfig{
+						ServerId = e.Server.Id,
+						ChannelId = e.Channel.Id
+					};
+
+					dbContext.Channels.Add(channel);
+				}
+
+				try
+				{
+					responseString = await MuteChannel(channel, TimeSpan.FromMinutes(muteDurationMinutes));
+					dbContext.SaveChanges();
+				}
+				catch(Exception exception)
+				{
+					await this.Client.LogException(exception, e);
+					responseString = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+				}
+				dbContext.Dispose();
+
+				await this.Client.SendMessageToChannel(e.Channel, responseString);
+			};
+			commands.Add(newCommand);
+
 // !unmuteChannel
 			newCommand = new Command("unmuteChannel");
 			newCommand.Type = CommandType.Standard;
