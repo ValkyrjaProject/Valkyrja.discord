@@ -9,7 +9,7 @@ using Botwinder.entities;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
-
+using Microsoft.EntityFrameworkCore;
 using guid = System.UInt64;
 
 namespace Botwinder.modules
@@ -17,6 +17,7 @@ namespace Botwinder.modules
 	public class Moderation: IModule
 	{
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
+		private const string ErrorPermissionHierarchyString = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanNotFoundString = "I couldn't find them :(";
 		private const string BanConfirmString = "_\\*fires them railguns at {0}*_  Ò_Ó";
@@ -28,7 +29,9 @@ namespace Botwinder.modules
 		private const string WarningPmString = "Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}";
 		private const string MuteIgnoreChannelString = "{0}, you've been muted.";
 		private const string MuteConfirmString = "*Silence!!  ò_ó\n...\nI keel u, {0}!!*  Ò_Ó";
+		private const string MuteChannelConfirmString = "Silence!!  ò_ó";
 		private const string UnmuteConfirmString = "Speak {0}!";
+		private const string UnmuteChannelConfirmString = "You may speak now.";
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <http://botwinder.info/config>";
@@ -254,7 +257,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+						response = ErrorPermissionHierarchyString;
 					else
 						throw;
 				}
@@ -480,7 +483,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+						response = ErrorPermissionHierarchyString;
 					else
 						throw;
 				}
@@ -966,6 +969,14 @@ namespace Botwinder.modules
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 			bool save = false;
 
+			await dbContext.Channels.Where(c => c.MutedUntil > DateTime.MinValue && c.MutedUntil < DateTime.UtcNow)
+				.ForEachAsync(async c => {
+					try {
+						await UnmuteChannel(c);
+						save = true;
+					} catch(Exception) { }
+				});
+
 			foreach( UserData userData in dbContext.UserDatabase )
 			{
 				try
@@ -1068,7 +1079,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+						response = ErrorPermissionHierarchyString;
 					else
 						throw;
 				}
@@ -1147,7 +1158,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+						response = ErrorPermissionHierarchyString;
 					else
 						throw;
 				}
@@ -1246,7 +1257,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+						response = ErrorPermissionHierarchyString;
 					else
 						throw;
 				}
@@ -1286,7 +1297,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+						response = ErrorPermissionHierarchyString;
 					else
 						throw;
 				}
@@ -1295,6 +1306,60 @@ namespace Botwinder.modules
 			if( unmuted.Any() )
 				response = string.Format(UnmuteConfirmString, unmuted.ToMentions());
 
+			return response;
+		}
+
+		public async Task<string> MuteChannel(ChannelConfig channelConfig, TimeSpan duration)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(channelConfig.ServerId) || (server = this.Client.Servers[channelConfig.ServerId]) == null )
+				throw new Exception("Server not found.");
+
+			string response = MuteChannelConfirmString;
+			try
+			{
+				IRole role = server.Guild.EveryoneRole;
+				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
+				OverwritePermissions permissions = channel.GetPermissionOverwrite(role) ?? new OverwritePermissions();
+				permissions.Modify(sendMessages: PermValue.Deny);
+				await channel.AddPermissionOverwriteAsync(role, permissions);
+
+				channelConfig.MutedUntil = DateTime.UtcNow + duration;
+			}
+			catch(Exception exception)
+			{
+				if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					response = ErrorPermissionHierarchyString;
+				else
+					throw;
+			}
+			return response;
+		}
+
+		public async Task<string> UnmuteChannel(ChannelConfig channelConfig)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(channelConfig.ServerId) || (server = this.Client.Servers[channelConfig.ServerId]) == null )
+				throw new Exception("Server not found.");
+
+			string response = UnmuteChannelConfirmString;
+			try
+			{
+				channelConfig.MutedUntil = DateTime.MinValue;
+
+				IRole role = server.Guild.EveryoneRole;
+				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
+				OverwritePermissions permissions = channel.GetPermissionOverwrite(role) ?? new OverwritePermissions();
+				permissions.Modify(sendMessages: PermValue.Inherit);
+				await channel.AddPermissionOverwriteAsync(role, permissions);
+			}
+			catch(Exception exception)
+			{
+				if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					response = ErrorPermissionHierarchyString;
+				else
+					throw;
+			}
 			return response;
 		}
 	}
