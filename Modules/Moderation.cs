@@ -456,7 +456,7 @@ namespace Botwinder.modules
 
 				try
 				{
-					responseString = await MuteChannel(channel, TimeSpan.FromMinutes(muteDurationMinutes));
+					responseString = await MuteChannel(channel, TimeSpan.FromMinutes(muteDurationMinutes), e.Message.Author as SocketGuildUser);
 					dbContext.SaveChanges();
 				}
 				catch(Exception exception)
@@ -491,7 +491,7 @@ namespace Botwinder.modules
 
 				try
 				{
-					responseString = await UnmuteChannel(channel);
+					responseString = await UnmuteChannel(channel, e.Message.Author as SocketGuildUser);
 					dbContext.SaveChanges();
 				}
 				catch(Exception exception)
@@ -1072,7 +1072,7 @@ namespace Botwinder.modules
 			await dbContext.Channels.Where(c => c.MutedUntil > DateTime.MinValue && c.MutedUntil < DateTime.UtcNow)
 				.ForEachAsync(async c => {
 					try {
-						await UnmuteChannel(c);
+						await UnmuteChannel(c, client.DiscordClient.CurrentUser);
 						save = true;
 					} catch(Exception) { }
 				});
@@ -1361,7 +1361,7 @@ namespace Botwinder.modules
 			return response;
 		}
 
-		public async Task<string> UnmuteChannel(ChannelConfig channelConfig, SocketGuildUser unmutedBy = null)
+		public async Task<string> UnmuteChannel(ChannelConfig channelConfig, SocketUser unmutedBy = null)
 		{
 			Server server;
 			if( !this.Client.Servers.ContainsKey(channelConfig.ServerId) || (server = this.Client.Servers[channelConfig.ServerId]) == null )

@@ -534,7 +534,7 @@ namespace Botwinder.modules
 			}
 		}
 
-		private async Task LogUnmutedChannel(Server server, SocketGuildChannel channel, SocketGuildUser issuedBy)
+		private async Task LogUnmutedChannel(Server server, SocketGuildChannel channel, SocketUser issuedBy)
 		{
 			try
 			{
