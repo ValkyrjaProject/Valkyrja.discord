@@ -404,6 +404,40 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !unmuteChannel
+			newCommand = new Command("unmuteChannel");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Mute the current channel temporarily - duration configured at the website.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
+			newCommand.OnExecute += async e => {
+				string responseString = "";
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
+				if( channel == null )
+				{
+					channel = new ChannelConfig{
+						ServerId = e.Server.Id,
+						ChannelId = e.Channel.Id
+					};
+
+					dbContext.Channels.Add(channel);
+				}
+
+				try
+				{
+					responseString = await UnmuteChannel(channel);
+					dbContext.SaveChanges();
+				}
+				catch(Exception exception)
+				{
+					await this.Client.LogException(exception, e);
+					responseString = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+				}
+				dbContext.Dispose();
+				await this.Client.SendMessageToChannel(e.Channel, responseString);
+			};
+			commands.Add(newCommand);
+
 // !kick
 			newCommand = new Command("kick");
 			newCommand.Type = CommandType.Standard;
