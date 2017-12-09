@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,6 +18,7 @@ namespace Botwinder.modules
 {
 	public class Moderation: IModule
 	{
+		private const string ErrorUnknownString = "Unknown error, please poke <@{0}> to take a look x_x";
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
 		private const string ErrorPermissionHierarchyString = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
@@ -35,8 +38,11 @@ namespace Botwinder.modules
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <http://botwinder.info/config>";
+		private const string TempChannelConfirmString = "Here you go! <3\n_(Temporary channel `{0}` was created.)_";
 
 		private BotwinderClient Client;
+
+		private TimeSpan TempChannelDelay = TimeSpan.FromMinutes(3);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -345,7 +351,7 @@ namespace Botwinder.modules
 				} catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					response = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 
 				dbContext.Dispose();
@@ -398,7 +404,7 @@ namespace Botwinder.modules
 				} catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					response = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 
 				dbContext.Dispose();
@@ -464,7 +470,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
-					responseString = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					responseString = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 				dbContext.Dispose();
 
@@ -499,7 +505,7 @@ namespace Botwinder.modules
 				catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
-					responseString = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					responseString = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 				dbContext.Dispose();
 				await this.Client.SendMessageToChannel(e.Channel, responseString);
@@ -682,7 +688,7 @@ namespace Botwinder.modules
 				} catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					response = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 
 				dbContext.Dispose();
@@ -742,7 +748,7 @@ namespace Botwinder.modules
 				} catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					response = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 
 				dbContext.Dispose();
@@ -788,7 +794,7 @@ namespace Botwinder.modules
 				} catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
-					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
+					response = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 
 				dbContext.Dispose();
@@ -1060,10 +1066,53 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !tempChannel
+			newCommand = new Command("tempChannel");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Creates a temporary voice channel. This channel will be destroyed when it becomes empty, with grace period of three minutes since it's creation.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
+				{
+					await this.Client.SendMessageToChannel(e.Channel, "Please specify a name for the new temporary channel.");
+					return;
+				}
+
+				string responseString = string.Format(TempChannelConfirmString, e.TrimmedMessage);
+
+				try
+				{
+					RestVoiceChannel tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(e.TrimmedMessage);
+
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
+					if( channel == null )
+					{
+						channel = new ChannelConfig{
+							ServerId = e.Server.Id,
+							ChannelId = tempChannel.Id
+						};
+
+						dbContext.Channels.Add(channel);
+					}
+
+					channel.Temporary = true;
+					dbContext.SaveChanges();
+					dbContext.Dispose();
+				}
+				catch(Exception exception)
+				{
+					await this.Client.LogException(exception, e);
+					responseString = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
+				}
+				await this.Client.SendMessageToChannel(e.Channel, responseString);
+			};
+			commands.Add(newCommand);
+
 			return commands;
 		}
 
-
+//User Joined
 		private async Task OnUserJoined(SocketGuildUser user)
 		{
 			IRole role;
@@ -1101,14 +1150,47 @@ namespace Botwinder.modules
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 			bool save = false;
 
-			await dbContext.Channels.Where(c => c.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && c.MutedUntil < DateTime.UtcNow)
-				.ForEachAsync(async c => {
-					try {
-						await UnmuteChannel(c, client.DiscordClient.CurrentUser);
-						save = true;
-					} catch(Exception) { }
-				});
+			//Channels
+			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
+			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.Temporary || (c.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && c.MutedUntil < DateTime.UtcNow)) )
+			{
+				//Muted channels
+				if( channelConfig.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && channelConfig.MutedUntil < DateTime.UtcNow )
+				{
+					await UnmuteChannel(channelConfig, client.DiscordClient.CurrentUser);
+					save = true;
+					continue;
+				}
 
+				//Temporary voice channels
+				Server server;
+				if( !channelConfig.Temporary ||
+					!client.Servers.ContainsKey(channelConfig.ServerId) ||
+				    (server = client.Servers[channelConfig.ServerId]) == null )
+					continue;
+
+				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
+				if( channel != null &&
+				    channel.CreatedAt < DateTimeOffset.UtcNow - this.TempChannelDelay &&
+				    !channel.Users.Any() )
+				{
+					try
+					{
+						await channel.DeleteAsync();
+						channelConfig.Temporary = false;
+						channelsToRemove.Add(channelConfig);
+						save = true;
+						continue;
+					}
+					catch(Exception) { }
+				}
+			}
+
+			if( channelsToRemove.Any() )
+				dbContext.Channels.RemoveRange(channelsToRemove);
+
+
+			//Users
 			foreach( UserData userData in dbContext.UserDatabase )
 			{
 				try
