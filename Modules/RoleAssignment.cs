@@ -313,7 +313,7 @@ namespace Botwinder.modules
 				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoPublicRoles);
+					await iClient.SendMessageToChannel(e.Channel, ErrorNoMemberRoles);
 					return;
 				}
 
