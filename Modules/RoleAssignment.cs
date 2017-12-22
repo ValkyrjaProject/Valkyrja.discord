@@ -339,7 +339,7 @@ namespace Botwinder.modules
 				}
 
 				List<SocketGuildUser> users;
-				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any())
+				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count)
 				{
 					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
 					return;
