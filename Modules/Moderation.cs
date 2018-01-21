@@ -1219,7 +1219,9 @@ namespace Botwinder.modules
 				}
 				catch(Exception exception)
 				{
-					if( !(exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden) )
+					if( !(exception is Discord.Net.HttpException ex && (
+						      ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+						      ex.HttpCode == System.Net.HttpStatusCode.NotFound)) )
 						await this.HandleException(exception, "Update Moderation", userData.ServerId);
 				}
 			}
