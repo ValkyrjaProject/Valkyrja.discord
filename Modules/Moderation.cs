@@ -1154,6 +1154,11 @@ namespace Botwinder.modules
 			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
 			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.Temporary || (c.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && c.MutedUntil < DateTime.UtcNow)) )
 			{
+				Server server;
+				if( !client.Servers.ContainsKey(channelConfig.ServerId) ||
+				    (server = client.Servers[channelConfig.ServerId]) == null )
+					continue;
+
 				//Muted channels
 				if( channelConfig.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && channelConfig.MutedUntil < DateTime.UtcNow )
 				{
@@ -1163,10 +1168,7 @@ namespace Botwinder.modules
 				}
 
 				//Temporary voice channels
-				Server server;
-				if( !channelConfig.Temporary ||
-					!client.Servers.ContainsKey(channelConfig.ServerId) ||
-				    (server = client.Servers[channelConfig.ServerId]) == null )
+				if( !channelConfig.Temporary )
 					continue;
 
 				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
