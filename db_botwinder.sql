@@ -42,6 +42,11 @@ CREATE TABLE `global_config` (
 	PRIMARY KEY (`configuration_name`)
 );
 
+CREATE TABLE `support_team` (
+	`userid` BIGINT UNSIGNED NOT NULL UNIQUE,
+	PRIMARY KEY (`userid`)
+);
+
 CREATE TABLE `subscribers` (
 	`userid` BIGINT UNSIGNED NOT NULL UNIQUE,
 	`has_bonus` BOOLEAN NOT NULL,
