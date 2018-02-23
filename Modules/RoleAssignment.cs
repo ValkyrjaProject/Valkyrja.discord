@@ -476,6 +476,17 @@ namespace Botwinder.modules
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
+			if( server.Config.WelcomeMessageEnabled && !string.IsNullOrWhiteSpace(server.Config.WelcomeMessage) )
+			{
+				try
+				{
+					string welcomePm = server.Config.WelcomeMessage;
+					if( server.Config.WelcomeMessage.Contains("{0}") )
+						welcomePm = string.Format(server.Config.WelcomeMessage, user.Username);
+					await user.SendMessageSafe(welcomePm);
+				} catch(Exception) { }
+			}
+
 			SocketRole role;
 			if( server.Config.WelcomeRoleId != 0 && (role = server.Guild.GetRole(server.Config.WelcomeRoleId)) != null )
 			{
