@@ -492,6 +492,7 @@ namespace Botwinder.modules
 				}
 
 				await iClient.SendMessageToChannel(e.Channel, PromoteEveryoneResponseString);
+				await e.Server.Guild.DownloadUsersAsync();
 				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
 
 				int i = 0;
@@ -546,6 +547,7 @@ namespace Botwinder.modules
 				}
 
 				await iClient.SendMessageToChannel(e.Channel, DemoteEveryoneResponseString);
+				await e.Server.Guild.DownloadUsersAsync();
 				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
 
 				int i = 0;
