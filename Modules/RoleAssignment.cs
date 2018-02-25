@@ -23,6 +23,8 @@ namespace Botwinder.modules
 		private static string ErrorRoleNotFound = "I did not find a role based on that expression.";
 		private static string ErrorRoleNotFoundId = "Role not found. Use with roleID parameter.\n(Use the `getRole` command to get the ID)";
 		private static string ErrorPromoteEveryone = "Failed to assign the role to more than 10 people - aborting. (Assuming wrong permissions or hierarchy.)";
+		private static string PromoteEveryoneResponseString = "I will assign a role to everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
+		private static string DemoteEveryoneResponseString = "I will remove a role from everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
 
 		private BotwinderClient Client;
 
@@ -489,6 +491,7 @@ namespace Botwinder.modules
 					return;
 				}
 
+				await iClient.SendMessageToChannel(e.Channel, PromoteEveryoneResponseString);
 				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
 
 				int i = 0;
@@ -542,6 +545,7 @@ namespace Botwinder.modules
 					return;
 				}
 
+				await iClient.SendMessageToChannel(e.Channel, DemoteEveryoneResponseString);
 				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
 
 				int i = 0;
