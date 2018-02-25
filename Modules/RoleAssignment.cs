@@ -19,8 +19,10 @@ namespace Botwinder.modules
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
 		private static string ErrorNoPublicRoles = "I'm sorry, but there are no public roles on this server.";
 		private static string ErrorNoMemberRoles = "I'm sorry, but there are no member roles on this server.";
-		private static string ErrorRoleNotFound = "I did not find a role based on that expression.";
 		private static string ErrorTooManyFound = "I found more than one role with that expression, please be more specific.";
+		private static string ErrorRoleNotFound = "I did not find a role based on that expression.";
+		private static string ErrorRoleNotFoundId = "Role not found. Use with roleID parameter.\n(Use the `getRole` command to get the ID)";
+		private static string ErrorPromoteEveryone = "Failed to assign the role to more than 10 people - aborting. (Assuming wrong permissions or hierarchy.)";
 
 		private BotwinderClient Client;
 
@@ -462,6 +464,112 @@ namespace Botwinder.modules
 					}
 				}
 
+				await iClient.SendMessageToChannel(e.Channel, response);
+			};
+			commands.Add(newCommand);
+
+// !promoteEveryone
+			newCommand = new Command("promoteEveryone");
+			newCommand.Type = CommandType.LargeOperation;
+			newCommand.Description = "Assign everyone a role identified by it's ID. Use the `getRole` command to get the ID.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					return;
+				}
+
+				SocketRole role = null;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) ||
+				    !guid.TryParse(e.TrimmedMessage, out guid id) || id < int.MaxValue ||
+				    (role = e.Server.Guild.Roles.FirstOrDefault(r => r.Id == id)) == null )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFoundId);
+					return;
+				}
+
+				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
+
+				int i = 0;
+				int count = 0;
+				int exceptions = 0;
+				bool canceled = await e.Operation.While(() => i < users.Count, async () => {
+					try
+					{
+						SocketGuildUser user = users[i++];
+						if( user.Roles.Any(r => r.Id == role.Id) )
+							return false;
+
+						await user.AddRoleAsync(role);
+						count++;
+					}
+					catch(Exception)
+					{
+						if( ++exceptions > 10 )
+							return true;
+					}
+
+					return false;
+				});
+
+				if( canceled )
+					return;
+
+				string response = exceptions > 10 ? ErrorPromoteEveryone : ($"Done! I've assigned `{role.Name}` to `{count}` member" + (count != 1 ? "s." : "."));
+				await iClient.SendMessageToChannel(e.Channel, response);
+			};
+			commands.Add(newCommand);
+
+// !demoteEveryone
+			newCommand = new Command("demoteEveryone");
+			newCommand.Type = CommandType.LargeOperation;
+			newCommand.Description = "Remove a role from everyone, identified by roleID. Use the `getRole` command to get the ID.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					return;
+				}
+
+				SocketRole role = null;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) ||
+				    !guid.TryParse(e.TrimmedMessage, out guid id) || id < int.MaxValue ||
+				    (role = e.Server.Guild.Roles.FirstOrDefault(r => r.Id == id)) == null )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFoundId);
+					return;
+				}
+
+				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
+
+				int i = 0;
+				int count = 0;
+				int exceptions = 0;
+				bool canceled = await e.Operation.While(() => i < users.Count, async () => {
+					try
+					{
+						SocketGuildUser user = users[i++];
+						if( !user.Roles.Any(r => r.Id == role.Id) )
+							return false;
+
+						await user.RemoveRoleAsync(role);
+						count++;
+					}
+					catch(Exception)
+					{
+						if( ++exceptions > 10 )
+							return true;
+					}
+
+					return false;
+				});
+
+				if( canceled )
+					return;
+
+				string response = exceptions > 10 ? ErrorPromoteEveryone : ($"Done! I've removed `{role.Name}` from `{count}` member" + (count != 1 ? "s." : "."));
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
 			commands.Add(newCommand);
