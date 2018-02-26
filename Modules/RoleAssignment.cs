@@ -270,7 +270,8 @@ namespace Botwinder.modules
 					await user.AddRoleAsync(roleToAssign);
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+					    exception.Message.Contains("Missing Access") )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
 					else
 					{
@@ -336,7 +337,8 @@ namespace Botwinder.modules
 					await (e.Message.Author as SocketGuildUser).RemoveRoleAsync(foundRoles.First());
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+					    exception.Message.Contains("Missing Access") )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
 					else
 					{
@@ -431,7 +433,8 @@ namespace Botwinder.modules
 					}
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+					    exception.Message.Contains("Missing Access") )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
 					else
 					{
@@ -501,7 +504,8 @@ namespace Botwinder.modules
 					}
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden )
+					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+						exception.Message.Contains("Missing Access") )
 						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
 					else
 					{
