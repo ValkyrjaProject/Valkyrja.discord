@@ -71,6 +71,50 @@ namespace Botwinder.modules
 				await iClient.SendMessageToChannel(e.Channel, response.ToString());
 			};
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("getrole"));
+
+// !membersOf
+			newCommand = new Command("membersOf");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Display a list of members of a role.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				string expression = e.TrimmedMessage;
+
+				guid id = 0;
+				IEnumerable<SocketRole> roles = e.Server.Guild.Roles;
+				IEnumerable<SocketRole> foundRoles = null;
+				SocketRole role = null;
+
+				if( !(guid.TryParse(expression, out id) && (role = e.Server.Guild.GetRole(id)) != null) &&
+					!(foundRoles = roles.Where(r => r.Name == expression)).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
+				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(expression.ToLower()))).Any() )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
+					return;
+				}
+
+				if( foundRoles.Count() > 1 )
+				{
+					await iClient.SendMessageToChannel(e.Channel, ErrorTooManyFound);
+					return;
+				}
+
+				if( role == null )
+				{
+					role = foundRoles.First();
+				}
+
+				await e.Server.Guild.DownloadUsersAsync();
+				List<string> names = role.Members.Select(u => u.GetUsername()).ToList();
+				names.Sort();
+
+				string response = names.Count == 0 ? "Nobody has this role." : $"Members of `{role.Name}` are:\n" + names.ToNamesList();
+				await iClient.SendMessageToChannel(e.Channel, response);
+			};
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("listMembers"));
 
 // !createRole
 			newCommand = new Command("createRole");
