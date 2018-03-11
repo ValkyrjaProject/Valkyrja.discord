@@ -1110,6 +1110,8 @@ namespace Botwinder.modules
 				await this.Client.SendMessageToChannel(e.Channel, responseString);
 			};
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("tmp"));
+			commands.Add(newCommand.CreateAlias("tc"));
 
 			return commands;
 		}
