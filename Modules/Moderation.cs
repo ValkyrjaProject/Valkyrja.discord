@@ -325,23 +325,32 @@ namespace Botwinder.modules
 				}
 
 				int muteDurationMinutes = 0;
-				Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
-				Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
-				Match minuteMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+m", RegexOptions.IgnoreCase);
+				try
+				{
+					Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
+					Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
+					Match minuteMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+m", RegexOptions.IgnoreCase);
 
-				if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out muteDurationMinutes) )
+					if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out muteDurationMinutes) )
+					{
+						await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+						dbContext.Dispose();
+						return;
+					}
+
+					if( minuteMatch.Success )
+						muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
+					if( hourMatch.Success )
+						muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+					if( dayMatch.Success )
+						muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+				}
+				catch(Exception)
 				{
 					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
-
-				if( minuteMatch.Success )
-					muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
-				if( hourMatch.Success )
-					muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
-				if( dayMatch.Success )
-					muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
 
 				string response = "ò_ó";
 
@@ -434,22 +443,34 @@ namespace Botwinder.modules
 					return;
 				}
 
+				Match dayMatch;
+				Match hourMatch;
+				Match minuteMatch;
 				int muteDurationMinutes = 0;
-				Match dayMatch = Regex.Match(e.MessageArgs[0], "\\d+d", RegexOptions.IgnoreCase);
-				Match hourMatch = Regex.Match(e.MessageArgs[0], "\\d+h", RegexOptions.IgnoreCase);
-				Match minuteMatch = Regex.Match(e.MessageArgs[0], "\\d+m", RegexOptions.IgnoreCase);
-				if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[0], out muteDurationMinutes) )
+				try
+				{
+					dayMatch = Regex.Match(e.MessageArgs[0], "\\d+d", RegexOptions.IgnoreCase);
+					hourMatch = Regex.Match(e.MessageArgs[0], "\\d+h", RegexOptions.IgnoreCase);
+					minuteMatch = Regex.Match(e.MessageArgs[0], "\\d+m", RegexOptions.IgnoreCase);
+
+					if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[0], out muteDurationMinutes) )
+					{
+						await this.Client.SendMessageToChannel(e.Channel, responseString);
+						return;
+					}
+
+					if( minuteMatch.Success )
+						muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
+					if( hourMatch.Success )
+						muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+					if( dayMatch.Success )
+						muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+				}
+				catch(Exception)
 				{
 					await this.Client.SendMessageToChannel(e.Channel, responseString);
 					return;
 				}
-
-				if( minuteMatch.Success )
-					muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
-				if( hourMatch.Success )
-					muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
-				if( dayMatch.Success )
-					muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
@@ -664,20 +685,29 @@ namespace Botwinder.modules
 				}
 
 				int banDurationHours = 0;
-				Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
-				Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
+				try
+				{
+					Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
+					Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
 
-				if( !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out banDurationHours) )
+					if( !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out banDurationHours) )
+					{
+						await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+						dbContext.Dispose();
+						return;
+					}
+
+					if( hourMatch.Success )
+						banDurationHours = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+					if( dayMatch.Success )
+						banDurationHours += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+				}
+				catch(Exception)
 				{
 					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
-
-				if( hourMatch.Success )
-					banDurationHours = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
-				if( dayMatch.Success )
-					banDurationHours += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
 
 				string response = "ò_ó";
 
