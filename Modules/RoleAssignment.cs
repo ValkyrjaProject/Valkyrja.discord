@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
+using Discord;
 using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
@@ -128,7 +129,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				RestRole role = await e.Server.Guild.CreateRoleAsync(e.TrimmedMessage);
+				RestRole role = await e.Server.Guild.CreateRoleAsync(e.TrimmedMessage, GuildPermissions.None);
 				string response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`";
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
