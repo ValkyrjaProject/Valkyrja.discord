@@ -352,7 +352,8 @@ CREATE TABLE `command_options` (
 	`serverid` BIGINT UNSIGNED NOT NULL,
 	`commandid` VARCHAR(255) NOT NULL,
 	`permission_overrides` TINYINT NOT NULL,
-	`delete_request` BOOLEAN NOT NULL,
+	`delete_request` BOOLEAN NOT NULL DEFAULT '0',
+	`delete_reply` BOOLEAN NOT NULL DEFAULT '0',
 	PRIMARY KEY (`serverid`,`commandid`)
 );
 
