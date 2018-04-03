@@ -74,7 +74,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.VerificationEnabled )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, "Verification is disabled on this server.");
+					await e.SendReplyUnsafe("Verification is disabled on this server.");
 					return;
 				}
 
@@ -89,7 +89,7 @@ namespace Botwinder.modules
 				{
 					if( !mentionedUsers.Any() )
 					{
-						await this.Client.SendMessageToChannel(e.Channel, UserNotFoundString);
+						await e.SendReplyUnsafe(UserNotFoundString);
 						dbContext.Dispose();
 						return;
 					}
@@ -110,7 +110,7 @@ namespace Botwinder.modules
 					response = MentionedString;
 				}
 
-				await this.Client.SendMessageToChannel(e.Channel, response);
+				await e.SendReplyUnsafe(response);
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);

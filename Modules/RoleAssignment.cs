@@ -210,7 +210,7 @@ namespace Botwinder.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
+					await e.SendReplyUnsafe(e.Command.Description);
 					return;
 				}
 
@@ -227,13 +227,13 @@ namespace Botwinder.modules
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower()))).Any() )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
+					await e.SendReplyUnsafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorTooManyFound);
+					await e.SendReplyUnsafe(ErrorTooManyFound);
 					return;
 				}
 
@@ -284,7 +284,7 @@ namespace Botwinder.modules
 				if( removed )
 					response += "\n_(I've removed the other exclusive roles from the same role group.)_";
 
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplyUnsafe(response);
 
 				if( this.Client.Events.LogPublicRoleJoin != null )
 					await this.Client.Events.LogPublicRoleJoin(e.Server, e.Message.Author as SocketGuildUser, roleToAssign.Name);
@@ -305,7 +305,7 @@ namespace Botwinder.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
+					await e.SendReplyUnsafe(e.Command.Description);
 					return;
 				}
 
@@ -322,13 +322,13 @@ namespace Botwinder.modules
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower()))).Any() )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
+					await e.SendReplyUnsafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorTooManyFound);
+					await e.SendReplyUnsafe(ErrorTooManyFound);
 					return;
 				}
 
@@ -348,7 +348,7 @@ namespace Botwinder.modules
 					}
 				}
 
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplyUnsafe(response);
 
 				if( this.Client.Events.LogPublicRoleLeave != null )
 					await this.Client.Events.LogPublicRoleLeave(e.Server, e.Message.Author as SocketGuildUser, foundRoles.First().Name);
