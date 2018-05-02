@@ -136,7 +136,7 @@ namespace Botwinder.modules
 					userNames.Append((count++ == 0 ? "" : count == users.Count ? ", and " : ", ") + e.Server.Guild.GetUser(mentionedUser.UserId).GetNickname());
 				}
 
-				string response = string.Format("**{0}** received a {1} of friendship from <@{2}> =]",
+				string response = string.Format("**{0}** received a {1} of friendship from {2} =]",
 					userNames, e.Server.Config.KarmaCurrencySingular, e.Message.Author.GetNickname());
 				if( count < users.Count )
 					response += "\nBut I couldn't give out more, as you don't have any left =(";
