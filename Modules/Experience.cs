@@ -139,8 +139,8 @@ namespace Botwinder.modules
 					}
 
 					IEnumerable<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null);
-					if( rolesToRemove.Any() )
-						await user.RemoveRolesAsync(rolesToRemove);
+					foreach( SocketRole roleToRemove in rolesToRemove )
+						await user.RemoveRoleAsync(roleToRemove);
 
 					if( newLvl > userData.Level && server.Config.ExpAnnounceLevelup )
 					{
