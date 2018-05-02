@@ -72,6 +72,8 @@ namespace Botwinder.modules
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("profile"));
+			commands.Add(newCommand.CreateAlias("hw"));
 
 // !setMemo
 			newCommand = new Command("setMemo");
