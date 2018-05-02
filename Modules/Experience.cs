@@ -124,9 +124,7 @@ namespace Botwinder.modules
 
 					bool IsRoleToAssign(RoleConfig r)
 					{
-						return r.ExpLevel != 0 &&
-						       ((server.Config.ExpCumulativeRoles && r.ExpLevel <= newLvl) ||
-						       (!server.Config.ExpCumulativeRoles && r.ExpLevel == newLvl));
+						return r.ExpLevel != 0 && ((server.Config.ExpCumulativeRoles && r.ExpLevel <= newLvl) || (!server.Config.ExpCumulativeRoles && r.ExpLevel == newLvl));
 					}
 
 					IEnumerable<SocketRole> rolesToAssign = server.Roles.Values.Where(IsRoleToAssign).Select(r => server.Guild.GetRole(r.RoleId));
