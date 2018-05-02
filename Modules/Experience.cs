@@ -15,8 +15,8 @@ namespace Botwinder.modules
 {
 	public class Experience: IModule
 	{
-		private static string LevelupString = "<@{0}>, you've gained the level `{1}`";
 		private static string ExpDisabledString = "Experience and levels are disabled on this server.";
+		private static string LevelupString = "<@{0}>, you've gained the level `{1}`";
 		private static string LevelString = "Your current level is `{0}` (`{1}`)";
 		private static string LevelNullString = "Your current level is `{0}`";
 		private static string MessagesToLevel = "\nYou're {0} messages away from the next!";
