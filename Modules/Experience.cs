@@ -124,8 +124,9 @@ namespace Botwinder.modules
 
 					bool IsRoleToAssign(RoleConfig r)
 					{
-						return (server.Config.ExpCumulativeRoles && r.ExpLevel != 0 && r.ExpLevel <= newLvl) ||
-						       (!server.Config.ExpCumulativeRoles && r.ExpLevel == newLvl);
+						return r.ExpLevel != 0 &&
+						       ((server.Config.ExpCumulativeRoles && r.ExpLevel <= newLvl) ||
+						       (!server.Config.ExpCumulativeRoles && r.ExpLevel == newLvl));
 					}
 
 					IEnumerable<SocketRole> rolesToAssign = server.Roles.Values.Where(IsRoleToAssign).Select(r => server.Guild.GetRole(r.RoleId));
@@ -134,8 +135,9 @@ namespace Botwinder.modules
 
 					bool IsRoleToRemove(RoleConfig r)
 					{
-						return (server.Config.ExpCumulativeRoles && r.ExpLevel != 0 && r.ExpLevel > newLvl) ||
-						       (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl);
+						return r.ExpLevel != 0 &&
+						       ((server.Config.ExpCumulativeRoles && r.ExpLevel > newLvl) ||
+						       (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl));
 					}
 
 					IEnumerable<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null);
@@ -154,7 +156,7 @@ namespace Botwinder.modules
 			}
 			catch(Exception e)
 			{
-				await channel.SendMessageAsync("My configuration on this server is bork, please advise the Admins to fix it :<");
+				//await channel.SendMessageAsync("My configuration on this server is bork, please advise the Admins to fix it :<");
 				await this.HandleException(e, "Levelup error", server.Id);
 			}
 
