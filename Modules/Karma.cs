@@ -7,14 +7,13 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord.WebSocket;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using guid = System.UInt64;
 
 namespace Botwinder.modules
 {
 	public class Karma: IModule
 	{
-		private static string KarmaDisabledString = "Karma is disabled on this server.";
+		private const string KarmaDisabledString = "Karma is disabled on this server.";
 
 		private BotwinderClient Client;
 		private readonly Regex RegexKarma = new Regex(".*(?<!\\\\)(thank(?!sgiving)|thx|ʞuɐɥʇ|danke|vielen dank|gracias|merci|grazie|arigato|dziękuję|dziekuje|obrigad).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);

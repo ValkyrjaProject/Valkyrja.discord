@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
-using Discord;
-using Discord.Rest;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -15,16 +12,17 @@ namespace Botwinder.modules
 {
 	public class Experience: IModule
 	{
-		private static string ExpDisabledString = "Experience and levels are disabled on this server.";
-		private static string LevelupString = "<@{0}>, you've gained the level `{1}`";
-		private static string LevelString = "Your current level is `{0}` (`{1}`)";
-		private static string LevelNullString = "Your current level is `{0}`";
-		private static string MessagesToLevel = "\nYou're {0} messages away from the next!";
-		private static string ImagesToLevel = "\nYou're {0} images away from the next!";
-		private static string ThingsToLevel = "\nYou're {0} messages or {1} images away from the next!";
+		private const string ExpDisabledString = "Experience and levels are disabled on this server.";
+		private const string LevelupString = "<@{0}>, you've gained the level `{1}`";
+		private const string LevelString = "Your current level is `{0}` (`{1}`)";
+		private const string LevelNullString = "Your current level is `{0}`";
+		private const string MessagesToLevel = "\nYou're {0} messages away from the next!";
+		private const string ImagesToLevel = "\nYou're {0} images away from the next!";
+		private const string ThingsToLevel = "\nYou're {0} messages or {1} images away from the next!";
 
 		private BotwinderClient Client;
 		private guid LastMessageId = 0;
+		private List<guid> ServersWithException = new List<guid>();
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -154,7 +152,11 @@ namespace Botwinder.modules
 			}
 			catch(Exception e)
 			{
-				//await channel.SendMessageAsync("My configuration on this server is bork, please advise the Admins to fix it :<");
+				if( !this.ServersWithException.Contains(server.Id) )
+				{
+					this.ServersWithException.Add(server.Id);
+					await channel.SendMessageAsync("My configuration on this server is bork, please advise the Admins to fix it :<");
+				}
 				await this.HandleException(e, "Levelup error", server.Id);
 			}
 
