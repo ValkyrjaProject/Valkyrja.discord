@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord;
-using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
 

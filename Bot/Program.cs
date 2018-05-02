@@ -72,6 +72,7 @@ namespace Botwinder.discord
 			this.Bot.Modules.Add(new Verification());
 			this.Bot.Modules.Add(new RoleAssignment());
 			this.Bot.Modules.Add(new Logging());
+			this.Bot.Modules.Add(new Experience());
 		}
 
 		private Task InitCommands()
