@@ -113,7 +113,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				if( e.Message.MentionedUsers == null || e.Message.MentionedUsers.Any() || e.Message.MentionedUsers.Count() > e.Server.Config.KarmaLimitMentions )
+				if( e.Message.MentionedUsers == null || !e.Message.MentionedUsers.Any() || e.Message.MentionedUsers.Count() > e.Server.Config.KarmaLimitMentions )
 				{
 					await this.Client.SendMessageToChannel(e.Channel, string.Format("You have to @mention your friend who will receive the {0}. You can mention up to {1} people at the same time.",
 						e.Server.Config.KarmaCurrencySingular, e.Server.Config.KarmaLimitMentions));
