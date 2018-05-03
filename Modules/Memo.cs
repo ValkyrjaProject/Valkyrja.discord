@@ -73,7 +73,6 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("profile"));
-			commands.Add(newCommand.CreateAlias("hw"));
 
 // !setMemo
 			newCommand = new Command("setMemo");
