@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord.WebSocket;
-
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using guid = System.UInt64;
 
 namespace Botwinder.modules
@@ -21,7 +22,6 @@ namespace Botwinder.modules
 		private const string ThingsToLevel = "\nYou're {0} messages or {1} images away from the next!";
 
 		private BotwinderClient Client;
-		private guid LastMessageId = 0;
 		private List<guid> ServersWithException = new List<guid>();
 
 
@@ -59,9 +59,9 @@ namespace Botwinder.modules
 					response = string.Format(LevelString, role.Name, userData.Level);
 				}
 
-				//exp = base * lvl * (lvl + 1)
-				Int64 expToLevel = e.Server.Config.BaseExpToLevelup * (userData.Level+1) * (userData.Level + 2);
-				expToLevel -= userData.ExpRelative;
+				Int64 expToLevel = GetExpToLevel(e.Server.Config.BaseExpToLevelup, userData.Level+1);
+				Int64 expAtLevel = GetTotalExpAtLevel(e.Server.Config.BaseExpToLevelup, userData.Level);
+				expToLevel = userData.Exp - expAtLevel;
 
 				if( e.Server.Config.ExpPerMessage != 0 && e.Server.Config.ExpPerAttachment != 0 )
 					response += string.Format(ThingsToLevel, expToLevel / e.Server.Config.ExpPerMessage, expToLevel / e.Server.Config.ExpPerAttachment);
@@ -83,15 +83,12 @@ namespace Botwinder.modules
 		{
 			Server server;
 			if( message.Author.IsBot ||
-			    message.Id == LastMessageId ||
 			    !(message.Channel is SocketTextChannel channel) ||
 			    !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
 			    (server = this.Client.Servers[channel.Guild.Id]) == null ||
 			    !(message.Author is SocketGuildUser user) ||
 			    !server.Config.ExpEnabled )
 				return;
-
-			LastMessageId = message.Id;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
@@ -107,22 +104,39 @@ namespace Botwinder.modules
 			if( message.Attachments.Any() )
 				userData.CountAttachments++;
 
-			userData.ExpRelative = server.Config.ExpPerMessage * userData.CountMessages +
+			userData.Exp = server.Config.ExpPerMessage * userData.CountMessages +
 								   server.Config.ExpPerAttachment * userData.CountAttachments;
 
 			// Recalculate level and assign appropriate roles if it changed.
 			try
 			{
-				double exp = userData.ExpRelative;
-				double b = server.Config.BaseExpToLevelup;
-				//lvl = ( sqrt(4exp + base)/sqrt(base) - 1)/2
-				//exp = base * lvl * (lvl + 1)
-				Int64 newLvl = (Int64) ((Math.Sqrt(4 * exp + b) / Math.Sqrt(b) - 1) / 2);
+				Int64 newLvl = GetLvlFromExp(server.Config.BaseExpToLevelup, userData.Exp);
 				if( newLvl != userData.Level )
 				{
 					if( newLvl > userData.Level )
 					{
 						userData.KarmaCount += server.Config.KarmaPerLevel * (newLvl - userData.Level);
+					}
+
+					if( server.Config.ExpAdvanceUsers )
+					{
+						SocketRole highestRole = null;
+						RoleConfig highestRoleConfig = null;
+						RoleConfig roleConfig = null;
+						foreach( SocketRole role in user.Roles.Where(r => server.Roles.ContainsKey(r.Id) && (roleConfig = server.Roles[r.Id]).ExpLevel > 0) )
+						{
+							if( highestRoleConfig == null || (roleConfig != null && roleConfig.ExpLevel > highestRoleConfig.ExpLevel) )
+							{
+								highestRoleConfig = roleConfig;
+								highestRole = role;
+							}
+						}
+
+						if( highestRoleConfig != null && highestRole != null && highestRoleConfig.ExpLevel > userData.Level )
+						{
+							newLvl = highestRoleConfig.ExpLevel;
+							userData.Exp = GetTotalExpAtLevel(server.Config.BaseExpToLevelup, highestRoleConfig.ExpLevel);
+						}
 					}
 
 					bool IsRoleToAssign(RoleConfig r)
@@ -172,6 +186,30 @@ namespace Botwinder.modules
 		public Task Update(IBotwinderClient iClient)
 		{
 			return Task.CompletedTask;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private Int64 GetExpToLevel(Int64 baseExp, Int64 lvl)
+		{
+			//exp = base * lvl * (lvl + 1)
+			return baseExp * (lvl) * (lvl + 1);
+		}
+		private Int64 GetTotalExpAtLevel(Int64 baseExp, Int64 lvl)
+		{
+			if( lvl <= 0 )
+				return 0;
+			if( lvl == 1 )
+				return GetExpToLevel(baseExp, lvl);
+
+			return GetExpToLevel(baseExp, lvl) + GetTotalExpAtLevel(baseExp, lvl-1);
+		}
+
+		private Int64 GetLvlFromExp(Int64 baseExp, Int64 currentExp)
+		{
+			Int64 lvl = 0;
+			Int64 expAtLvl = 0;
+			while( (expAtLvl += GetExpToLevel(baseExp, ++lvl)) < currentExp ) ;
+			return lvl - 1;
 		}
 	}
 }
