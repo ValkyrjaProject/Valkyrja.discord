@@ -96,6 +96,11 @@ namespace Botwinder.modules
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 			UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
+			if( server.Config.ExpMaxLevel != 0 && userData.Level >= server.Config.ExpMaxLevel )
+			{
+				dbContext.Dispose();
+				return;
+			}
 
 			if( !string.IsNullOrEmpty(message.Content) )
 				userData.CountMessages++;
