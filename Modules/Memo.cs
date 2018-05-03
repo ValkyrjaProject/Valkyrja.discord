@@ -54,18 +54,18 @@ namespace Botwinder.modules
 					{
 						UserData userData = dbContext.GetOrAddUser(e.Server.Id, user.Id);
 						if( string.IsNullOrEmpty(userData.Memo) )
-							response = string.Format(NoMemoOtherString, user.GetNickname(), e.Command.Id);
+							response = string.Format(NoMemoOtherString, user.GetNickname(), e.CommandId);
 						else
-							response = string.Format(MemoOtherString, user.GetNickname(), e.Command.Id, userData.Memo);
+							response = string.Format(MemoOtherString, user.GetNickname(), e.CommandId, userData.Memo);
 					}
 				}
 				else
 				{
 					UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 					if( string.IsNullOrEmpty(userData.Memo) )
-						response = string.Format(NoMemoString, e.Command.Id);
+						response = string.Format(NoMemoString, e.CommandId);
 					else
-						response = string.Format(MemoString, e.Command.Id, userData.Memo);
+						response = string.Format(MemoString, e.CommandId, userData.Memo);
 				}
 
 				await this.Client.SendMessageToChannel(e.Channel, response);
