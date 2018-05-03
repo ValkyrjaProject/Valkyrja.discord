@@ -59,9 +59,8 @@ namespace Botwinder.modules
 					response = string.Format(LevelString, role.Name, userData.Level);
 				}
 
-				Int64 expToLevel = GetExpToLevel(e.Server.Config.BaseExpToLevelup, userData.Level+1);
-				Int64 expAtLevel = GetTotalExpAtLevel(e.Server.Config.BaseExpToLevelup, userData.Level);
-				expToLevel = userData.Exp - expAtLevel;
+				Int64 expAtLevel = GetTotalExpAtLevel(e.Server.Config.BaseExpToLevelup, userData.Level + 1);
+				Int64 expToLevel = expAtLevel - userData.Exp;
 
 				if( e.Server.Config.ExpPerMessage != 0 && e.Server.Config.ExpPerAttachment != 0 )
 					response += string.Format(ThingsToLevel, expToLevel / e.Server.Config.ExpPerMessage, expToLevel / e.Server.Config.ExpPerAttachment);
