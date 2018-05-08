@@ -84,12 +84,13 @@ namespace Botwinder.modules
 				SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
 				if( server.Config.LogJoin && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
 				{
-					if( server.Config.ActivityChannelEmbeds )
+					string joinMessage = string.Format(server.Config.LogMessageJoin, user.GetUsername());
+					if( server.Config.ActivityChannelEmbeds && joinMessage.Length < 255 )
 					{
 						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 						await channel.SendMessageAsync("", embed:
 							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
-								string.Format(server.Config.LogMessageJoin, user.GetUsername()),
+								joinMessage,
 								user.GetAvatarUrl(), $"UserId: {user.Id}",
 								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
 					}
@@ -121,12 +122,13 @@ namespace Botwinder.modules
 				SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
 				if( server.Config.LogLeave && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
 				{
-					if( server.Config.ActivityChannelEmbeds )
+					string leaveMessage = string.Format(server.Config.LogMessageLeave, user.GetUsername());
+					if( server.Config.ActivityChannelEmbeds && leaveMessage.Length < 255 )
 					{
 						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 						await channel.SendMessageAsync("", embed:
 							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
-								string.Format(server.Config.LogMessageLeave, user.GetUsername()),
+								leaveMessage,
 								user.GetAvatarUrl(), $"UserId: {user.Id}",
 								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
 					}
