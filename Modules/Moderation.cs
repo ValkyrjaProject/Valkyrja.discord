@@ -21,6 +21,7 @@ namespace Botwinder.modules
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanNotFoundString = "I couldn't find them :(";
 		private const string BanConfirmString = "_\\*fires them railguns at {0}*_  Ò_Ó";
+		private const string NotFoundString = "User not found.";
 		private const string UnbanConfirmString = "I've unbanned {0}... ó_ò";
 		private const string KickArgsString = "I'm supposed to shoot... who?\n";
 		private const string KickNotFoundString = "I couldn't find them :(";
@@ -259,13 +260,15 @@ namespace Botwinder.modules
 						response = "Go get em tiger!";
 					}
 				}
-				catch(Exception exception)
+				catch(Discord.Net.HttpException exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden ||
 					    exception.Message.Contains("Missing Access") )
 						response = ErrorPermissionHierarchyString;
-					else
-						throw;
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
+					         exception.Message.Contains("NotFound") )
+						response = NotFoundString;
+					else throw;
 				}
 				await iClient.SendMessageToChannel(e.Channel, response);
 			};
@@ -607,13 +610,15 @@ namespace Botwinder.modules
 							await this.Client.Events.LogKick(e.Server, user?.GetUsername(), userData.UserId, warning.ToString(), e.Message.Author as SocketGuildUser);
 					}
 				}
-				catch(Exception exception)
+				catch(Discord.Net.HttpException exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden ||
 					    exception.Message.Contains("Missing Access") )
 						response = ErrorPermissionHierarchyString;
-					else
-						throw;
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
+					         exception.Message.Contains("NotFound") )
+						response = NotFoundString;
+					else throw;
 				}
 
 				if( !usernames.Any() )
@@ -1361,21 +1366,23 @@ namespace Botwinder.modules
 			{
 				try
 				{
-					if( this.Client.Events.LogUnban != null )
-						await this.Client.Events.LogUnban(server, null, userData.UserId, unbannedBy);
+					userData.BannedUntil = DateTime.MinValue;
 
 					await server.Guild.RemoveBanAsync(userData.UserId);
-
-					userData.BannedUntil = DateTime.MinValue;
 					unbanned.Add(userData.UserId);
+
+					if( this.Client.Events.LogUnban != null )
+						await this.Client.Events.LogUnban(server, null, userData.UserId, unbannedBy);
 				}
-				catch(Exception exception)
+				catch(Discord.Net.HttpException exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden ||
 					    exception.Message.Contains("Missing Access") )
 						response = ErrorPermissionHierarchyString;
-					else
-						throw;
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
+					         exception.Message.Contains("NotFound") )
+						response = NotFoundString;
+					else throw;
 				}
 			}
 
@@ -1427,13 +1434,15 @@ namespace Botwinder.modules
 					if( this.Client.Events.LogMute != null )
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
 				}
-				catch(Exception exception)
+				catch(Discord.Net.HttpException exception)
 				{
-					if( (exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden) ||
+					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden ||
 					    exception.Message.Contains("Missing Access") )
 						response = ErrorPermissionHierarchyString;
-					else
-						throw;
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
+					         exception.Message.Contains("NotFound") )
+						response = NotFoundString;
+					else throw;
 				}
 			}
 
@@ -1456,25 +1465,27 @@ namespace Botwinder.modules
 			{
 				try
 				{
+					userData.MutedUntil = DateTime.MinValue;
+
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 					if(user == null)
 						continue;
 
 					await user.RemoveRoleAsync(role);
-
-					userData.MutedUntil = DateTime.MinValue;
 					unmuted.Add(userData.UserId);
 
 					if( this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
 				}
-				catch(Exception exception)
+				catch(Discord.Net.HttpException exception)
 				{
-					if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden ||
 					    exception.Message.Contains("Missing Access") )
 						response = ErrorPermissionHierarchyString;
-					else
-						throw;
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
+					         exception.Message.Contains("NotFound") )
+						response = NotFoundString;
+					else throw;
 				}
 			}
 
@@ -1504,13 +1515,15 @@ namespace Botwinder.modules
 				if( this.Client.Events.LogMutedChannel != null )
 					await this.Client.Events.LogMutedChannel(server, channel, GetDurationString(duration), mutedBy);
 			}
-			catch(Exception exception)
+			catch(Discord.Net.HttpException exception)
 			{
-				if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+				if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden ||
 				    exception.Message.Contains("Missing Access") )
 					response = ErrorPermissionHierarchyString;
-				else
-					throw;
+				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
+				         exception.Message.Contains("NotFound") )
+					response = NotFoundString;
+				else throw;
 			}
 			return response;
 		}
@@ -1535,13 +1548,15 @@ namespace Botwinder.modules
 				if( this.Client.Events.LogUnmutedChannel != null )
 					await this.Client.Events.LogUnmutedChannel(server, channel, unmutedBy);
 			}
-			catch(Exception exception)
+			catch(Discord.Net.HttpException exception)
 			{
-				if( exception is Discord.Net.HttpException ex && ex.HttpCode == System.Net.HttpStatusCode.Forbidden ||
+				if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden ||
 				    exception.Message.Contains("Missing Access") )
 					response = ErrorPermissionHierarchyString;
-				else
-					throw;
+				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
+				         exception.Message.Contains("NotFound") )
+					response = NotFoundString;
+				else throw;
 			}
 			return response;
 		}
