@@ -1166,13 +1166,14 @@ namespace Botwinder.modules
 				try
 				{
 					if( userData.MutedUntil < DateTime.UtcNow )
+					{
 						await UnMute(server, new List<UserData>{userData}, role, server.Guild.CurrentUser);
+						dbContext.SaveChanges();
+					}
 					else
 						await user.AddRoleAsync(role);
 				}
 				catch(Exception) { }
-
-				dbContext.SaveChanges();
 			}
 
 			dbContext.Dispose();
