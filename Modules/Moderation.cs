@@ -1366,10 +1366,9 @@ namespace Botwinder.modules
 			{
 				try
 				{
-					userData.BannedUntil = DateTime.MinValue;
-
 					await server.Guild.RemoveBanAsync(userData.UserId);
 					unbanned.Add(userData.UserId);
+					userData.BannedUntil = DateTime.MinValue;
 
 					if( this.Client.Events.LogUnban != null )
 						await this.Client.Events.LogUnban(server, null, userData.UserId, unbannedBy);
@@ -1381,7 +1380,10 @@ namespace Botwinder.modules
 						response = ErrorPermissionHierarchyString;
 					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
 					         exception.Message.Contains("NotFound") )
+					{
+						userData.BannedUntil = DateTime.MinValue;
 						response = NotFoundString;
+					}
 					else throw;
 				}
 			}
@@ -1465,14 +1467,13 @@ namespace Botwinder.modules
 			{
 				try
 				{
-					userData.MutedUntil = DateTime.MinValue;
-
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 					if(user == null)
 						continue;
 
 					await user.RemoveRoleAsync(role);
 					unmuted.Add(userData.UserId);
+					userData.MutedUntil = DateTime.MinValue;
 
 					if( this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
@@ -1484,7 +1485,10 @@ namespace Botwinder.modules
 						response = ErrorPermissionHierarchyString;
 					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
 					         exception.Message.Contains("NotFound") )
+					{
+						userData.MutedUntil = DateTime.MinValue;
 						response = NotFoundString;
+					}
 					else throw;
 				}
 			}
