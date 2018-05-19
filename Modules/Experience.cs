@@ -38,6 +38,7 @@ namespace Botwinder.modules
 			Command newCommand = new Command("lvl");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Find out what's your level!";
+			newCommand.IsPremiumCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.ExpEnabled )
@@ -86,7 +87,9 @@ namespace Botwinder.modules
 			    !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
 			    (server = this.Client.Servers[channel.Guild.Id]) == null ||
 			    !(message.Author is SocketGuildUser user) ||
-			    !server.Config.ExpEnabled )
+			    !server.Config.ExpEnabled ||
+				!this.Client.IsPremiumPartner(server.Id) ||
+				!this.Client.IsPremiumSubscriber(server.Guild.OwnerId) )
 				return;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);

@@ -32,6 +32,7 @@ namespace Botwinder.modules
 			Command newCommand = new Command("cookies");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Check how many cookies you've got.";
+			newCommand.IsPremiumCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.KarmaEnabled )
@@ -57,6 +58,7 @@ namespace Botwinder.modules
 			newCommand = new Command("nom");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Eat one of your cookies!";
+			newCommand.IsPremiumCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.KarmaEnabled )
@@ -93,6 +95,7 @@ namespace Botwinder.modules
 			newCommand = new Command("give");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Give one of your cookies to a friend =] (use with their @mention as a parameter)";
+			newCommand.IsPremiumCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.KarmaEnabled )
@@ -162,6 +165,8 @@ namespace Botwinder.modules
 			    !(message.Author is SocketGuildUser user) ||
 			    !server.Config.KarmaEnabled||
 			    message.MentionedUsers == null || !message.MentionedUsers.Any() ||
+			    !this.Client.IsPremiumPartner(server.Id) ||
+			    !this.Client.IsPremiumSubscriber(server.Guild.OwnerId) ||
 			    !this.RegexKarma.Match(message.Content).Success )
 				return;
 
