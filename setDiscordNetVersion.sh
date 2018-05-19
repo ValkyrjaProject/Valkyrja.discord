@@ -6,10 +6,10 @@ mv ~/Downloads/Discord.Net.* packages/
 rm -rf ~/.nuget/packages/discord.net*
 git add packages/
 
-sed -i "s/2.0.0-alpha-build-[0-9]*/2.0.0-alpha-build-$1/g" Core/Botwinder.core.csproj
-sed -i "s/2.0.0-alpha-build-[0-9]*/2.0.0-alpha-build-$1/g" Bot/Botwinder.discord.csproj
-sed -i "s/2.0.0-alpha-build-[0-9]*/2.0.0-alpha-build-$1/g" Modules/Botwinder.modules.csproj
-sed -i "s/2.0.0-alpha-build-[0-9]*/2.0.0-alpha-build-$1/g" Secure/Botwinder.secure.csproj
+sed -i "s/2.0.0-beta2-[0-9]*/2.0.0-beta2-$1/g" Core/Botwinder.core.csproj
+sed -i "s/2.0.0-beta2-[0-9]*/2.0.0-beta2-$1/g" Bot/Botwinder.discord.csproj
+sed -i "s/2.0.0-beta2-[0-9]*/2.0.0-beta2-$1/g" Modules/Botwinder.modules.csproj
+sed -i "s/2.0.0-beta2-[0-9]*/2.0.0-beta2-$1/g" Secure/Botwinder.secure.csproj
 
 git add Bot/Botwinder.discord.csproj
 git add Modules/Botwinder.modules.csproj
