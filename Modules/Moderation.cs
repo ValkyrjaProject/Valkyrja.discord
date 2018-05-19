@@ -126,7 +126,7 @@ namespace Botwinder.modules
 
 					try
 					{
-						messages = (await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten()).ToArray();
+						messages = await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten().ToArray();
 					}
 					catch(Exception exception)
 					{
