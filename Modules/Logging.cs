@@ -263,8 +263,14 @@ namespace Botwinder.modules
 							if( !string.IsNullOrWhiteSpace(a.Url) )
 								attachment.AppendLine(a.Url);
 
+					MessageDeleteAuditLogData auditData;
+					RestAuditLogEntry auditEntry = await server.Guild.GetAuditLogsAsync(10).Flatten()
+						.FirstOrDefault(e => e.Action == ActionType.MessageDeleted &&
+						                     (auditData = e.Data as MessageDeleteAuditLogData) != null &&
+						                      auditData.ChannelId == c.Id);
+
 					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
-					string title = byAntispam ? "Message Deleted by Antispam" : "Message Deleted";
+					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsername()) : "");
 					if( server.Config.LogChannelEmbeds )
 					{
 						Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
