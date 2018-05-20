@@ -40,21 +40,7 @@ namespace Botwinder.modules
 			this.Client.Events.UserVoiceStateUpdated += OnUserVoice;
 			this.Client.Events.MessageDeleted += OnMessageDeleted;
 			this.Client.Events.MessageUpdated += OnMessageUpdated;
-			this.Client.Events.UserBanned += async (user, guild) => {
-				Server server;
-				if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
-				    this.RecentlyBannedUserIDs.Contains(user.Id) )
-					return;
-
-				string reason = "unknown";
-				RestBan ban = await server.Guild.GetBanAsync(user);
-				if( ban != null )
-				{
-					reason = ban.Reason;
-					await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
-				}
-				await LogBan(server, user.GetUsername(), user.Id, "unknown", "permanently", null);
-			};
+			this.Client.Events.UserBanned += OnUserBanned;
 			this.Client.Events.UserUnbanned += async (user, guild) => {
 				Server server;
 				if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
@@ -353,6 +339,33 @@ namespace Botwinder.modules
 			}
 		}
 
+
+		private async Task OnUserBanned(SocketUser user, SocketGuild guild)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
+			    this.RecentlyBannedUserIDs.Contains(user.Id) )
+				return;
+
+			BanAuditLogData auditData = null;
+			RestAuditLogEntry auditEntry = null;
+			if( guild.CurrentUser.GuildPermissions.ViewAuditLog )
+			{
+				auditEntry = await guild.GetAuditLogsAsync(10).Flatten()
+					.FirstOrDefault(e => e.Action == ActionType.Ban &&
+					                     (auditData = e.Data as BanAuditLogData) != null &&
+					                     auditData.Target.Id == user.Id);
+			}
+
+			string reason = "unknown";
+			RestBan ban = await server.Guild.GetBanAsync(user);
+			if( ban != null )
+			{
+				reason = ban.Reason;
+				await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
+			}
+			await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
+		}
 
 		private async Task LogBan(Server server, string userName, guid userId, string reason, string duration, SocketGuildUser issuedBy)
 		{

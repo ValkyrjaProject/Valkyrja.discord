@@ -1283,11 +1283,14 @@ namespace Botwinder.modules
 			else
 				duration = TimeSpan.Zero;
 
+			string durationString = GetDurationString(duration);
+			string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
+
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 			UserData userData = dbContext.GetOrAddUser(serverid, userid);
 			userData.BannedUntil = bannedUntil;
-			userData.AddWarning(reason);
+			userData.AddWarning(logMessage);
 
 			dbContext.SaveChanges();
 			dbContext.Dispose();
