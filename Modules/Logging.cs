@@ -8,6 +8,7 @@ using Botwinder.core;
 using Botwinder.entities;
 using Discord;
 using Discord.Net;
+using Discord.Rest;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -45,6 +46,13 @@ namespace Botwinder.modules
 				    this.RecentlyBannedUserIDs.Contains(user.Id) )
 					return;
 
+				string reason = "unknown";
+				RestBan ban = await server.Guild.GetBanAsync(user);
+				if( ban != null )
+				{
+					reason = ban.Reason;
+					await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
+				}
 				await LogBan(server, user.GetUsername(), user.Id, "unknown", "permanently", null);
 			};
 			this.Client.Events.UserUnbanned += async (user, guild) => {

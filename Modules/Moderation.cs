@@ -50,6 +50,7 @@ namespace Botwinder.modules
 			this.Client = iClient as BotwinderClient;
 			List<Command> commands = new List<Command>();
 
+			this.Client.Events.AddBan += AddBan;
 			this.Client.Events.BanUser += Ban;
 			this.Client.Events.BanUsers += Ban;
 			this.Client.Events.UnBanUsers += UnBan;
@@ -1273,6 +1274,26 @@ namespace Botwinder.modules
 
 
 // Ban
+
+		public Task AddBan(guid serverid, guid userid, TimeSpan duration, string reason)
+		{
+			DateTime bannedUntil = DateTime.MaxValue;
+			if( duration.TotalHours >= 1 )
+				bannedUntil = DateTime.UtcNow + duration;
+			else
+				duration = TimeSpan.Zero;
+
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+
+			UserData userData = dbContext.GetOrAddUser(serverid, userid);
+			userData.BannedUntil = bannedUntil;
+			userData.AddWarning(reason);
+
+			dbContext.SaveChanges();
+			dbContext.Dispose();
+			return Task.CompletedTask;
+		}
+
 		/// <summary> Ban the User - this will also ban them as soon as they join the server, if they are not there right now. </summary>
 		/// <param name="duration">Use zero for permanent ban.</param>
 		/// <param name="silent">Set to true to not PM the user information about the ban (time, server, reason)</param>
