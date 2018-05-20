@@ -351,6 +351,7 @@ namespace Botwinder.modules
 			RestAuditLogEntry auditEntry = null;
 			if( guild.CurrentUser.GuildPermissions.ViewAuditLog )
 			{
+				await Task.Delay(1000);
 				auditEntry = await guild.GetAuditLogsAsync(10).Flatten()
 					.FirstOrDefault(e => e.Action == ActionType.Ban &&
 					                     (auditData = e.Data as BanAuditLogData) != null &&
