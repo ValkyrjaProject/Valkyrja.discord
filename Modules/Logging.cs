@@ -253,10 +253,15 @@ namespace Botwinder.modules
 					RestAuditLogEntry auditEntry = null;
 					if( server.Guild.CurrentUser.GuildPermissions.ViewAuditLog )
 					{
-							auditEntry = await server.Guild.GetAuditLogsAsync(10).Flatten()
-								.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted &&
-								                     (auditData = e.Data as MessageDeleteAuditLogData) != null &&
-								                     auditData.ChannelId == c.Id);
+						await Task.Delay(500);
+						try
+						{
+							auditEntry = await server.Guild.GetAuditLogsAsync(10)?.Flatten()
+								?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted &&
+								                      (auditData = e.Data as MessageDeleteAuditLogData) != null &&
+								                      auditData.ChannelId == c.Id);
+						}
+						catch(Exception) { }
 					}
 
 					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
@@ -351,11 +356,15 @@ namespace Botwinder.modules
 			RestAuditLogEntry auditEntry = null;
 			if( guild.CurrentUser.GuildPermissions.ViewAuditLog )
 			{
-					await Task.Delay(1000);
-					auditEntry = await guild.GetAuditLogsAsync(10).Flatten()
-						.FirstOrDefault(e => e != null && e.Action == ActionType.Ban &&
+				await Task.Delay(500);
+				try
+				{
+					auditEntry = await guild.GetAuditLogsAsync(10)?.Flatten()
+						?.FirstOrDefault(e => e != null && e.Action == ActionType.Ban &&
 						                     (auditData = e.Data as BanAuditLogData) != null &&
 						                     auditData.Target.Id == user.Id);
+				}
+				catch(Exception) { }
 			}
 
 			string reason = "unknown";
