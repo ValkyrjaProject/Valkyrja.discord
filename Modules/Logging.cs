@@ -708,7 +708,7 @@ namespace Botwinder.modules
 						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
 							user.GetUsername() + $" was demoted from the {roleName} memberRole.",
 							user.GetAvatarUrl(),
-							"Promoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+							"Demoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
 				}
 				else
