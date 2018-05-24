@@ -16,7 +16,7 @@ namespace Botwinder.modules
 		private const string KarmaDisabledString = "Karma is disabled on this server.";
 
 		private BotwinderClient Client;
-		private readonly Regex RegexKarma = new Regex(".*(?<!\\\\)(thank(?!sgiving)|thx|ʞuɐɥʇ|danke|vielen dank|gracias|merci|grazie|arigato|dziękuję|dziekuje|obrigad).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private readonly Regex RegexKarma = new Regex(".*(?<!\\\\)(thank(?!sgiving)|thx|ʞuɐɥʇ|danke|vielen dank|gracias|merci(?!al)|grazie|arigato|dziękuję|dziekuje|obrigad).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
