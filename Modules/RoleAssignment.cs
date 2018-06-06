@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
@@ -121,6 +122,11 @@ namespace Botwinder.modules
 			newCommand.Description = "Create a role with specified name.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
 					await iClient.SendMessageToChannel(e.Channel, "What role? Name? Do you want me to come up with something silly or what?");
@@ -130,6 +136,37 @@ namespace Botwinder.modules
 				RestRole role = await e.Server.Guild.CreateRoleAsync(e.TrimmedMessage, GuildPermissions.None);
 				string response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`";
 				await iClient.SendMessageToChannel(e.Channel, response);
+			};
+			commands.Add(newCommand);
+
+// !createTempRole
+			newCommand = new Command("createTempRole");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "`createTempRole name time` Create a role with specified name, which will be destroyed after specified time (e.g. `7d` or `12h` or `1d12h`)";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				RoleConfig roleConfig = await CreateTempRole(e, dbContext);
+				if( roleConfig != null )
+					dbContext.SaveChanges();
+				dbContext.Dispose();
+			};
+			commands.Add(newCommand);
+
+// !createTempPublicRole
+			newCommand = new Command("createTempPublicRole");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "`createTempRole name time` Create a role with specified name, which will be destroyed after specified time (e.g. `7d` or `12h` or `1d12h`) This role will also become a public - use the `join` command to get it.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				RoleConfig roleConfig = await CreateTempRole(e, dbContext);
+				if( roleConfig != null )
+				{
+					roleConfig.PermissionLevel = RolePermissionLevel.Public;
+					dbContext.SaveChanges();
+				}
+				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
 
@@ -658,9 +695,102 @@ namespace Botwinder.modules
 			}
 		}
 
-		public Task Update(IBotwinderClient iClient)
+		public async Task Update(IBotwinderClient iClient)
 		{
-			return Task.CompletedTask;
+			BotwinderClient client = iClient as BotwinderClient;
+			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
+
+			List<RoleConfig> rolesToRemove = new List<RoleConfig>();
+			foreach( RoleConfig roleConfig in dbContext.Roles.Where(r => r.DeleteAtTime > DateTime.MinValue + TimeSpan.FromMinutes(1) && r.DeleteAtTime < DateTime.UtcNow) )
+			{
+				Server server;
+				if( !client.Servers.ContainsKey(roleConfig.ServerId) ||
+				    (server = client.Servers[roleConfig.ServerId]) == null )
+					continue;
+
+				try
+				{
+					SocketRole role = server.Guild.GetRole(roleConfig.RoleId);
+					if(role != null && !role.Deleted)
+						await role.DeleteAsync();
+
+					rolesToRemove.Add(roleConfig);
+				}
+				catch(Exception e)
+				{
+					await this.HandleException(e, "Delete Temporary Role failed.", roleConfig.ServerId);
+				}
+			}
+
+			if( rolesToRemove.Any() )
+			{
+				dbContext.Roles.RemoveRange(rolesToRemove);
+				dbContext.SaveChanges();
+			}
+
+			dbContext.Dispose();
+		}
+
+		private async Task<RoleConfig> CreateTempRole(CommandArguments e, ServerContext dbContext)
+		{
+			if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+			{
+				await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+				return null;
+			}
+			if( string.IsNullOrEmpty(e.TrimmedMessage) )
+			{
+				await this.Client.SendMessageToChannel(e.Channel, "What role? Name? Do you want me to come up with something silly or what? And when do you want to nuke it?");
+				return null;
+			}
+
+			if( e.MessageArgs.Length != 2 )
+			{
+				await this.Client.SendMessageToChannel(e.Channel, e.Command.Description);
+				return null;
+			}
+
+			int durationHours = 0;
+			try
+			{
+				Match dayMatch = Regex.Match(e.MessageArgs[1], "\\d+d", RegexOptions.IgnoreCase);
+				Match hourMatch = Regex.Match(e.MessageArgs[1], "\\d+h", RegexOptions.IgnoreCase);
+
+				if( !hourMatch.Success && !dayMatch.Success )
+				{
+					await this.Client.SendMessageToChannel(e.Channel, e.Command.Description);
+					dbContext.Dispose();
+					return null;
+				}
+
+				if( hourMatch.Success )
+					durationHours = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
+				if( dayMatch.Success )
+					durationHours += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
+			}
+			catch(Exception)
+			{
+				await this.Client.SendMessageToChannel(e.Channel, e.Command.Description);
+				dbContext.Dispose();
+				return null;
+			}
+
+			RoleConfig roleConfig = null;
+			string response = Localisation.SystemStrings.DiscordShitEmoji;
+			try
+			{
+				RestRole role = await e.Server.Guild.CreateRoleAsync(e.TrimmedMessage, GuildPermissions.None);
+				roleConfig = dbContext.GetOrAddRole(e.Server.Id, role.Id);
+				roleConfig.DeleteAtTime = DateTime.UtcNow + TimeSpan.FromHours(durationHours);
+				response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`\n  Delete at `{Utils.GetTimestamp(roleConfig.DeleteAtTime)}`";
+			}
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "CreateTempRole failed.", e.Server.Id);
+			}
+
+			await this.Client.SendMessageToChannel(e.Channel, response);
+			return roleConfig;
 		}
 	}
 }
