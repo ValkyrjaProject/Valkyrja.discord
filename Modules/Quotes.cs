@@ -33,7 +33,11 @@ namespace Botwinder.modules
 
 				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
 
-				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				if( !quotes.Any() )
+				{
+					response = "There ain't no quotes here! Add some first :]";
+				}
+				else if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
 					int count = quotes.Count();
 					Int64 id = Utils.Random.Next(0, count - 1);
@@ -62,7 +66,7 @@ namespace Botwinder.modules
 						quotes = quotes.Where(q => q.Username.ToLower().Contains(username) ||
 						                           (!string.IsNullOrEmpty(nickname) && q.Username.ToLower().Contains(nickname)));
 						id = Utils.Random.Next(0, quotes.Count() - 1);
-						response = quotes.Skip((int)id).FirstOrDefault()?.ToString();
+						response = quotes.Skip((int) id).FirstOrDefault()?.ToString();
 					}
 				}
 
@@ -79,7 +83,7 @@ namespace Botwinder.modules
 			newCommand = new Command("addQuote");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Add a new quote! Use with a username or mention as the first parameter, and the text as second. (Or you can just use a message ID.)";
-			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.RequiredPermissions = PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				string response = "I've no idea what are you trying to tell me.\nUse with a username or mention as the first parameter, and the text as second. (Or you can just use a message ID.)";
