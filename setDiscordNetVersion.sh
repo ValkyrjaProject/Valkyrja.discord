@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "x$1" = "x" ]; then
+  echo "version please"
+  exit 1
+fi
+
 git rm packages/*
 mkdir packages
 mv ~/Downloads/Discord.Net.* packages/
