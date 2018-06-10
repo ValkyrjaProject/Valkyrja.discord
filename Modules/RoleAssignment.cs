@@ -779,7 +779,7 @@ namespace Botwinder.modules
 			string response = Localisation.SystemStrings.DiscordShitEmoji;
 			try
 			{
-				RestRole role = await e.Server.Guild.CreateRoleAsync(e.TrimmedMessage, GuildPermissions.None);
+				RestRole role = await e.Server.Guild.CreateRoleAsync(e.MessageArgs[0], GuildPermissions.None);
 				roleConfig = dbContext.GetOrAddRole(e.Server.Id, role.Id);
 				roleConfig.DeleteAtTime = DateTime.UtcNow + TimeSpan.FromHours(durationHours);
 				response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`\n  Delete at `{Utils.GetTimestamp(roleConfig.DeleteAtTime)}`";

@@ -75,6 +75,7 @@ namespace Botwinder.discord
 			this.Bot.Modules.Add(new Experience());
 			this.Bot.Modules.Add(new Karma());
 			this.Bot.Modules.Add(new Memo());
+			this.Bot.Modules.Add(new Quotes());
 		}
 
 		private Task InitCommands()
