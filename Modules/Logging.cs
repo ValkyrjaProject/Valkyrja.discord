@@ -259,7 +259,8 @@ namespace Botwinder.modules
 							auditEntry = await server.Guild.GetAuditLogsAsync(10)?.Flatten()
 								?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted &&
 								                      (auditData = e.Data as MessageDeleteAuditLogData) != null &&
-								                      auditData.ChannelId == c.Id);
+								                      auditData.ChannelId == c.Id &&
+								                      (Utils.GetTimeFromId(e.Id) + TimeSpan.FromHours(1)) > DateTime.UtcNow);
 						}
 						catch(Exception) { }
 					}
