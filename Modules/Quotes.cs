@@ -105,7 +105,7 @@ namespace Botwinder.modules
 						};
 					}
 					else
-						response = "Message not found.";
+						response = "Message not found _(it may be too old)_";
 				}
 				else if( e.MessageArgs.Length > 1 )
 				{
