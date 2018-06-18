@@ -51,7 +51,7 @@ namespace Botwinder.modules
 				    (!(guid.TryParse(e.TrimmedMessage, out id) && (roleFromId = e.Server.Guild.GetRole(id)) != null) &&
 				     !(roles = e.Server.Guild.Roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower())).ToList()).Any()) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Role not found.");
+					await e.SendReplySafe("Role not found.");
 					return;
 				}
 
@@ -68,7 +68,7 @@ namespace Botwinder.modules
 					response.AppendLine($"Role: `{role.Name}`\n  Id: `{role.Id}`\n  Position: `{role.Position}`\n  Color: `rgb({role.Color.R},{role.Color.G},{role.Color.B})` | `hex(#{hex})`");
 				}
 
-				await iClient.SendMessageToChannel(e.Channel, response.ToString());
+				await e.SendReplySafe(response.ToString());
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("getrole"));
@@ -91,13 +91,13 @@ namespace Botwinder.modules
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(expression.ToLower()))).Any() )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
+					await e.SendReplySafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorTooManyFound);
+					await e.SendReplySafe(ErrorTooManyFound);
 					return;
 				}
 
@@ -111,7 +111,7 @@ namespace Botwinder.modules
 				names.Sort();
 
 				string response = names.Count == 0 ? "Nobody has this role." : $"Members of `{role.Name}` are:\n" + names.ToNamesList();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("listMembers"));
@@ -129,13 +129,13 @@ namespace Botwinder.modules
 				}
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "What role? Name? Do you want me to come up with something silly or what?");
+					await e.SendReplySafe("What role? Name? Do you want me to come up with something silly or what?");
 					return;
 				}
 
 				RestRole role = await e.Server.Guild.CreateRoleAsync(e.TrimmedMessage, GuildPermissions.None);
 				string response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`";
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -179,7 +179,7 @@ namespace Botwinder.modules
 				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
 				if( publicRoles == null || publicRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoPublicRoles);
+					await e.SendReplySafe(ErrorNoPublicRoles);
 					return;
 				}
 
@@ -227,7 +227,7 @@ namespace Botwinder.modules
 					responseBuilder.AppendLine("\n\n_(Where the `Group` roles are mutually exclusive - joining a `Group` role will remove any other role out of that group, that you already have.)_");
 				}
 
-				await iClient.SendMessageToChannel(e.Channel, responseBuilder.ToString());
+				await e.SendReplySafe(responseBuilder.ToString());
 			};
 			commands.Add(newCommand);
 
@@ -239,7 +239,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -252,7 +252,7 @@ namespace Botwinder.modules
 				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
 				if( publicRoles == null || publicRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoPublicRoles);
+					await e.SendReplySafe(ErrorNoPublicRoles);
 					return;
 				}
 
@@ -334,7 +334,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -347,7 +347,7 @@ namespace Botwinder.modules
 				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
 				if( publicRoles == null || publicRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoPublicRoles);
+					await e.SendReplySafe(ErrorNoPublicRoles);
 					return;
 				}
 
@@ -399,7 +399,7 @@ namespace Botwinder.modules
 				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoMemberRoles);
+					await e.SendReplySafe(ErrorNoMemberRoles);
 					return;
 				}
 
@@ -408,7 +408,7 @@ namespace Botwinder.modules
 					e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc.RoleId == r.Id)).Select(r => r.Name).ToNames()
 				);
 
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -420,21 +420,21 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
 				List<SocketGuildUser> users;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count )
 				{
-					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
+					await e.SendReplySafe(e.Command.Description);
 					return;
 				}
 
 				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoMemberRoles);
+					await e.SendReplySafe(ErrorNoMemberRoles);
 					return;
 				}
 
@@ -446,13 +446,13 @@ namespace Botwinder.modules
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(expression.ToLower()))).Any() )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
+					await e.SendReplySafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorTooManyFound);
+					await e.SendReplySafe(ErrorTooManyFound);
 					return;
 				}
 
@@ -479,7 +479,7 @@ namespace Botwinder.modules
 					}
 				}
 
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -491,21 +491,21 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
 				List<SocketGuildUser> users;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count)
 				{
-					await iClient.SendMessageToChannel(e.Channel, e.Command.Description);
+					await e.SendReplySafe(e.Command.Description);
 					return;
 				}
 
 				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorNoMemberRoles);
+					await e.SendReplySafe(ErrorNoMemberRoles);
 					return;
 				}
 
@@ -517,13 +517,13 @@ namespace Botwinder.modules
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(expression.ToLower()))).Any() )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFound);
+					await e.SendReplySafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorTooManyFound);
+					await e.SendReplySafe(ErrorTooManyFound);
 					return;
 				}
 
@@ -550,7 +550,7 @@ namespace Botwinder.modules
 					}
 				}
 
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -562,7 +562,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -571,11 +571,11 @@ namespace Botwinder.modules
 				    !guid.TryParse(e.TrimmedMessage, out guid id) || id < int.MaxValue ||
 				    (role = e.Server.Guild.Roles.FirstOrDefault(r => r.Id == id)) == null )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFoundId);
+					await e.SendReplySafe(ErrorRoleNotFoundId);
 					return;
 				}
 
-				await iClient.SendMessageToChannel(e.Channel, PromoteEveryoneResponseString);
+				await e.SendReplySafe(PromoteEveryoneResponseString);
 				await e.Server.Guild.DownloadUsersAsync();
 				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
 
@@ -605,7 +605,7 @@ namespace Botwinder.modules
 					return;
 
 				string response = exceptions > 10 ? ErrorPromoteEveryone : ($"Done! I've assigned `{role.Name}` to `{count}` member" + (count != 1 ? "s." : "."));
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -617,7 +617,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -626,11 +626,11 @@ namespace Botwinder.modules
 				    !guid.TryParse(e.TrimmedMessage, out guid id) || id < int.MaxValue ||
 				    (role = e.Server.Guild.Roles.FirstOrDefault(r => r.Id == id)) == null )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorRoleNotFoundId);
+					await e.SendReplySafe(ErrorRoleNotFoundId);
 					return;
 				}
 
-				await iClient.SendMessageToChannel(e.Channel, DemoteEveryoneResponseString);
+				await e.SendReplySafe(DemoteEveryoneResponseString);
 				await e.Server.Guild.DownloadUsersAsync();
 				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
 
@@ -660,7 +660,7 @@ namespace Botwinder.modules
 					return;
 
 				string response = exceptions > 10 ? ErrorPromoteEveryone : ($"Done! I've removed `{role.Name}` from `{count}` member" + (count != 1 ? "s." : "."));
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -740,13 +740,13 @@ namespace Botwinder.modules
 			}
 			if( string.IsNullOrEmpty(e.TrimmedMessage) )
 			{
-				await this.Client.SendMessageToChannel(e.Channel, "What role? Name? Do you want me to come up with something silly or what? And when do you want to nuke it?");
+				await e.SendReplySafe("What role? Name? Do you want me to come up with something silly or what? And when do you want to nuke it?");
 				return null;
 			}
 
 			if( e.MessageArgs.Length != 2 )
 			{
-				await this.Client.SendMessageToChannel(e.Channel, e.Command.Description);
+				await e.SendReplySafe(e.Command.Description);
 				return null;
 			}
 
@@ -758,7 +758,7 @@ namespace Botwinder.modules
 
 				if( !hourMatch.Success && !dayMatch.Success )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, e.Command.Description);
+					await e.SendReplySafe(e.Command.Description);
 					dbContext.Dispose();
 					return null;
 				}
@@ -770,7 +770,7 @@ namespace Botwinder.modules
 			}
 			catch(Exception)
 			{
-				await this.Client.SendMessageToChannel(e.Channel, e.Command.Description);
+				await e.SendReplySafe(e.Command.Description);
 				dbContext.Dispose();
 				return null;
 			}
@@ -789,7 +789,7 @@ namespace Botwinder.modules
 				await this.HandleException(exception, "CreateTempRole failed.", e.Server.Id);
 			}
 
-			await this.Client.SendMessageToChannel(e.Channel, response);
+			await e.SendReplySafe(response);
 			return roleConfig;
 		}
 	}

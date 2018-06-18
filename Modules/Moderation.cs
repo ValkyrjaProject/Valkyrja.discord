@@ -237,12 +237,12 @@ namespace Botwinder.modules
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
 				if( role == null )
 				{
-					await iClient.SendMessageToChannel(e.Channel, string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.Config.CommandPrefix));
+					await e.SendReplySafe(string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.Config.CommandPrefix));
 					return;
 				}
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await iClient.SendMessageToChannel(e.Channel, ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -271,7 +271,7 @@ namespace Botwinder.modules
 						response = NotFoundString;
 					else throw;
 				}
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -313,7 +313,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					await e.SendReplySafe(BanNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -366,7 +366,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -394,7 +394,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, MuteNotFoundString);
+					await e.SendReplySafe(MuteNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -419,7 +419,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -440,7 +440,7 @@ namespace Botwinder.modules
 				string responseString = "Invalid parameters...\n" + e.Command.Description;
 				if( e.MessageArgs == null || e.MessageArgs.Length < 1 )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, responseString);
+					await e.SendReplySafe(responseString);
 					return;
 				}
 
@@ -456,7 +456,7 @@ namespace Botwinder.modules
 
 					if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[0], out muteDurationMinutes) )
 					{
-						await this.Client.SendMessageToChannel(e.Channel, responseString);
+						await e.SendReplySafe(responseString);
 						return;
 					}
 
@@ -469,7 +469,7 @@ namespace Botwinder.modules
 				}
 				catch(Exception)
 				{
-					await this.Client.SendMessageToChannel(e.Channel, responseString);
+					await e.SendReplySafe(responseString);
 					return;
 				}
 
@@ -497,7 +497,7 @@ namespace Botwinder.modules
 				}
 				dbContext.Dispose();
 
-				await this.Client.SendMessageToChannel(e.Channel, responseString);
+				await e.SendReplySafe(responseString);
 			};
 			commands.Add(newCommand);
 
@@ -531,7 +531,7 @@ namespace Botwinder.modules
 					responseString = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 				dbContext.Dispose();
-				await this.Client.SendMessageToChannel(e.Channel, responseString);
+				await e.SendReplySafe(responseString);
 			};
 			commands.Add(newCommand);
 
@@ -557,7 +557,7 @@ namespace Botwinder.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, KickArgsString + e.Command.Description);
+					await e.SendReplySafe(KickArgsString + e.Command.Description);
 					return;
 				}
 
@@ -566,7 +566,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, KickNotFoundString);
+					await e.SendReplySafe(KickNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -633,7 +633,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -668,7 +668,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					await e.SendReplySafe(BanNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -727,7 +727,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -762,7 +762,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					await e.SendReplySafe(BanNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -787,7 +787,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -808,7 +808,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, BanNotFoundString);
+					await e.SendReplySafe(BanNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -833,7 +833,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -845,7 +845,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Give a warning to whom?\n" + e.Command.Description);
+					await e.SendReplySafe("Give a warning to whom?\n" + e.Command.Description);
 					return;
 				}
 
@@ -854,14 +854,14 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, WarningNotFoundString);
+					await e.SendReplySafe(WarningNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
 
 				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
 				{
-					await iClient.SendMessageToChannel(e.Channel, InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -893,7 +893,7 @@ namespace Botwinder.modules
 				dbContext.SaveChanges();
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, "Done.");
+				await e.SendReplySafe("Done.");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("addwarning"));
@@ -911,7 +911,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Remove warning from whom?\n" + e.Command.Description);
+					await e.SendReplySafe("Remove warning from whom?\n" + e.Command.Description);
 					return;
 				}
 
@@ -920,7 +920,7 @@ namespace Botwinder.modules
 
 				if( mentionedUsers.Count == 0 )
 				{
-					await iClient.SendMessageToChannel(e.Channel, WarningNotFoundString);
+					await e.SendReplySafe(WarningNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -965,7 +965,7 @@ namespace Botwinder.modules
 					dbContext.SaveChanges();
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, "Done.");
+				await e.SendReplySafe("Done.");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("removewarning"));
@@ -983,13 +983,13 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Who are you looking for?");
+					await e.SendReplySafe("Who are you looking for?");
 					return;
 				}
 
 				if( e.Server?.Guild?.Users == null )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Encountered unexpected D.Net library error.");
+					await e.SendReplySafe("Encountered unexpected D.Net library error.");
 					return;
 				}
 
@@ -1031,7 +1031,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -1043,7 +1043,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await iClient.SendMessageToChannel(e.Channel, "Who are you looking for?");
+					await e.SendReplySafe("Who are you looking for?");
 					return;
 				}
 
@@ -1097,7 +1097,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await iClient.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -1109,7 +1109,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, "Please specify a name for the new temporary channel.");
+					await e.SendReplySafe("Please specify a name for the new temporary channel.");
 					return;
 				}
 
@@ -1140,7 +1140,7 @@ namespace Botwinder.modules
 					await this.Client.LogException(exception, e);
 					responseString = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
-				await this.Client.SendMessageToChannel(e.Channel, responseString);
+				await e.SendReplySafe(responseString);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("tmp"));

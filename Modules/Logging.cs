@@ -90,9 +90,10 @@ namespace Botwinder.modules
 					}
 					else
 					{
-						await this.Client.SendMessageToChannel(channel,
+						await this.Client.SendRawMessageToChannel(channel,
 							string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
-								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+								.Replace("@everyone", "@-everyone").Replace("@here", "@-here"));
 					}
 				}
 			}
@@ -128,9 +129,10 @@ namespace Botwinder.modules
 					}
 					else
 					{
-						await this.Client.SendMessageToChannel(channel,
+						await this.Client.SendRawMessageToChannel(channel,
 							string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**"));
+								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+								.Replace("@everyone", "@-everyone").Replace("@here", "@-here"));
 					}
 				}
 			}

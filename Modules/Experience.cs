@@ -43,7 +43,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.ExpEnabled )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, ExpDisabledString);
+					await e.SendReplySafe(ExpDisabledString);
 					return;
 				}
 
@@ -70,7 +70,7 @@ namespace Botwinder.modules
 				else if( e.Server.Config.ExpPerAttachment != 0 )
 					response += string.Format(ImagesToLevel, expToLevel / e.Server.Config.ExpPerAttachment);
 
-				await this.Client.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
@@ -164,7 +164,7 @@ namespace Botwinder.modules
 					{
 						SocketRole role = server.Roles.Values.Where(r => r.ExpLevel == newLvl)
 							.Select(r => server.Guild.GetRole(r.RoleId)).FirstOrDefault();
-						await this.Client.SendMessageToChannel(channel, string.Format(LevelupString, user.Id, role?.Name ?? newLvl.ToString()));
+						await this.Client.SendRawMessageToChannel(channel, string.Format(LevelupString, user.Id, role?.Name ?? newLvl.ToString()));
 					}
 
 					userData.Level = newLvl;

@@ -73,7 +73,7 @@ namespace Botwinder.modules
 				if( string.IsNullOrEmpty(response) )
 					response = "I didn't find no such quote.";
 
-				await this.Client.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
@@ -130,7 +130,7 @@ namespace Botwinder.modules
 				}
 
 				dbContext.Dispose();
-				await this.Client.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("addquote"));

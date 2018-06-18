@@ -68,7 +68,7 @@ namespace Botwinder.modules
 						response = string.Format(MemoString, e.CommandId, userData.Memo);
 				}
 
-				await this.Client.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
@@ -97,7 +97,7 @@ namespace Botwinder.modules
 
 				dbContext.SaveChanges();
 				dbContext.Dispose();
-				await this.Client.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("setmemo"));

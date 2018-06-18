@@ -86,7 +86,7 @@ namespace Botwinder.discord
 			newCommand.Description = "The best command of all time.";
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
-				await this.Bot.SendMessageToChannel(e.Channel, "**-wat-**\n<http://destroyallsoftware.com/talks/wat>");
+				await e.SendReplySafe("**-wat-**\n<http://destroyallsoftware.com/talks/wat>");
 			};
 			this.Bot.Commands.Add(newCommand.Id, newCommand);
 

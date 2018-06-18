@@ -37,14 +37,14 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.KarmaEnabled )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, KarmaDisabledString);
+					await e.SendReplySafe(KarmaDisabledString);
 					return;
 				}
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 
-				await this.Client.SendMessageToChannel(e.Channel, string.Format("Hai **{0}**, you have {1} {2}!\nYou can {4} one with the `{3}{4}` command, or you can give a {5} to your friend using `{3}give @friend`",
+				await e.SendReplySafe(string.Format("Hai **{0}**, you have {1} {2}!\nYou can {4} one with the `{3}{4}` command, or you can give a {5} to your friend using `{3}give @friend`",
 					e.Message.Author.GetNickname(), userData.KarmaCount,
 					(userData.KarmaCount == 1 ? e.Server.Config.KarmaCurrencySingular : e.Server.Config.KarmaCurrency),
 					e.Server.Config.CommandPrefix, e.Server.Config.KarmaConsumeCommand,
@@ -63,7 +63,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.KarmaEnabled )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, KarmaDisabledString);
+					await e.SendReplySafe(KarmaDisabledString);
 					return;
 				}
 
@@ -72,7 +72,7 @@ namespace Botwinder.modules
 
 				if( userData.KarmaCount <= 0 )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, string.Format("Umm... I'm sorry **{0}** you don't have any {1} left =(",
+					await e.SendReplySafe(string.Format("Umm... I'm sorry **{0}** you don't have any {1} left =(",
 						e.Message.Author.GetNickname(), e.Server.Config.KarmaCurrency));
 
 					dbContext.Dispose();
@@ -81,7 +81,7 @@ namespace Botwinder.modules
 
 				userData.KarmaCount -= 1;
 
-				await this.Client.SendMessageToChannel(e.Channel, string.Format("**{0}** just {1} one of {2} {3}! {4} {5} left.",
+				await e.SendReplySafe(string.Format("**{0}** just {1} one of {2} {3}! {4} {5} left.",
 					e.Message.Author.GetNickname(), e.Server.Config.KarmaConsumeVerb,
 					(this.Client.IsGlobalAdmin(e.Message.Author.Id) ? "her" : "their"), e.Server.Config.KarmaCurrency,
 					(this.Client.IsGlobalAdmin(e.Message.Author.Id) ? "She has" : "They have"), userData.KarmaCount));// Because i can :P
@@ -100,7 +100,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.KarmaEnabled )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, KarmaDisabledString);
+					await e.SendReplySafe(KarmaDisabledString);
 					return;
 				}
 
@@ -108,7 +108,7 @@ namespace Botwinder.modules
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 				if( userData.KarmaCount == 0 )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, string.Format("Umm... I'm sorry **{0}**, you don't have any {1} left =(",
+					await e.SendReplySafe(string.Format("Umm... I'm sorry **{0}**, you don't have any {1} left =(",
 						e.Message.Author.GetNickname(), e.Server.Config.KarmaCurrency));
 
 					dbContext.Dispose();
@@ -117,7 +117,7 @@ namespace Botwinder.modules
 
 				if( e.Message.MentionedUsers == null || !e.Message.MentionedUsers.Any() || e.Message.MentionedUsers.Count() > e.Server.Config.KarmaLimitMentions )
 				{
-					await this.Client.SendMessageToChannel(e.Channel, string.Format("You have to @mention your friend who will receive the {0}. You can mention up to {1} people at the same time.",
+					await e.SendReplySafe(string.Format("You have to @mention your friend who will receive the {0}. You can mention up to {1} people at the same time.",
 						e.Server.Config.KarmaCurrencySingular, e.Server.Config.KarmaLimitMentions));
 
 					dbContext.Dispose();
@@ -142,7 +142,7 @@ namespace Botwinder.modules
 					userNames, e.Server.Config.KarmaCurrencySingular, e.Message.Author.GetNickname());
 				if( count < users.Count )
 					response += "\nBut I couldn't give out more, as you don't have any left =(";
-				await this.Client.SendMessageToChannel(e.Channel, response);
+				await e.SendReplySafe(response);
 
 				if( count > 0 )
 					dbContext.SaveChanges();
@@ -198,7 +198,9 @@ namespace Botwinder.modules
 			{
 				userData.LastThanksTime = DateTime.UtcNow;
 				dbContext.SaveChanges();
-				await this.Client.SendMessageToChannel(channel, string.Format("**{0}** received a _thank you_ {1}!", userNames, server.Config.KarmaCurrencySingular));
+				if( server.Config.IgnoreEveryone )
+					userNames = userNames.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+				await this.Client.SendRawMessageToChannel(channel, string.Format("**{0}** received a _thank you_ {1}!", userNames, server.Config.KarmaCurrencySingular));
 			}
 
 			dbContext.Dispose();
