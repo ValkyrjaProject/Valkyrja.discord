@@ -996,7 +996,7 @@ namespace Botwinder.modules
 				string expression = e.TrimmedMessage.ToLower();
 				List<guid> foundUserIds = e.Server.Guild.Users
 					.Where(u => u != null && ((u.Username != null && u.Username.ToLower().Contains(expression)) ||
-					            (u.Nickname != null && u.Nickname.Contains(expression))))
+					            (u.Nickname != null && u.Nickname.ToLower().Contains(expression))))
 					.Select(u => u.Id).ToList();
 
 				foundUserIds.AddRange(e.Message.MentionedUsers.Select(u => u.Id));
