@@ -1452,6 +1452,12 @@ namespace Botwinder.modules
 				try
 				{
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					if( user == null )
+					{
+						response = NotFoundString;
+						continue;
+					}
+
 					await user.AddRoleAsync(role);
 
 					userData.MutedUntil = mutedUntil;
