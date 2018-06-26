@@ -258,11 +258,8 @@ namespace Botwinder.modules
 						await Task.Delay(500);
 						try
 						{
-							auditEntry = await server.Guild.GetAuditLogsAsync(10)?.Flatten()
-								?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted &&
-								                      (auditData = e.Data as MessageDeleteAuditLogData) != null &&
-								                      auditData.ChannelId == c.Id &&
-								                      (Utils.GetTimeFromId(e.Id) + TimeSpan.FromHours(1)) > DateTime.UtcNow);
+							auditEntry = await server.Guild.GetAuditLogsAsync(10)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted && (auditData = e.Data as MessageDeleteAuditLogData) != null && auditData.ChannelId == c.Id && (Utils.GetTimeFromId(e.Id) + TimeSpan.FromHours(1)) > DateTime.UtcNow);
+							//One huge line because black magic from .NET Core?
 						}
 						catch(Exception) { }
 					}
@@ -362,10 +359,8 @@ namespace Botwinder.modules
 				await Task.Delay(500);
 				try
 				{
-					auditEntry = await guild.GetAuditLogsAsync(10)?.Flatten()
-						?.FirstOrDefault(e => e != null && e.Action == ActionType.Ban &&
-						                     (auditData = e.Data as BanAuditLogData) != null &&
-						                     auditData.Target.Id == user.Id);
+					auditEntry = await guild.GetAuditLogsAsync(10)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.Ban && (auditData = e.Data as BanAuditLogData) != null && auditData.Target.Id == user.Id);
+					//One huge line because black magic from .NET Core?
 				}
 				catch(Exception) { }
 			}
