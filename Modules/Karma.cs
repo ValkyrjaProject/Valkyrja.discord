@@ -158,14 +158,16 @@ namespace Botwinder.modules
 		private async Task OnMessageReceived(SocketMessage message)
 		{
 			Server server;
-			if( message.Author.IsBot ||
-			    !(message.Channel is SocketTextChannel channel) ||
+			if( !(message.Channel is SocketTextChannel channel) ||
 			    !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
-			    (server = this.Client.Servers[channel.Guild.Id]) == null ||
-			    !(message.Author is SocketGuildUser user) ||
-			    !server.Config.KarmaEnabled||
+			    (server = this.Client.Servers[channel.Guild.Id]) == null )
+				return;
+			if( !(message.Author is SocketGuildUser user) || message.Author.IsBot )
+				return;
+			if( !(this.Client.IsPremiumPartner(server.Id) || this.Client.IsPremiumSubscriber(server.Guild.OwnerId)) )
+				return;
+			if( !server.Config.KarmaEnabled ||
 			    message.MentionedUsers == null || !message.MentionedUsers.Any() ||
-			    !(this.Client.IsPremiumPartner(server.Id) || this.Client.IsPremiumSubscriber(server.Guild.OwnerId)) ||
 			    !this.RegexKarma.Match(message.Content).Success )
 				return;
 

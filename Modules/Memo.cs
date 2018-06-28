@@ -43,7 +43,7 @@ namespace Botwinder.modules
 					string expression = e.TrimmedMessage.ToLower();
 					SocketUser user = e.Message.MentionedUsers.FirstOrDefault();
 					if( user == null )
-						user = e.Server.Guild.Users.FirstOrDefault(u => u.Username.ToLower() == expression || (u.Nickname != null && u.Nickname.ToLower() == expression));
+						user = e.Server.Guild.Users.FirstOrDefault(u => (u?.Username != null && u.Username.ToLower() == expression) || (u?.Nickname != null && u.Nickname.ToLower() == expression));
 
 					if( user == null )
 					{
