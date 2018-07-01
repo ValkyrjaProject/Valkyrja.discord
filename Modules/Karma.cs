@@ -164,7 +164,7 @@ namespace Botwinder.modules
 				return;
 			if( !(message.Author is SocketGuildUser user) || message.Author.IsBot )
 				return;
-			if( !(this.Client.IsPremiumPartner(server.Id) || this.Client.IsPremiumSubscriber(server.Guild.OwnerId)) )
+			if( !(this.Client.IsPremiumPartner(server.Id) || this.Client.IsPremiumSubscriber(server.Guild.OwnerId)) && !this.Client.IsTrialServer(server.Id) )
 				return;
 			if( !server.Config.KarmaEnabled ||
 			    message.MentionedUsers == null || !message.MentionedUsers.Any() ||

@@ -82,14 +82,13 @@ namespace Botwinder.modules
 		private async Task OnMessageReceived(SocketMessage message)
 		{
 			Server server;
-			if( message.Author.IsBot || !(message.Author is SocketGuildUser user) )
-				return;
 			if( !(message.Channel is SocketTextChannel channel) ||
 			    !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
 			    (server = this.Client.Servers[channel.Guild.Id]) == null )
 				return;
-			if( !server.Config.ExpEnabled ||
-			    !(this.Client.IsPremiumPartner(server.Id) || this.Client.IsPremiumSubscriber(server.Guild.OwnerId)) )
+			if( message.Author.IsBot || !(message.Author is SocketGuildUser user) || !server.Config.ExpEnabled )
+				return;
+			if( !(this.Client.IsPremiumPartner(server.Id) || this.Client.IsPremiumSubscriber(server.Guild.OwnerId)) && !this.Client.IsTrialServer(server.Id) )
 				return;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
