@@ -217,6 +217,14 @@ namespace Botwinder.modules
 				foreach( Match match in matches )
 				{
 					string optionString = this.ProfileOptionRegex.Match(match.Value).Value;
+					string value = match.Value.Substring(optionString.Length + 1);
+					if( value.Length >= UserProfileOption.ValueCharacterLimit )
+					{
+						await e.SendReplySafe($"`{optionString}` is too long! (It's {value.Length} characters while the limit is {UserProfileOption.ValueCharacterLimit})");
+						dbContext.Dispose();
+						return;
+					}
+
 					ProfileOption option = options.FirstOrDefault(o => o.Option == optionString || o.OptionAlt == optionString);
 					if( option == null )
 						continue;
@@ -232,7 +240,7 @@ namespace Botwinder.modules
 						dbContext.UserProfileOptions.Add(userOption);
 					}
 
-					userOption.Value = match.Value.Substring(optionString.Length + 1);
+					userOption.Value = value;
 				}
 
 				dbContext.SaveChanges();
