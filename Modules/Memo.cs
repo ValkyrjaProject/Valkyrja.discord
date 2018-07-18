@@ -40,8 +40,14 @@ namespace Botwinder.modules
 			Command newCommand = new Command("memo");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Display your memo. If used with a username or @mention, it will display someone else' memo.";
-			newCommand.RequiredPermissions = PermissionType.Member;
+			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
+				if( !e.Server.Config.MemoEnabled )
+				{
+					await e.SendReplySafe("Memo is disabled on this server.");
+					return;
+				}
+
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				string response = "";
 
@@ -84,8 +90,14 @@ namespace Botwinder.modules
 			newCommand = new Command("setMemo");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Set your memo.";
-			newCommand.RequiredPermissions = PermissionType.Member;
+			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
+				if( !e.Server.Config.MemoEnabled )
+				{
+					await e.SendReplySafe("Memo is disabled on this server.");
+					return;
+				}
+
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				string response = "";
 
@@ -114,7 +126,12 @@ namespace Botwinder.modules
 			newCommand.Description = "Display your profile. If used with a username or @mention, it will display someone else' profile. Get Help: setProfile --help";
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
-				//TODO is profile enabled?
+				if( !e.Server.Config.ProfileEnabled )
+				{
+					await e.SendReplySafe("User profiles are disabled on this server.");
+					return;
+				}
+
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 				if( !string.IsNullOrEmpty(e.TrimmedMessage) )
@@ -148,7 +165,12 @@ namespace Botwinder.modules
 			newCommand.Description = "Set your profile. Get Help: setProfile --help";
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
-				//TODO is profile enabled?
+				if( !e.Server.Config.ProfileEnabled )
+				{
+					await e.SendReplySafe("User profiles are disabled on this server.");
+					return;
+				}
+
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				StringBuilder response = new StringBuilder();
 
