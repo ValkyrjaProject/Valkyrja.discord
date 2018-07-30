@@ -251,7 +251,7 @@ namespace Botwinder.modules
 				foreach( Match match in matches )
 				{
 					string optionString = this.ProfileOptionRegex.Match(match.Value).Value;
-					string value = match.Value.Substring(optionString.Length + 1);
+					string value = match.Value.Substring(optionString.Length + 1).Replace('`','\'');
 					if( value.Length >= UserProfileOption.ValueCharacterLimit )
 					{
 						await e.SendReplySafe($"`{optionString}` is too long! (It's {value.Length} characters while the limit is {UserProfileOption.ValueCharacterLimit})");
