@@ -171,7 +171,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				StringBuilder response = new StringBuilder($"```\n{e.Server.Config.CommandPrefix}setProfile ");
+				StringBuilder response = new StringBuilder();
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);
 				foreach( ProfileOption option in options )
@@ -184,7 +184,10 @@ namespace Botwinder.modules
 				}
 				response.Append("\n```");
 
-				await e.SendReplySafe(response.ToString());
+				string responseString = "There ain't no profile to get! >_<";
+				if( response.Length > 0 )
+					responseString = $"```\n{e.Server.Config.CommandPrefix}setProfile {response.ToString()}";
+				await e.SendReplySafe(responseString);
 
 				dbContext.Dispose();
 			};
