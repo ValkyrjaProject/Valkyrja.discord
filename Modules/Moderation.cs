@@ -22,6 +22,7 @@ namespace Botwinder.modules
 		private const string BanNotFoundString = "I couldn't find them :(";
 		private const string BanConfirmString = "_\\*fires them railguns at {0}*_  Ò_Ó";
 		private const string NotFoundString = "User not found.";
+		private const string NotFoundChannelString = "Channel not found.";
 		private const string UnbanConfirmString = "I've unbanned {0}... ó_ò";
 		private const string KickArgsString = "I'm supposed to shoot... who?\n";
 		private const string KickNotFoundString = "I couldn't find them :(";
@@ -1576,6 +1577,9 @@ namespace Botwinder.modules
 
 				IRole role = server.Guild.EveryoneRole;
 				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
+				if( channel == null )
+					return NotFoundChannelString;
+
 				OverwritePermissions permissions = channel.GetPermissionOverwrite(role) ?? new OverwritePermissions();
 				permissions = permissions.Modify(sendMessages: PermValue.Inherit);
 				await channel.AddPermissionOverwriteAsync(role, permissions);
@@ -1590,7 +1594,7 @@ namespace Botwinder.modules
 					response = ErrorPermissionHierarchyString;
 				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
 				         exception.Message.Contains("NotFound") )
-					response = NotFoundString;
+					response = NotFoundChannelString;
 				else throw;
 			}
 			return response;
