@@ -159,6 +159,37 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !getProfile
+			newCommand = new Command("getProfile");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Get the source used to set your profile.";
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Config.ProfileEnabled )
+				{
+					await e.SendReplySafe("User profiles are disabled on this server.");
+					return;
+				}
+
+				StringBuilder response = new StringBuilder($"```\n{e.Server.Config.CommandPrefix}setProfile ");
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);
+				foreach( ProfileOption option in options )
+				{
+					UserProfileOption userOption = dbContext.UserProfileOptions.FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
+					if( userOption == null || string.IsNullOrWhiteSpace(userOption.Value) )
+						continue;
+
+					response.Append($"{userOption.Option} {userOption.Value} ");
+				}
+				response.Append("\n```");
+
+				await e.SendReplySafe(response.ToString());
+
+				dbContext.Dispose();
+			};
+			commands.Add(newCommand);
+
 // !setProfile
 			newCommand = new Command("setProfile");
 			newCommand.Type = CommandType.Standard;
