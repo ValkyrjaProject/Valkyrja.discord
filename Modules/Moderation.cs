@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -875,26 +876,43 @@ namespace Botwinder.modules
 				}
 
 				bool sendMessage = e.Command.Id.ToLower() == "issuewarning";
+				List<UserData> failedToPmUsers = new List<UserData>();
+				List<string> userNames = new List<string>();
+				List<guid> userIds = new List<guid>();
 				foreach(UserData userData in mentionedUsers)
 				{
+					SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+					userNames.Add(user?.GetUsername() ?? "<unknown>");
+					userIds.Add(userData.UserId);
 					userData.AddWarning(warning.ToString());
+
 					if( sendMessage )
 					{
 						try
 						{
-							SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
 							if( user != null )
-								await user.SendMessageSafe(string.Format(WarningPmString,
-									e.Server.Guild.Name, warning.ToString()));
+								await user.SendMessageSafe(string.Format(WarningPmString, e.Server.Guild.Name, warning.ToString()));
+							else
+								failedToPmUsers.Add(userData);
 						}
-						catch(Exception) { }
+						catch(Exception)
+						{
+							failedToPmUsers.Add(userData);
+						}
 					}
 				}
+
+				if( this.Client.Events.LogWarning != null )
+					await this.Client.Events.LogWarning(e.Server, userNames, userIds, warning.ToString(), e.Message.Author as SocketGuildUser);
+
+				string response = "Done.";
+				if( failedToPmUsers.Any() )
+					response = "Failed to PM " + failedToPmUsers.Select(u => u.UserId).ToMentions();
 
 				dbContext.SaveChanges();
 
 				dbContext.Dispose();
-				await e.SendReplySafe("Done.");
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("addwarning"));

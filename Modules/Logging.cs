@@ -50,6 +50,7 @@ namespace Botwinder.modules
 				await LogUnban(server, user.GetUsername(), user.Id, null);
 			};
 
+			this.Client.Events.LogWarning += LogWarning;
 			this.Client.Events.LogBan += LogBan;
 			this.Client.Events.LogUnban += LogUnban;
 			this.Client.Events.LogKick += LogKick;
@@ -373,6 +374,40 @@ namespace Botwinder.modules
 				await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
 			}
 			await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
+		}
+
+		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy)
+		{
+			try
+			{
+				SocketTextChannel logChannel;
+				if( !server.Config.LogWarnings || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+					return;
+
+				if( server.Config.ModChannelEmbeds )
+				{
+					Color color = new Color(server.Config.LogWarningColor);
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(color, "", "User warned",
+							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+							userNames.ToNamesList() ?? "<unknown>", userIds.Select(id => id.ToString()).ToNamesList(),
+							DateTime.UtcNow,
+							"Warning", warning));
+				}
+				else
+				{
+					await logChannel.SendMessageSafe(
+						GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+							userNames.ToNamesList() ?? "", userIds.Select(id => id.ToString()).ToNamesList(),
+							Utils.GetTimestamp(),
+							"Warning", warning));
+				}
+			}
+			catch(HttpException) { }
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "LogBan", server.Id);
+			}
 		}
 
 		private async Task LogBan(Server server, string userName, guid userId, string reason, string duration, SocketGuildUser issuedBy)
