@@ -308,7 +308,7 @@ namespace Botwinder.modules
 				if( userOption == null || string.IsNullOrWhiteSpace(userOption.Value) )
 					continue;
 
-				embedBuilder.AddField(option.Label, userOption.Value);
+				embedBuilder.AddField(option.Label, userOption.Value, option.IsInline);
 			}
 
 			return embedBuilder.Build();
