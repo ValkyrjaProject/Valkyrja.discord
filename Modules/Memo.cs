@@ -228,8 +228,8 @@ namespace Botwinder.modules
 						response.AppendLine($" ] | {o.Label}");
 					}
 
-					response.AppendLine($"\nExample:\n  {e.CommandId} --twitter @RheaAyase -y youtube.com/RheaAyase");
-					response.AppendLine($"\nTo null one of the options you have already set, leave it empty:\n  {e.CommandId} --twitter -y\n```");
+					response.AppendLine($"\nExample:\n  {e.Server.Config.CommandPrefix}{e.CommandId} --twitter @RheaAyase -y youtube.com/RheaAyase");
+					response.AppendLine($"\nTo null one of the options you have already set, leave it empty:\n  {e.Server.Config.CommandPrefix}{e.CommandId} --twitter -y\n```");
 					dbContext.Dispose();
 					await e.SendReplySafe(response.ToString());
 					return;
