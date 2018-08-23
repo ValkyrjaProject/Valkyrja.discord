@@ -126,6 +126,12 @@ namespace Botwinder.modules
 			newCommand.Description = "Display your profile. If used with a username or @mention, it will display someone else' profile. Get Help: setProfile --help";
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
+				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )
+				{
+					await e.SendReplySafe("User profiles are a subscriber-only feature.");
+					return;
+				}
+
 				if( !e.Server.Config.ProfileEnabled )
 				{
 					await e.SendReplySafe("User profiles are disabled on this server.");
@@ -165,6 +171,12 @@ namespace Botwinder.modules
 			newCommand.Description = "Get the source used to set your profile.";
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
+				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )
+				{
+					await e.SendReplySafe("User profiles are a subscriber-only feature.");
+					return;
+				}
+
 				if( !e.Server.Config.ProfileEnabled )
 				{
 					await e.SendReplySafe("User profiles are disabled on this server.");
@@ -199,6 +211,12 @@ namespace Botwinder.modules
 			newCommand.Description = "Set your profile. Get Help: setProfile --help";
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
+				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )
+				{
+					await e.SendReplySafe("User profiles are a subscriber-only feature.");
+					return;
+				}
+
 				if( !e.Server.Config.ProfileEnabled )
 				{
 					await e.SendReplySafe("User profiles are disabled on this server.");

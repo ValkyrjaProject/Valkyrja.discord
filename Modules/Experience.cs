@@ -88,7 +88,7 @@ namespace Botwinder.modules
 				return;
 			if( message.Author.IsBot || !(message.Author is SocketGuildUser user) || !server.Config.ExpEnabled )
 				return;
-			if( !(this.Client.IsPremiumPartner(server.Id) || this.Client.IsPremiumSubscriber(server.Guild.OwnerId)) && !this.Client.IsTrialServer(server.Id) )
+			if( !this.Client.IsPremium(server) && !this.Client.IsTrialServer(server.Id) )
 				return;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
