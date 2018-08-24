@@ -52,6 +52,7 @@ namespace Botwinder.modules
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
+		public bool DoUpdate{ get; set; } = true;
 
 		public List<Command> Init(IBotwinderClient iClient)
 		{

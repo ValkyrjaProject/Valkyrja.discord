@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -46,6 +45,7 @@ namespace Botwinder.modules
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
+		public bool DoUpdate{ get; set; } = true;
 
 		public List<Command> Init(IBotwinderClient iClient)
 		{
@@ -1206,10 +1206,11 @@ namespace Botwinder.modules
 			BotwinderClient client = iClient as BotwinderClient;
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 			bool save = false;
+			DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);
 
 			//Channels
 			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
-			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.Temporary || (c.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && c.MutedUntil < DateTime.UtcNow)) )
+			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.Temporary || (c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow)) )
 			{
 				Server server;
 				if( !client.Servers.ContainsKey(channelConfig.ServerId) ||
@@ -1217,7 +1218,7 @@ namespace Botwinder.modules
 					continue;
 
 				//Muted channels
-				if( channelConfig.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && channelConfig.MutedUntil < DateTime.UtcNow )
+				if( channelConfig.MutedUntil > minTime && channelConfig.MutedUntil < DateTime.UtcNow )
 				{
 					await UnmuteChannel(channelConfig, client.DiscordClient.CurrentUser);
 					save = true;
@@ -1250,14 +1251,14 @@ namespace Botwinder.modules
 
 
 			//Users
-			foreach( UserData userData in dbContext.UserDatabase )
+			foreach( UserData userData in dbContext.UserDatabase.Where(ud => ud.BannedUntil > minTime || ud.MutedUntil > minTime) )
 			{
 				try
 				{
 					Server server;
 
 					//Unban
-					if( userData.BannedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && userData.BannedUntil < DateTime.UtcNow &&
+					if( userData.BannedUntil > minTime && userData.BannedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
 					{
 						await UnBan(server, new List<UserData>{userData}, server.Guild.CurrentUser);
@@ -1268,7 +1269,7 @@ namespace Botwinder.modules
 
 					//Unmute
 					IRole role;
-					if( userData.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) && userData.MutedUntil < DateTime.UtcNow &&
+					if( userData.MutedUntil > minTime && userData.MutedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
 					    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null )
 					{
