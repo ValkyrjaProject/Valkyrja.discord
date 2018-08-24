@@ -183,8 +183,11 @@ namespace Botwinder.modules
 					return;
 				}
 
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				StringBuilder responseBuilder = new StringBuilder(string.Format("You can use `{0}join` and `{0}leave` commands with these Public Roles: ", e.Server.Config.CommandPrefix));
-				Dictionary<Int64, List<RoleConfig>> groups = new Dictionary<Int64, List<RoleConfig>>();
+				Dictionary<Int64, List<RoleConfig>> groupRoles = new Dictionary<Int64, List<RoleConfig>>();
+				Dictionary<Int64, RoleGroupConfig> groupConfigs = dbContext.PublicRoleGroups.Where(g => g.ServerId == e.Server.Id).ToDictionary(g => g.GroupId);
+				dbContext.Dispose();
 
 				foreach( RoleConfig roleConfig in publicRoles )
 				{
@@ -192,10 +195,10 @@ namespace Botwinder.modules
 					if( role == null )
 						continue;
 
-					if( !groups.ContainsKey(roleConfig.PublicRoleGroupId) )
+					if( !groupRoles.ContainsKey(roleConfig.PublicRoleGroupId) )
 					{
 						List<RoleConfig> tempGroup = publicRoles.Where(r => r.PublicRoleGroupId == roleConfig.PublicRoleGroupId).ToList();
-						groups.Add(roleConfig.PublicRoleGroupId, tempGroup);
+						groupRoles.Add(roleConfig.PublicRoleGroupId, tempGroup);
 					}
 				}
 
@@ -205,26 +208,21 @@ namespace Botwinder.modules
 						.Select(r => r.Name).ToNames();
 				}
 
-				if( groups.ContainsKey(0) )
+				if( groupRoles.ContainsKey(0) )
 				{
-					responseBuilder.Append(GetRoleNames(groups[0]));
+					responseBuilder.Append(GetRoleNames(groupRoles[0]));
 				}
 
-				bool hadGroup = false;
-				foreach( KeyValuePair<Int64, List<RoleConfig>> group in groups )
+				foreach( KeyValuePair<Int64, List<RoleConfig>> groupRole in groupRoles )
 				{
-					if( group.Key == 0 )
+					if( groupRole.Key == 0 )
 						continue;
 
-					hadGroup = true;
-					responseBuilder.Append($"\n\n**Group #{group.Key}:** ");
+					RoleGroupConfig groupConfig = groupConfigs.ContainsKey(groupRole.Key) ? groupConfigs[groupRole.Key] : new RoleGroupConfig();
+					string name = string.IsNullOrEmpty(groupConfig.Name) ? ("Group #" + groupRole.Key.ToString()) : groupConfig.Name;
+					responseBuilder.Append($"\n\n**{name}** - you can join {groupConfig.RoleLimit} of these:\n");
 
-					responseBuilder.Append(GetRoleNames(group.Value));
-				}
-
-				if( hadGroup )
-				{
-					responseBuilder.AppendLine("\n\n_(Where the `Group` roles are mutually exclusive - joining a `Group` role will remove any other role out of that group, that you already have.)_");
+					responseBuilder.Append(GetRoleNames(groupRole.Value));
 				}
 
 				await e.SendReplySafe(responseBuilder.ToString());
@@ -279,6 +277,19 @@ namespace Botwinder.modules
 				if( groupId != 0 )
 				{
 					idsToLeave = publicRoles.Where(r => r.PublicRoleGroupId == groupId).Select(r => r.RoleId);
+
+					if( idsToLeave.Any() )
+					{
+						ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+						RoleGroupConfig groupConfig = dbContext.PublicRoleGroups.FirstOrDefault(g => g.ServerId == e.Server.Id && g.GroupId == groupId);
+						dbContext.Dispose();
+
+						if( groupConfig != null && groupConfig.RoleLimit > 1 )
+						{
+							await e.SendReplySafe($"You can have only {groupConfig.RoleLimit} roles from the `{groupConfig.Name}` group.");
+							return;
+						}
+					}
 				}
 
 				bool removed = false;
