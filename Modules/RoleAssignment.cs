@@ -20,7 +20,9 @@ namespace Botwinder.modules
 		private static string ErrorNoPublicRoles = "I'm sorry, but there are no public roles on this server.";
 		private static string ErrorNoMemberRoles = "I'm sorry, but there are no member roles on this server.";
 		private static string ErrorTooManyFound = "I found more than one role with that expression, please be more specific.";
+		private static string ErrorTooManyGroupsFound = "I found more than one group with that expression, please be more specific.";
 		private static string ErrorRoleNotFound = "I did not find a role based on that expression.";
+		private static string ErrorGroupNotFound = "I did not find a group based on that expression.";
 		private static string ErrorRoleNotFoundId = "Role not found. Use with roleID parameter.\n(Use the `getRole` command to get the ID)";
 		private static string ErrorPromoteEveryone = "Failed to assign the role to more than 10 people - aborting. (Assuming wrong permissions or hierarchy.)";
 		private static string PromoteEveryoneResponseString = "I will assign a role to everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
@@ -227,6 +229,48 @@ namespace Botwinder.modules
 				}
 
 				await e.SendReplySafe(responseBuilder.ToString());
+			};
+			commands.Add(newCommand);
+
+// !roleCounts
+			newCommand = new Command("roleCounts");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Get some numbers about public roles for specific group.";
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				string expression = e.TrimmedMessage;
+
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				IEnumerable<RoleGroupConfig> roleGroups = dbContext.PublicRoleGroups.Where(g => g.ServerId == e.Server.Id);
+				IEnumerable<RoleGroupConfig> foundGroups = null;
+				dbContext.Dispose();
+
+				if( !(foundGroups = roleGroups.Where(g => g.Name == expression)).Any() &&
+				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower() == expression.ToLower())).Any() &&
+				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower().Contains(expression.ToLower()))).Any() )
+				{
+					await e.SendReplySafe(ErrorGroupNotFound);
+					return;
+				}
+
+				if( foundGroups.Count() > 1 )
+				{
+					await e.SendReplySafe(ErrorTooManyGroupsFound);
+					return;
+				}
+
+				await e.Server.Guild.DownloadUsersAsync();
+
+				Int64 groupId = foundGroups.First().GroupId;
+				IEnumerable<guid> roleIds = e.Server.Roles.Values.Where(r => r.PublicRoleGroupId == groupId).Select(r => r.RoleId);
+				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => roleIds.Contains(r.Id));
+				StringBuilder response = new StringBuilder();
+				foreach( SocketRole role in roles )
+				{
+					response.AppendLine($"**{role.Name}**: `{role.Members.Count()}`");
+				}
+
+				await e.SendReplySafe(response.ToString());
 			};
 			commands.Add(newCommand);
 
