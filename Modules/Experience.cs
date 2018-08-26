@@ -137,7 +137,9 @@ namespace Botwinder.modules
 						if( highestRoleConfig != null && highestRole != null && highestRoleConfig.ExpLevel > userData.Level )
 						{
 							newLvl = highestRoleConfig.ExpLevel;
-							userData.Exp = GetTotalExpAtLevel(server.Config.BaseExpToLevelup, highestRoleConfig.ExpLevel);
+							userData.Exp = GetTotalExpAtLevel(server.Config.BaseExpToLevelup, newLvl);
+							userData.CountMessages = userData.Exp / server.Config.ExpPerMessage;
+							userData.CountAttachments = 1;
 						}
 					}
 
@@ -154,7 +156,7 @@ namespace Botwinder.modules
 					{
 						return r.ExpLevel != 0 &&
 						       ((server.Config.ExpCumulativeRoles && r.ExpLevel > newLvl) ||
-						       (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl));
+						        (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl));
 					}
 
 					IEnumerable<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null);
@@ -170,6 +172,8 @@ namespace Botwinder.modules
 
 					userData.Level = newLvl;
 				}
+
+				dbContext.SaveChanges();
 			}
 			catch(Exception e)
 			{
@@ -178,11 +182,13 @@ namespace Botwinder.modules
 					this.ServersWithException.Add(server.Id);
 					await channel.SendMessageAsync("My configuration on this server is bork, please advise the Admins to fix it :<");
 				}
+
 				await this.HandleException(e, "Levelup error", server.Id);
 			}
-
-			dbContext.SaveChanges();
-			dbContext.Dispose();
+			finally
+			{
+				dbContext.Dispose();
+			}
 		}
 
 		public Task Update(IBotwinderClient iClient)
