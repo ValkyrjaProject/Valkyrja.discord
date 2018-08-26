@@ -245,9 +245,10 @@ namespace Botwinder.modules
 				IEnumerable<RoleGroupConfig> foundGroups = null;
 				dbContext.Dispose();
 
-				if( !(foundGroups = roleGroups.Where(g => g.Name == expression)).Any() &&
+				if( string.IsNullOrEmpty(expression) || (
+					!(foundGroups = roleGroups.Where(g => g.Name == expression)).Any() &&
 				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower() == expression.ToLower())).Any() &&
-				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower().Contains(expression.ToLower()))).Any() )
+				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower().Contains(expression.ToLower()))).Any()) )
 				{
 					await e.SendReplySafe(ErrorGroupNotFound);
 					return;
