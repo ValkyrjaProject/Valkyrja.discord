@@ -246,8 +246,8 @@ namespace Botwinder.modules
 
 				if( string.IsNullOrEmpty(expression) || (
 					!(foundGroups = roleGroups.Where(g => g.Name == expression)).Any() &&
-				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower() == expression.ToLower())).Any() &&
-				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower().Contains(expression.ToLower()))).Any()) )
+				    !(foundGroups = roleGroups.Where(g => (g.Name?.ToLower() ?? "") == expression.ToLower())).Any() &&
+				    !(foundGroups = roleGroups.Where(g => g.Name?.ToLower().Contains(expression.ToLower()) ?? false )).Any()) )
 				{
 					await e.SendReplySafe(ErrorGroupNotFound);
 					dbContext.Dispose();
@@ -275,6 +275,8 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response.ToString());
 			};
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("countGroup"));
+			commands.Add(newCommand.CreateAlias("countRoles"));
 
 // !join
 			newCommand = new Command("join");
