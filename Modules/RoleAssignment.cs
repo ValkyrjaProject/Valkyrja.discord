@@ -316,6 +316,7 @@ namespace Botwinder.modules
 					return;
 				}
 
+				RoleGroupConfig groupConfig = null;
 				IEnumerable<guid> idsToLeave = null;
 				SocketRole roleToAssign = foundRoles.First();
 				Int64 groupId = publicRoles.First(r => r.RoleId == roleToAssign.Id).PublicRoleGroupId;
@@ -327,12 +328,12 @@ namespace Botwinder.modules
 					if( idsToLeave.Any() )
 					{
 						ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-						RoleGroupConfig groupConfig = dbContext.PublicRoleGroups.FirstOrDefault(g => g.ServerId == e.Server.Id && g.GroupId == groupId);
+						groupConfig = dbContext.PublicRoleGroups.FirstOrDefault(g => g.ServerId == e.Server.Id && g.GroupId == groupId);
 						dbContext.Dispose();
 
-						if( groupConfig != null && groupConfig.RoleLimit > 1 )
+						if( groupConfig != null && groupConfig.RoleLimit > 1 && idsToLeave.Count() >= groupConfig.RoleLimit )
 						{
-							await e.SendReplySafe($"You can have only {groupConfig.RoleLimit} roles from the `{groupConfig.Name}` group.");
+							await e.SendReplyUnsafe($"You can only have {groupConfig.RoleLimit} roles from the `{groupConfig.Name}` group.");
 							return;
 						}
 					}
@@ -344,7 +345,7 @@ namespace Botwinder.modules
 				{
 					SocketGuildUser user = (e.Message.Author as SocketGuildUser);
 
-					if( idsToLeave != null )
+					if( idsToLeave != null && groupConfig != null && groupConfig.RoleLimit > 1 )
 					{
 						foreach( guid id in idsToLeave )
 						{
