@@ -253,17 +253,19 @@ namespace Botwinder.modules
 					dbContext.Dispose();
 					return;
 				}
-				dbContext.Dispose();
 
 				if( foundGroups.Count() > 1 )
 				{
 					await e.SendReplySafe(ErrorTooManyGroupsFound);
+					dbContext.Dispose();
 					return;
 				}
 
 				await e.Server.Guild.DownloadUsersAsync();
 
 				Int64 groupId = foundGroups.First().GroupId;
+				dbContext.Dispose();
+
 				IEnumerable<guid> roleIds = e.Server.Roles.Values.Where(r => r.PublicRoleGroupId == groupId).Select(r => r.RoleId);
 				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => roleIds.Contains(r.Id));
 				StringBuilder response = new StringBuilder();
