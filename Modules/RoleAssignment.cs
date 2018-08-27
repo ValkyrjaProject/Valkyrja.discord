@@ -243,7 +243,6 @@ namespace Botwinder.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				IEnumerable<RoleGroupConfig> roleGroups = dbContext.PublicRoleGroups.Where(g => g.ServerId == e.Server.Id);
 				IEnumerable<RoleGroupConfig> foundGroups = null;
-				dbContext.Dispose();
 
 				if( string.IsNullOrEmpty(expression) || (
 					!(foundGroups = roleGroups.Where(g => g.Name == expression)).Any() &&
@@ -251,8 +250,10 @@ namespace Botwinder.modules
 				    !(foundGroups = roleGroups.Where(g => g.Name.ToLower().Contains(expression.ToLower()))).Any()) )
 				{
 					await e.SendReplySafe(ErrorGroupNotFound);
+					dbContext.Dispose();
 					return;
 				}
+				dbContext.Dispose();
 
 				if( foundGroups.Count() > 1 )
 				{
