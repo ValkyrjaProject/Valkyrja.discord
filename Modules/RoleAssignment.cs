@@ -346,7 +346,7 @@ namespace Botwinder.modules
 				{
 					SocketGuildUser user = (e.Message.Author as SocketGuildUser);
 
-					if( groupRoleIds != null && groupConfig != null && groupConfig.RoleLimit > 1 )
+					if( groupRoleIds != null && (groupConfig == null || groupConfig.RoleLimit == 1) )
 					{
 						foreach( guid id in groupRoleIds )
 						{
