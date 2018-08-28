@@ -66,7 +66,8 @@ namespace Botwinder.modules
 						}
 						quotes = quotes.Where(q => q.Username.ToLower().Contains(username) ||
 						                           (!string.IsNullOrEmpty(nickname) && q.Username.ToLower().Contains(nickname)));
-						id = Utils.Random.Next(0, quotes.Count() - 1);
+						int count = quotes.Count();
+						id = Utils.Random.Next(0, count < 1 ? 0 : (count - 1));
 						response = quotes.Skip((int) id).FirstOrDefault()?.ToString();
 					}
 				}
