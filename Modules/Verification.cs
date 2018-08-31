@@ -32,7 +32,7 @@ namespace Botwinder.modules
 		private const string PmInfoString = "In order to get verified, you must reply to me with a hidden code within the below rules. " +
 		                                "Just the code by itself, do not add anything extra. Read the rules and you will find the code.\n" +
 		                                "_(Beware that this will expire in a few hours, " +
-		                                "if it does simply run the `verify` command in the server chat, " +
+		                                "if it does simply run the `{0}verify` command in the server chat, " +
 		                                "and re-send the code that you already found - it won't change.)_";
 		private const string PmVerifiedString = "You have been verified on the `{0}` server =]";
 		private const string PmHashErrorString = "```diff\n- Error!\n\n  " +
@@ -134,7 +134,7 @@ namespace Botwinder.modules
 					continue;
 				}
 
-				string verifyPm = PmInfoString;
+				string verifyPm = string.Format(PmInfoString, server.Config.CommandPrefix);
 				int source = Math.Abs((userData.UserId.ToString() + server.Id).GetHashCode());
 				int chunkNum = (int) Math.Ceiling(Math.Ceiling(Math.Log(source)) / 2);
 				StringBuilder hashBuilder = new StringBuilder(chunkNum);
