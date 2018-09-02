@@ -146,9 +146,10 @@ namespace Botwinder.modules
 				string[] lines = server.Config.VerifyMessage.Split('\n');
 				string[] words = null;
 				bool found = false;
+				int d = 0;
 				try
 				{
-					for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); i >= lines.Length / 2; i-- )
+					for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); ++d > 50 || i >= lines.Length / 2; i-- )
 					{
 						if( i <= lines.Length / 2 )
 						{
@@ -158,7 +159,7 @@ namespace Botwinder.modules
 						if( (words = lines[i].Split(' ')).Length > 10 )
 						{
 							int space = Math.Max(1, Utils.Random.Next(words.Length / 4, words.Length - 1));
-							lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, $" the secret is: {hash} ");
+							lines[i] = lines[i].Insert(lines[i].IndexOf(words[space], StringComparison.Ordinal) - 1, $" the secret is: {hash} ");
 
 							hashBuilder = new StringBuilder();
 							hashBuilder.AppendLine(verifyPm).AppendLine("");
