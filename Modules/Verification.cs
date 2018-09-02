@@ -61,12 +61,6 @@ namespace Botwinder.modules
 
 			this.Client.Events.UserJoined += OnUserJoined;
 
-			// Replaced by cluster solution in the Update.
-			/* this.Client.Events.MessageReceived += async message => {
-				if( message.Channel is IDMChannel )
-					await VerifyUserHash(message.Author.Id, message.Content);
-			}; */
-
 // !verify
 			Command newCommand = new Command("verify");
 			newCommand.Type = CommandType.Standard;
