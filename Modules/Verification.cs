@@ -157,8 +157,8 @@ namespace Botwinder.modules
 						}
 						if( (words = lines[i].Split(' ')).Length > 10 )
 						{
-							int space = Utils.Random.Next(words.Length / 4, words.Length - 1);
-							lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, " the secret is: " + hash + " ");
+							int space = Math.Max(1, Utils.Random.Next(words.Length / 4, words.Length - 1));
+							lines[i] = lines[i].Insert(lines[i].IndexOf(words[space]) - 1, $" the secret is: {hash} ");
 
 							hashBuilder = new StringBuilder();
 							hashBuilder.AppendLine(verifyPm).AppendLine("");
