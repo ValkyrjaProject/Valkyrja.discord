@@ -159,7 +159,7 @@ namespace Botwinder.modules
 						        (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl));
 					}
 
-					IEnumerable<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null);
+					List<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null).ToList();
 					foreach( SocketRole roleToRemove in rolesToRemove )
 						await user.RemoveRoleAsync(roleToRemove);
 
