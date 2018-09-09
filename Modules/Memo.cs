@@ -309,7 +309,6 @@ namespace Botwinder.modules
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("setprofile"));
 
-
 			return commands;
 		}
 
@@ -321,7 +320,7 @@ namespace Botwinder.modules
 				.WithAuthor($"{user.GetNickname()}'s profile on {server.Guild.Name}", server.Guild.IconUrl)
 				.AddField("Username", user.GetUsername());
 
-			SocketRole highestRole = user.Roles.FirstOrDefault(r => r.Position == user.Hierarchy);
+			SocketRole highestRole = user.Roles.Where(r => r.Color.RawValue != 0).OrderByDescending(r => r.Position).FirstOrDefault();
 			if( highestRole != null )
 				embedBuilder.Color = highestRole.Color;
 
@@ -352,7 +351,7 @@ namespace Botwinder.modules
 				.AddField("Web-Author", "[Her fiancé](https://github.com/SpyTec), also a professional slacker.")
 				.AddField("Questions?", "Direct them to [Jefi's Nest](https://discord.gg/XgVvkXx), Botwinder's support server.");
 
-			SocketRole highestRole = user.Roles.FirstOrDefault(r => r.Position == user.Hierarchy);
+			SocketRole highestRole = user.Roles.Where(r => r.Color.RawValue != 0).OrderByDescending(r => r.Position).FirstOrDefault();
 			if( highestRole != null )
 				embedBuilder.Color = highestRole.Color;
 
