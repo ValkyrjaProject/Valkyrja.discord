@@ -152,6 +152,10 @@ namespace Botwinder.modules
 					{
 						await e.SendReplySafe(NotFoundString);
 					}
+					else if( user.Id == this.Client.DiscordClient.CurrentUser.Id )
+					{
+						await e.Channel.SendMessageAsync("", embed: GetBotwinderEmbed(user as SocketGuildUser));
+					}
 					else
 					{
 						await e.Channel.SendMessageAsync("", embed: GetProfileEmbed(dbContext, e.Server, user as SocketGuildUser));
@@ -329,6 +333,28 @@ namespace Botwinder.modules
 
 				embedBuilder.AddField(option.Label, userOption.Value, option.IsInline);
 			}
+
+			return embedBuilder.Build();
+		}
+
+		private Embed GetBotwinderEmbed(SocketGuildUser user)
+		{
+			EmbedBuilder embedBuilder = new EmbedBuilder().WithThumbnailUrl(user.GetAvatarUrl())
+				.WithAuthor($"My profile", user.GetAvatarUrl())
+				.AddField("Website", "[https://botwinder.info](https://botwinder.info)", true)
+				.AddField("Purpose", "[Community Management](http://rhea-ayase.eu/articles/2017-04/Moderation-guidelines)", true)
+				.AddField("Language", "[C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language))", true)
+				.AddField("Platform", "[.NET Core](https://github.com/dotnet)", true)
+				.AddField("License", "[MIT](https://github.com/RheaAyase/Botwinder.discord/blob/master/LICENSE)", true)
+				.AddField("Operating System", "[Fedora Linux](https://discord.gg/fedora)", true)
+				.AddField("Server", "Water cooled DualZeeon with 32x 3.8GHz, 64GB ECC memory, ~20TB raid5. [It's pink!](https://persephone.cloud)")
+				.AddField("Author", "A girl who inspires the desolate white space of Linux world with the delicate C# letters of simplified artificial intelligence. Also a [Mountain Biker](https://rhea-ayase.eu/mtb)")
+				.AddField("Web-Author", "[Her fiancé](https://github.com/SpyTec), also a professional slacker.")
+				.AddField("Questions?", "Direct them to [Jefi's Nest](https://discord.gg/XgVvkXx), Botwinder's support server.");
+
+			SocketRole highestRole = user.Roles.FirstOrDefault(r => r.Position == user.Hierarchy);
+			if( highestRole != null )
+				embedBuilder.Color = highestRole.Color;
 
 			return embedBuilder.Build();
 		}
