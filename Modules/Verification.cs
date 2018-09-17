@@ -29,7 +29,7 @@ namespace Botwinder.modules
 
 		private const string PmString = "Hi {0},\nthe `{1}` server is using code verification.\n\n{2}\n\n";
 		private const string PmKarmaString = "You will also get {0} `{1}{2}` for verifying!\n\n";
-		private const string PmInfoString = "In order to get verified, you must reply to me with a hidden code within the below rules. " +
+		private const string PmInfoString = "In order to get verified, you must **reply to me in PM** with a hidden code within the below rules. " +
 		                                "Just the code by itself, do not add anything extra. Read the rules and you will find the code.\n" +
 		                                "_(Beware that this will expire in a few hours, " +
 		                                "if it does simply run the `{0}verify` command in the server chat, " +
