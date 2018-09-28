@@ -103,7 +103,7 @@ namespace Botwinder.modules
 
 			try
 			{
-				if( server.Config.ExpMemberRoleId != 0 && server.Config.ExpMemberMessages > 0 && userData.CountMessages > server.Config.ExpMemberMessages )
+				if( server.Config.ExpMemberRoleId != 0 && server.Config.ExpMemberMessages > 0 && userData.CountMessages > server.Config.ExpMemberMessages && user.Roles.All(r => r.Id != server.Config.ExpMemberRoleId) )
 				{
 					SocketRole memberRole = server.Guild.GetRole(server.Config.ExpMemberRoleId);
 					if( memberRole != null )
