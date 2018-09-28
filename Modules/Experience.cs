@@ -87,7 +87,8 @@ namespace Botwinder.modules
 			    !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
 			    (server = this.Client.Servers[channel.Guild.Id]) == null )
 				return;
-			if( message.Author.IsBot || !(message.Author is SocketGuildUser user) || !server.Config.ExpEnabled )
+			if( message.Author.IsBot || !(message.Author is SocketGuildUser user) ||
+			    (!server.Config.ExpEnabled && server.Config.ExpMemberMessages == 0) )
 				return;
 			if( !this.Client.IsPremium(server) && !this.Client.IsTrialServer(server.Id) )
 				return;
@@ -95,82 +96,86 @@ namespace Botwinder.modules
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 			UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-			if( server.Config.ExpMaxLevel != 0 && userData.Level >= server.Config.ExpMaxLevel )
-			{
-				dbContext.Dispose();
-				return;
-			}
-
 			if( !string.IsNullOrEmpty(message.Content) )
 				userData.CountMessages++;
 			if( message.Attachments.Any() )
 				userData.CountAttachments++;
 
-			userData.Exp = server.Config.ExpPerMessage * userData.CountMessages +
-								   server.Config.ExpPerAttachment * userData.CountAttachments;
-
-			// Recalculate level and assign appropriate roles if it changed.
 			try
 			{
-				Int64 newLvl = GetLvlFromExp(server.Config.BaseExpToLevelup, userData.Exp);
-				if( newLvl != userData.Level )
+				if( server.Config.ExpMemberRoleId != 0 && server.Config.ExpMemberMessages > 0 && userData.CountMessages > server.Config.ExpMemberMessages )
 				{
-					if( newLvl > userData.Level )
-					{
-						userData.KarmaCount += server.Config.KarmaPerLevel * (newLvl - userData.Level);
-					}
+					SocketRole memberRole = server.Guild.GetRole(server.Config.ExpMemberRoleId);
+					if( memberRole != null )
+						await user.AddRoleAsync(memberRole);
+				}
 
-					if( server.Config.ExpAdvanceUsers )
+				if( server.Config.ExpEnabled && (server.Config.ExpMaxLevel == 0 || userData.Level < server.Config.ExpMaxLevel) )
+				{
+
+					userData.Exp = server.Config.ExpPerMessage * userData.CountMessages + server.Config.ExpPerAttachment * userData.CountAttachments;
+
+					// Recalculate level and assign appropriate roles if it changed.
+					Int64 newLvl = GetLvlFromExp(server.Config.BaseExpToLevelup, userData.Exp);
+					if( newLvl != userData.Level )
 					{
-						SocketRole highestRole = null;
-						RoleConfig highestRoleConfig = null;
-						RoleConfig roleConfig = null;
-						foreach( SocketRole role in user.Roles.Where(r => server.Roles.ContainsKey(r.Id) && (roleConfig = server.Roles[r.Id]).ExpLevel > 0) )
+						if( newLvl > userData.Level )
 						{
-							if( highestRoleConfig == null || (roleConfig != null && roleConfig.ExpLevel > highestRoleConfig.ExpLevel) )
+							userData.KarmaCount += server.Config.KarmaPerLevel * (newLvl - userData.Level);
+						}
+
+						if( server.Config.ExpAdvanceUsers )
+						{
+							SocketRole highestRole = null;
+							RoleConfig highestRoleConfig = null;
+							RoleConfig roleConfig = null;
+							foreach( SocketRole role in user.Roles.Where(r => server.Roles.ContainsKey(r.Id) && (roleConfig = server.Roles[r.Id]).ExpLevel > 0) )
 							{
-								highestRoleConfig = roleConfig;
-								highestRole = role;
+								if( highestRoleConfig == null || (roleConfig != null && roleConfig.ExpLevel > highestRoleConfig.ExpLevel) )
+								{
+									highestRoleConfig = roleConfig;
+									highestRole = role;
+								}
+							}
+
+							if( highestRoleConfig != null && highestRole != null && highestRoleConfig.ExpLevel > userData.Level )
+							{
+								newLvl = highestRoleConfig.ExpLevel;
+								userData.Exp = GetTotalExpAtLevel(server.Config.BaseExpToLevelup, newLvl);
+								userData.CountMessages = userData.Exp / server.Config.ExpPerMessage;
+								userData.CountAttachments = 1;
 							}
 						}
 
-						if( highestRoleConfig != null && highestRole != null && highestRoleConfig.ExpLevel > userData.Level )
+						bool IsRoleToAssign(RoleConfig r)
 						{
-							newLvl = highestRoleConfig.ExpLevel;
-							userData.Exp = GetTotalExpAtLevel(server.Config.BaseExpToLevelup, newLvl);
-							userData.CountMessages = userData.Exp / server.Config.ExpPerMessage;
-							userData.CountAttachments = 1;
+							return r.ExpLevel != 0 && ((server.Config.ExpCumulativeRoles && r.ExpLevel <= newLvl) || (!server.Config.ExpCumulativeRoles && r.ExpLevel == newLvl));
 						}
+
+						IEnumerable<SocketRole> rolesToAssign = server.Roles.Values.Where(IsRoleToAssign).Select(r => server.Guild.GetRole(r.RoleId));
+						if( rolesToAssign.Any() )
+							await user.AddRolesAsync(rolesToAssign);
+
+						bool IsRoleToRemove(RoleConfig r)
+						{
+							return r.ExpLevel != 0 &&
+							       ((server.Config.ExpCumulativeRoles && r.ExpLevel > newLvl) ||
+							        (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl));
+						}
+
+						List<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null).ToList();
+						foreach( SocketRole roleToRemove in rolesToRemove )
+							await user.RemoveRoleAsync(roleToRemove);
+
+						if( newLvl > userData.Level && server.Config.ExpAnnounceLevelup )
+						{
+							SocketRole role = server.Roles.Values.Where(r => r.ExpLevel == newLvl)
+								.Select(r => server.Guild.GetRole(r.RoleId)).FirstOrDefault();
+							await this.Client.SendRawMessageToChannel(channel, string.Format(LevelupString, user.Id, role?.Name ?? newLvl.ToString()));
+						}
+
+						userData.Level = newLvl;
 					}
-
-					bool IsRoleToAssign(RoleConfig r)
-					{
-						return r.ExpLevel != 0 && ((server.Config.ExpCumulativeRoles && r.ExpLevel <= newLvl) || (!server.Config.ExpCumulativeRoles && r.ExpLevel == newLvl));
-					}
-
-					IEnumerable<SocketRole> rolesToAssign = server.Roles.Values.Where(IsRoleToAssign).Select(r => server.Guild.GetRole(r.RoleId));
-					if( rolesToAssign.Any() )
-						await user.AddRolesAsync(rolesToAssign);
-
-					bool IsRoleToRemove(RoleConfig r)
-					{
-						return r.ExpLevel != 0 &&
-						       ((server.Config.ExpCumulativeRoles && r.ExpLevel > newLvl) ||
-						        (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl));
-					}
-
-					List<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null).ToList();
-					foreach( SocketRole roleToRemove in rolesToRemove )
-						await user.RemoveRoleAsync(roleToRemove);
-
-					if( newLvl > userData.Level && server.Config.ExpAnnounceLevelup )
-					{
-						SocketRole role = server.Roles.Values.Where(r => r.ExpLevel == newLvl)
-							.Select(r => server.Guild.GetRole(r.RoleId)).FirstOrDefault();
-						await this.Client.SendRawMessageToChannel(channel, string.Format(LevelupString, user.Id, role?.Name ?? newLvl.ToString()));
-					}
-
-					userData.Level = newLvl;
 				}
 
 				dbContext.SaveChanges();
