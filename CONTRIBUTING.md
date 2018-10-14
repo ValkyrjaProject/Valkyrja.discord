@@ -4,10 +4,12 @@ As a contributor you can directly commit to the project. Please create a new bra
 
 Clone the repository recursively to include the Core project:
 * Fork this repository, and then clone it recursively to get the Core library as well: `git clone --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
+  * If you plan to contribute to the Core as well, fork it as well, and clone them both with `git clone git@github.com:YOURUSERNAME/Botwinder.discord.git && cd Botwinder.discord && git clone git@github.com:YOURUSERNAME/Botwinder.core.git Core`
 * Nuke your nuget cache `rm -rf ~/.nuget/packages/discord.net*` (google the location for windows...)
 
 Fix the project to exclude the private code:
-* Remove `Botwinder.secure` project reference from the `.sln` file
+* Remove the `Botwinder.secure` project reference from the `.sln` file on lines [10-11](https://github.com/RheaAyase/Botwinder.discord/blob/master/Botwinder.sln#L10), and search for it's guid (the long string) - there are at least four other lines that need to be removed, related to build configuration.
+* Remove the `Botwinder.secure` project reference from the `Bot/Botwinder.discord.csproj` file on line [12](https://github.com/RheaAyase/Botwinder.discord/blob/master/Bot/Botwinder.discord.csproj#L12)
 * Comment out the `#define UsingBotwinderSecure` in `Program.cs`
 * Do not submit any of these changes, otherwise you will screw up our build!
 
