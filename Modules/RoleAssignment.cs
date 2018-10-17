@@ -40,6 +40,8 @@ namespace Botwinder.modules
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.UserJoined += OnUserJoined;
+			this.Client.Events.ReactionAdded += OnReactionAdded;
+			this.Client.Events.ReactionRemoved += OnReactionRemoved;
 
 // !getRole
 			Command newCommand = new Command("getRole");
@@ -756,6 +758,47 @@ namespace Botwinder.modules
 				{
 					await user.AddRoleAsync(role);
 				} catch(Exception) { }
+			}
+		}
+
+		public async Task OnReactionAdded(IUserMessage message, ISocketMessageChannel iChannel, SocketReaction reaction)
+		{
+			await ReactionAssignedRoles(reaction, true);
+		}
+
+		public async Task OnReactionRemoved(IUserMessage message, ISocketMessageChannel iChannel, SocketReaction reaction)
+		{
+			await ReactionAssignedRoles(reaction, false);
+		}
+
+		public async Task ReactionAssignedRoles(SocketReaction reaction, bool assignRoles)
+		{
+			Server server;
+			if( !(reaction.Channel is SocketTextChannel channel) || !this.Client.Servers.ContainsKey(channel.Guild.Id) || (server = this.Client.Servers[channel.Guild.Id]) == null || server.Config == null )
+				return;
+
+			IEnumerable<ReactionAssignedRole> roles = server.ReactionAssignedRoles.Values.Where(r => r.MessageId == reaction.MessageId && r.Emoji == reaction.Emote.Name);
+			if( roles.Any() )
+			{
+				SocketGuildUser user = null;
+				if( !reaction.User.IsSpecified || (user = reaction.User.Value as SocketGuildUser) == null )
+				{
+					user = server.Guild.GetUser(reaction.UserId);
+					if( user == null )
+						return;
+				}
+
+				try
+				{
+					if( assignRoles )
+						await user.AddRolesAsync(roles.Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null));
+					else
+						await user.RemoveRolesAsync(roles.Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null));
+				}
+				catch(Exception e)
+				{
+					await this.HandleException(e, "Reaction Assigned Roles", server.Id);
+				}
 			}
 		}
 
