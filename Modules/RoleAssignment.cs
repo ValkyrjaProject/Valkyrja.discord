@@ -790,10 +790,20 @@ namespace Botwinder.modules
 
 				try
 				{
-					if( assignRoles )
-						await user.AddRolesAsync(roles.Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null));
-					else
-						await user.RemoveRolesAsync(roles.Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null));
+					foreach( ReactionAssignedRole role in roles )
+					{
+						if( assignRoles == user.Roles.Any(r => r.Id == role.RoleId) )
+							continue;
+
+						IRole discordRole = server.Guild.GetRole(role.RoleId);
+						if( discordRole == null )
+							continue;
+
+						if( assignRoles )
+							await user.AddRoleAsync(discordRole);
+						else
+							await user.RemoveRoleAsync(discordRole);
+					}
 				}
 				catch(Exception e)
 				{
