@@ -3,14 +3,14 @@
 As a contributor you can directly commit to the project. Please create a new branch for everything, and then submit pull-request. This is done easily right here on the page if you're not awesome enough in the CLI.
 
 Clone the repository recursively to include the Core project:
-* Fork this repository, and then clone it recursively to get the Core library as well: `git clone --recursive git@github.com:YOURUSERNAME/Botwinder.discord.git`
-  * If you plan to contribute to the Core as well, fork it as well, and clone them both with `git clone git@github.com:YOURUSERNAME/Botwinder.discord.git && cd Botwinder.discord && git clone git@github.com:YOURUSERNAME/Botwinder.core.git Core`
+* Fork this repository, and then clone it recursively to get the Core library as well: `git clone --recursive git@github.com:YOURUSERNAME/Valkyrja.discord.git`
+  * If you plan to contribute to the Core as well, fork it as well, and clone them both with `git clone git@github.com:YOURUSERNAME/Valkyrja.discord.git && cd Valkyrja.discord && git clone git@github.com:YOURUSERNAME/Valkyrja.core.git Core`
 * Nuke your nuget cache `rm -rf ~/.nuget/packages/discord.net*` (google the location for windows...)
 
 Fix the project to exclude the private code:
-* Remove the `Botwinder.secure` project reference from the `.sln` file on lines [10-11](https://github.com/RheaAyase/Botwinder.discord/blob/master/Botwinder.sln#L10), and search for it's guid (the long string) - there are at least four other lines that need to be removed, related to build configuration.
-* Remove the `Botwinder.secure` project reference from the `Bot/Botwinder.discord.csproj` file on line [12](https://github.com/RheaAyase/Botwinder.discord/blob/master/Bot/Botwinder.discord.csproj#L12)
-* Comment out the `#define UsingBotwinderSecure` in `Program.cs`
+* Remove the `Valkyrja.secure` project reference from the `.sln` file on lines [10-11](https://github.com/RheaAyase/Valkyrja.discord/blob/master/Valkyrja.sln#L10), and search for it's guid (the long string) - there are at least four other lines that need to be removed, related to build configuration.
+* Remove the `Valkyrja.secure` project reference from the `Bot/Valkyrja.discord.csproj` file on line [12](https://github.com/RheaAyase/Valkyrja.discord/blob/master/Bot/Valkyrja.discord.csproj#L12)
+* Comment out the `#define UsingValkyrjaSecure` in `Program.cs`
 * Do not submit any of these changes, otherwise you will screw up our build!
 
 1. Create a new branch. This can be done easily on github. [e.g.](https://i.imgur.com/EDtnZ56.png)
@@ -32,7 +32,7 @@ Fix the project to exclude the private code:
   3. Discuss your problems and ideas with our awesome dev team on Discord, to further improve them!
 3. Test your code.
   1. [Jetbrains Rider](https://www.jetbrains.com/rider) can nicely build, debug and run both mono (`1.0 code`) and netcore (`2.0 code`) on both Windows and Linux. VS, VSCode, MonoDevelop or Xamarin are not recommended for debugging.
-  2. You will be given [beta-token](http://inviteb.botwinder.info) by Rhea, which you can use either on your own server, or in Jefi's Nest.
+  2. You will be given [beta-token](http://inviteb.valkyrja.app) by Rhea, which you can use either on your own server, or in Jefi's Nest.
 4. Submit PullRequest when you're done. This can be done easily on github. e.g. [1.](https://i.imgur.com/vF1uSMm.png) [2.](https://i.imgur.com/mbNvr3c.png)
   1. New features or improvements or any other large changes should go into the `dev` branch.
   2. Really tiny fixes and typos, or tiny improvements of a response message, etc, can go straight into `master`. If in doubt ask.

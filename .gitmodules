@@ -1,4 +1,4 @@
 [submodule "Botwinder.core"]
   path = Core
-  url = git@github.com:RheaAyase/Botwinder.core.git
+  url = git@github.com:RheaAyase/Valkyrja.core.git
   ignore = all

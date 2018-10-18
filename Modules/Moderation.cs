@@ -17,7 +17,7 @@ namespace Botwinder.modules
 	{
 		private const string ErrorUnknownString = "Unknown error, please poke <@{0}> to take a look x_x";
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
-		private const string ErrorPermissionHierarchyString = "Something went wrong, I may not have server permissions to do that.\n(Hint: Botwinder has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
+		private const string ErrorPermissionHierarchyString = "Something went wrong, I may not have server permissions to do that.\n(Hint: Valkyrja has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanNotFoundString = "I couldn't find them :(";
 		private const string BanConfirmString = "_\\*fires them railguns at {0}*_  Ò_Ó";
@@ -36,7 +36,7 @@ namespace Botwinder.modules
 		private const string UnmuteChannelConfirmString = "You may speak now.";
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
-		private const string RoleNotFoundString = "The Muted role is not configured - head to <http://botwinder.info/config>";
+		private const string RoleNotFoundString = "The Muted role is not configured - head to <https://valkyrja.app/config>";
 		private const string TempChannelConfirmString = "Here you go! <3\n_(Temporary channel `{0}` was created.)_";
 
 		private BotwinderClient Client;
@@ -233,13 +233,13 @@ namespace Botwinder.modules
 // !op
 			newCommand = new Command("op");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <http://botwinder.info/config>)";
+			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <https://valkyrja.app/config>)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
 				if( role == null )
 				{
-					await e.SendReplySafe(string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <http://botwinder.info/config>", e.Server.Config.CommandPrefix));
+					await e.SendReplySafe(string.Format("I'm really sorry, buuut `{0}op` feature is not configured! Poke your admin to set it up at <https://valkyrja.app/config>", e.Server.Config.CommandPrefix));
 					return;
 				}
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -280,7 +280,7 @@ namespace Botwinder.modules
 // !mute
 			newCommand = new Command("mute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Temporarily mute mentioned members from the chat. Use with parameters `@user time` where `@user` = user mention(s) or id(s); `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <http://botwinder.info/config>!";
+			newCommand.Description = "Temporarily mute mentioned members from the chat. Use with parameters `@user time` where `@user` = user mention(s) or id(s); `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <https://valkyrja.app/config>!";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -375,7 +375,7 @@ namespace Botwinder.modules
 // !unmute
 			newCommand = new Command("unmute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Unmute previously muted members. This command has to be configured at <http://botwinder.info/config>.";
+			newCommand.Description = "Unmute previously muted members. This command has to be configured at <https://valkyrja.app/config>.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -744,7 +744,7 @@ namespace Botwinder.modules
 // !quickban
 			newCommand = new Command("quickban");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. You can mention several people at once. (This command has to be first configured via `config` or <http://botwinder.info/config>.)";
+			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. You can mention several people at once. (This command has to be first configured via `config` or <https://valkyrja.app/config>.)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
@@ -755,7 +755,7 @@ namespace Botwinder.modules
 
 				if( string.IsNullOrEmpty(e.Server.Config.QuickbanReason) )
 				{
-					await e.Message.Channel.SendMessageSafe("This command has to be first configured via `config` or <http://botwinder.info/config>.");
+					await e.Message.Channel.SendMessageSafe("This command has to be first configured via `config` or <https://valkyrja.app/config>.");
 					return;
 				}
 
