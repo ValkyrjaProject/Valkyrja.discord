@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
@@ -27,6 +28,7 @@ namespace Botwinder.modules
 
 		private readonly Color AntispamColor = new Color(255, 0, 255);
 		private readonly Color AntispamLightColor = new Color(255, 0, 206);
+		private readonly Regex RegexDiscordInvites = new Regex(".*(discord\\s?\\.\\s?gg\\s?\\/|discordapp\\s?\\.\\s?com\\s?\\/\\s?invite).*", RegexOptions.Compiled);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -80,6 +82,9 @@ namespace Botwinder.modules
 				SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
 				if( server.Config.LogJoin && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
 				{
+					if( server.Config.AntispamInvites && server.Config.AntispamInvitesBan && this.RegexDiscordInvites.Match(user.Username).Success )
+						return;
+
 					string joinMessage = string.Format(server.Config.LogMessageJoin, user.GetUsername());
 					if( server.Config.ActivityChannelEmbeds && joinMessage.Length < 255 )
 					{
