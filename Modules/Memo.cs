@@ -343,7 +343,8 @@ namespace Botwinder.modules
 		private Embed GetBotwinderEmbed(SocketGuildUser user)
 		{
 			EmbedBuilder embedBuilder = new EmbedBuilder().WithThumbnailUrl(user.GetAvatarUrl())
-				.WithAuthor($"My profile", user.GetAvatarUrl())
+				.WithAuthor($"Kára", user.GetAvatarUrl())
+				.AddField("Who am I?", "I'm a Bunny Valkyrie, my name is Kára. I help with community management, administration and moderation tasks to help create safe spaces for inclusive communities.", false)
 				.AddField("Website", "[https://valkyrja.app](https://valkyrja.app)", true)
 				.AddField("Purpose", "[Community Management](http://rhea-ayase.eu/articles/2017-04/Moderation-guidelines)", true)
 				.AddField("Language", "[C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language\\))", true)
@@ -353,7 +354,7 @@ namespace Botwinder.modules
 				.AddField("Server", "Water cooled DualZeeon with 32x 3.8GHz, 64GB ECC memory and ~20TB raid5. [It's pink!](https://persephone.cloud)")
 				.AddField("Author", "A girl who inspires the desolate white space of Linux world with the delicate C# letters of simplified artificial intelligence. Also a [Mountain Biker](https://rhea-ayase.eu/mtb)")
 				.AddField("Web-Author", "[Her fiancé](https://github.com/SpyTec), also a professional slacker.")
-				.AddField("Questions?", "Direct them to [Kára's Den](https://discord.gg/XgVvkXx), Valkyrja's support server.");
+				.AddField("Questions?", "Direct them to the [Valhalla](https://discord.gg/XgVvkXx), Valkyrja's support server.");
 
 			SocketRole highestRole = user.Roles.Where(r => r.Color.RawValue != 0).OrderByDescending(r => r.Position).FirstOrDefault();
 			if( highestRole != null )
