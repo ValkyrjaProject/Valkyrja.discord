@@ -777,7 +777,7 @@ namespace Botwinder.modules
 			if( !(reaction.Channel is SocketTextChannel channel) || !this.Client.Servers.ContainsKey(channel.Guild.Id) || (server = this.Client.Servers[channel.Guild.Id]) == null || server.Config == null )
 				return;
 
-			IEnumerable<ReactionAssignedRole> roles = server.ReactionAssignedRoles.Values.Where(r => r.MessageId == reaction.MessageId && r.Emoji == reaction.Emote.Name);
+			IEnumerable<ReactionAssignedRole> roles = server.ReactionAssignedRoles.Where(r => r.MessageId == reaction.MessageId && r.Emoji == reaction.Emote.Name);
 			if( roles.Any() )
 			{
 				SocketGuildUser user = null;
