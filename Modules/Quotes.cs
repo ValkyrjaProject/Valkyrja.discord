@@ -144,7 +144,7 @@ namespace Botwinder.modules
 					quote = new Quote(){
 						CreatedTime = DateTime.UtcNow,
 						Username = username,
-						Value = e.TrimmedMessage.Substring(e.MessageArgs[0].Length).Replace('`', '\'')
+						Value = e.TrimmedMessage.Substring(e.MessageArgs[0].Length).Replace('`', '\'').Trim('"').Trim()
 					};
 				}
 
