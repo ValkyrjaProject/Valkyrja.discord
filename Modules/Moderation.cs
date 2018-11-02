@@ -1275,10 +1275,10 @@ namespace Botwinder.modules
 						save = true;
 					}
 				}
-				catch(Exception exception)
+				catch(Discord.Net.HttpException ex)
 				{
-					if( !(exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.NotFound || ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions"))) )
-						await this.HandleException(exception, "Update Moderation", userData.ServerId);
+					if( !(ex.HttpCode == System.Net.HttpStatusCode.NotFound || ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || ex.Message.Contains("Missing Access") || ex.Message.Contains("Missing Permissions")) )
+						await this.HandleException(ex, "Update Moderation", userData.ServerId);
 				}
 			}
 
@@ -1355,10 +1355,9 @@ namespace Botwinder.modules
 				}
 				catch(Discord.Net.HttpException ex)
 				{
-					if( ex != null && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || ex.Message.Contains("Missing Access") || ex.Message.Contains("Missing Permissions")) )
+					if( ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || ex.Message.Contains("Missing Access") || ex.Message.Contains("Missing Permissions") )
 						response = ErrorPermissionHierarchyString;
-					else if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.NotFound ||
-					         ex.Message.Contains("NotFound") )
+					else if( ex.HttpCode == System.Net.HttpStatusCode.NotFound || ex.Message.Contains("NotFound") )
 						response = NotFoundString;
 					else
 						throw;
