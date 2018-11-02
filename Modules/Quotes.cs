@@ -81,6 +81,35 @@ namespace Botwinder.modules
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("quote"));
 
+// !removeQuote
+			newCommand = new Command("removeQuote");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Remove the last created quote.";
+			newCommand.RequiredPermissions = PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				string response = "There ain't no quotes here! Add some first :]";
+
+				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
+
+				if( quotes.Any() )
+				{
+					int id = quotes.Count() - 1;
+					Quote quote = quotes.FirstOrDefault(q => q.Id == id);
+					if( quote != null )
+					{
+						response = "Removed:\n" + quote.ToString();
+						dbContext.Quotes.Remove(quote);
+						dbContext.SaveChanges();
+					}
+				}
+
+				await e.SendReplySafe(response);
+				dbContext.Dispose();
+			};
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("rmQuote"));
+
 // !addQuote
 			newCommand = new Command("addQuote");
 			newCommand.Type = CommandType.Standard;
