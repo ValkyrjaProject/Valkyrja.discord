@@ -268,8 +268,7 @@ namespace Botwinder.modules
 					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
 					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
 						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
-					         exception.Message.Contains("NotFound") )
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 						response = NotFoundString;
 					else throw;
 				}
@@ -618,8 +617,7 @@ namespace Botwinder.modules
 					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
 					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
 						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
-					         exception.Message.Contains("NotFound") )
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 						response = NotFoundString;
 					else throw;
 				}
@@ -1279,7 +1277,7 @@ namespace Botwinder.modules
 				}
 				catch(Exception exception)
 				{
-					if( !(exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions"))) )
+					if( !(exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.NotFound || ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions"))) )
 						await this.HandleException(exception, "Update Moderation", userData.ServerId);
 				}
 			}
@@ -1355,10 +1353,13 @@ namespace Botwinder.modules
 					userData.AddWarning(logMessage);
 					banned.Add(userData.UserId);
 				}
-				catch(Exception exception)
+				catch(Discord.Net.HttpException ex)
 				{
-					if( exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions")) )
+					if( ex != null && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || ex.Message.Contains("Missing Access") || ex.Message.Contains("Missing Permissions")) )
 						response = ErrorPermissionHierarchyString;
+					else if( ex != null && ex.HttpCode == System.Net.HttpStatusCode.NotFound ||
+					         ex.Message.Contains("NotFound") )
+						response = NotFoundString;
 					else
 						throw;
 				}
@@ -1420,8 +1421,7 @@ namespace Botwinder.modules
 					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
 					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
 						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
-					         exception.Message.Contains("NotFound") )
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 					{
 						userData.BannedUntil = DateTime.MinValue;
 						response = NotFoundString;
@@ -1489,8 +1489,7 @@ namespace Botwinder.modules
 					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
 					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
 						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
-					         exception.Message.Contains("NotFound") )
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 						response = NotFoundString;
 					else throw;
 				}
@@ -1531,8 +1530,7 @@ namespace Botwinder.modules
 					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
 					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
 						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
-					         exception.Message.Contains("NotFound") )
+					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 					{
 						userData.MutedUntil = DateTime.MinValue;
 						response = NotFoundString;
@@ -1572,8 +1570,7 @@ namespace Botwinder.modules
 				if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
 				    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
 					response = ErrorPermissionHierarchyString;
-				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
-				         exception.Message.Contains("NotFound") )
+				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 					response = NotFoundString;
 				else throw;
 			}
@@ -1608,8 +1605,7 @@ namespace Botwinder.modules
 				if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
 				    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
 					response = ErrorPermissionHierarchyString;
-				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound ||
-				         exception.Message.Contains("NotFound") )
+				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 					response = NotFoundChannelString;
 				else throw;
 			}
