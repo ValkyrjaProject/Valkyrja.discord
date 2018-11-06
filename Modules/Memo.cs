@@ -342,7 +342,7 @@ namespace Botwinder.modules
 
 		private Embed GetBotwinderEmbed(SocketGuildUser user)
 		{
-			EmbedBuilder embedBuilder = new EmbedBuilder().WithThumbnailUrl(user.GetAvatarUrl())
+			EmbedBuilder embedBuilder = new EmbedBuilder().WithThumbnailUrl("https://valkyrja.app/img/valkyrja-geared-517p.png")
 				.WithAuthor($"Kára", user.GetAvatarUrl())
 				.AddField("Who am I?", "I'm a Bunny Valkyrie, my name is Kára. I help with community management, administration and moderation tasks to help create safe spaces for inclusive communities.", false)
 				.AddField("Website", "[https://valkyrja.app](https://valkyrja.app)", true)
