@@ -278,7 +278,7 @@ namespace Botwinder.modules
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
-			if( server.Config.VerifyOnWelcome )
+			if( server.Config.VerificationEnabled && server.Config.VerifyOnWelcome )
 			{
 				await Task.Delay(3000);
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
