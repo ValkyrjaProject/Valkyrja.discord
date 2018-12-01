@@ -185,7 +185,7 @@ namespace Botwinder.modules
 				if( !this.ServersWithException.Contains(server.Id) )
 				{
 					this.ServersWithException.Add(server.Id);
-					await channel.SendMessageAsync("My configuration on this server is bork, please advise the Admins to fix it :<");
+					await channel.SendMessageAsync("My configuration (experience / level roles / permissions and hierarchy) on this server is bork, please advise the Admins to fix it :<");
 				}
 
 				await this.HandleException(e, "Levelup error", server.Id);
