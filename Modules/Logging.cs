@@ -236,6 +236,9 @@ namespace Botwinder.modules
 
 		private async Task OnMessageDeleted(SocketMessage message, ISocketMessageChannel c)
 		{
+			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
+				return;
+
 			if( !(c is SocketTextChannel channel) )
 				return;
 
@@ -305,6 +308,9 @@ namespace Botwinder.modules
 
 		private async Task OnMessageUpdated(SocketMessage originalMessage, SocketMessage updatedMessage, ISocketMessageChannel c)
 		{
+			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
+				return;
+
 			if( originalMessage == null || updatedMessage == null ||
 			    originalMessage.Content == updatedMessage.Content ||
 			    !(c is SocketTextChannel channel) )

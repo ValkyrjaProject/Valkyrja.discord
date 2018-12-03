@@ -82,6 +82,9 @@ namespace Botwinder.modules
 
 		private async Task OnMessageReceived(SocketMessage message)
 		{
+			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
+				return;
+
 			Server server;
 			if( !(message.Channel is SocketTextChannel channel) ||
 			    !this.Client.Servers.ContainsKey(channel.Guild.Id) ||

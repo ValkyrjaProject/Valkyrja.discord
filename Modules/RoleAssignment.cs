@@ -810,6 +810,9 @@ namespace Botwinder.modules
 
 		public async Task Update(IBotwinderClient iClient)
 		{
+			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
+				return;
+
 			BotwinderClient client = iClient as BotwinderClient;
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 

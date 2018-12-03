@@ -292,10 +292,13 @@ namespace Botwinder.modules
 
 		public async Task Update(IBotwinderClient iClient)
 		{
+			if( !this.Client.GlobalConfig.VerificationUpdateEnabled )
+				return;
+
 			GlobalContext dbContext = GlobalContext.Create(this.Client.DbConnectionString);
 
-			DateTime aDayAgo = DateTime.UtcNow - TimeSpan.FromDays(1);
-			foreach( LogEntry entry in dbContext.Log.Where(e => e.Type == LogType.Pm && e.DateTime > aDayAgo) )
+			DateTime anHourAgo = DateTime.UtcNow - TimeSpan.FromHours(1);
+			foreach( LogEntry entry in dbContext.Log.Where(e => e.Type == LogType.Pm && e.DateTime > anHourAgo) )
 			{
 				if( !this.RecentlyProcessedPms.ContainsKey(entry.MessageId) )
 				{
