@@ -2,6 +2,7 @@
 
 ## Botwinder specific:
 dbConfig.json
+dbConfig.json-*
 Secure/
 Bot/bin/
 Modules/bin/
