@@ -474,6 +474,12 @@ namespace Botwinder.modules
 					return;
 				}
 
+				if( muteDurationMinutes <= 0 )
+				{
+					await e.SendReplySafe(responseString);
+					return;
+				}
+
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
 				if( channel == null )
@@ -505,7 +511,7 @@ namespace Botwinder.modules
 // !unmuteChannel
 			newCommand = new Command("unmuteChannel");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Mute the current channel temporarily - duration configured at the website.";
+			newCommand.Description = "Unmute the current channel.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				string responseString = "";
