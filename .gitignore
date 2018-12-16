@@ -4,6 +4,7 @@
 dbConfig.json
 dbConfig.json-*
 Secure/
+ServerSpecific/
 Bot/bin/
 Modules/bin/
 Entities/bin/

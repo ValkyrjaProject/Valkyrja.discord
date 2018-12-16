@@ -1,4 +1,5 @@
-﻿#define UsingBotwinderSecure
+﻿#define UsingValkyrjaSecure
+#define UsingValkyrjaSpecific
 
 using System;
 using System.IO;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Botwinder.modules;
-#if UsingBotwinderSecure
+#if UsingValkyrjaSecure
 using Botwinder.secure;
 #endif
 
@@ -64,7 +65,7 @@ namespace Botwinder.discord
 
 		private void InitModules()
 		{
-			#if UsingBotwinderSecure
+			#if UsingValkyrjaSecure
 			this.Bot.Modules.Add(new Antispam());
 			#endif
 
@@ -76,6 +77,10 @@ namespace Botwinder.discord
 			this.Bot.Modules.Add(new Karma());
 			this.Bot.Modules.Add(new Memo());
 			this.Bot.Modules.Add(new Quotes());
+
+			#if UsingValkyrjaSpecific
+			this.Bot.Modules.Add(new Recruitment());
+			#endif
 		}
 
 		private Task InitCommands()

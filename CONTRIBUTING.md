@@ -8,9 +8,10 @@ Clone the repository recursively to include the Core project:
 * Nuke your nuget cache `rm -rf ~/.nuget/packages/discord.net*` (google the location for windows...)
 
 Fix the project to exclude the private code:
-* Remove the `Valkyrja.secure` project reference from the `.sln` file on lines [10-11](https://github.com/RheaAyase/Valkyrja.discord/blob/master/Valkyrja.sln#L10), and search for it's guid (the long string) - there are at least four other lines that need to be removed, related to build configuration.
-* Remove the `Valkyrja.secure` project reference from the `Bot/Valkyrja.discord.csproj` file on line [12](https://github.com/RheaAyase/Valkyrja.discord/blob/master/Bot/Valkyrja.discord.csproj#L12)
+* Remove the `Valkyrja.secure` and `.specific` project reference from the `.sln` file on lines [10-11](https://github.com/RheaAyase/Valkyrja.discord/blob/master/Valkyrja.sln#L10) and `14-15` and search for their guids (the long string) - there are at least four other lines for each project that need to be removed, related to build configuration.
+* Remove the `Valkyrja.secure` and `.specific` project reference from the `Bot/Valkyrja.discord.csproj` file on line [12](https://github.com/RheaAyase/Valkyrja.discord/blob/master/Bot/Valkyrja.discord.csproj#L12)
 * Comment out the `#define UsingValkyrjaSecure` in `Program.cs`
+* Comment out the `#define UsingValkyrjaSpecific` in `Program.cs`
 * Do not submit any of these changes, otherwise you will screw up our build!
 
 1. Create a new branch. This can be done easily on github. [e.g.](https://i.imgur.com/EDtnZ56.png)
