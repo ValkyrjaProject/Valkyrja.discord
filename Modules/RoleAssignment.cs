@@ -175,6 +175,34 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !createColourRoles
+			newCommand = new Command("createColourRoles");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Create 9 roles with various colours, you can find emoji representations of these colours in Valhalla - the Valkyrja support server.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await e.SendReplySafe(ErrorPermissionsString);
+					return;
+				}
+
+				await e.Server.Guild.CreateRoleAsync("purple", GuildPermissions.None, new Color(180,136,209));
+				await e.Server.Guild.CreateRoleAsync("pink", GuildPermissions.None, new Color(255,183,255));
+				await e.Server.Guild.CreateRoleAsync("orange", GuildPermissions.None, new Color(255,165,105));
+				await e.Server.Guild.CreateRoleAsync("lightOrange", GuildPermissions.None, new Color(255,186,158));
+				await e.Server.Guild.CreateRoleAsync("lightYellow", GuildPermissions.None, new Color(223,223,133));
+				await e.Server.Guild.CreateRoleAsync("yellow", GuildPermissions.None, new Color(201,192,67));
+				await e.Server.Guild.CreateRoleAsync("blue", GuildPermissions.None, new Color(92,221,255));
+				await e.Server.Guild.CreateRoleAsync("cyan", GuildPermissions.None, new Color(150,232,221));
+				await e.Server.Guild.CreateRoleAsync("green", GuildPermissions.None, new Color(46,204,113));
+
+				await e.SendReplySafe("I've created them roles, but you're gonna have to set them up yourself at <https://valkyrja.app/config> because I don't know the details!\n" +
+				                      "_You can use my colour emojis to set them up as reaction assigned roles. Get them in Valhalla: https://discord.gg/XgVvkXx_");
+			};
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("createColorRoles"));
+
 // !publicRoles
 			newCommand = new Command("publicRoles");
 			newCommand.Type = CommandType.Standard;
