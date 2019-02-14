@@ -15,6 +15,8 @@ namespace Botwinder.modules
 {
 	public class Moderation: IModule
 	{
+		private const int BanReasonLimit = 512;
+
 		private const string ErrorUnknownString = "Unknown error, please poke <@{0}> to take a look x_x";
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
 		private const string ErrorPermissionHierarchyString = "Something went wrong, I may not have server permissions to do that.\n(Hint: Valkyrja has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
@@ -36,6 +38,7 @@ namespace Botwinder.modules
 		private const string UnmuteChannelConfirmString = "You may speak now.";
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
+		private const string BanReasonTooLongString = "Ban reason has 512 characters limit.\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <https://valkyrja.app/config>";
 		private const string TempChannelConfirmString = "Here you go! <3\n_(Temporary channel `{0}` was created.)_";
 
@@ -719,6 +722,13 @@ namespace Botwinder.modules
 				}
 
 				string response = "ò_ó";
+
+				if( warning.Length >= BanReasonLimit )
+				{
+					await e.Message.Channel.SendMessageSafe(BanReasonTooLongString);
+					dbContext.Dispose();
+					return;
+				}
 
 				try
 				{
