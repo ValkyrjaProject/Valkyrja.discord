@@ -1429,7 +1429,7 @@ namespace Botwinder.modules
 					userData.BannedUntil = DateTime.MinValue;
 
 					if( this.Client.Events.LogUnban != null )
-						await this.Client.Events.LogUnban(server, null, userData.UserId, unbannedBy);
+						await this.Client.Events.LogUnban(server, userData.LastUsername, userData.UserId, unbannedBy);
 				}
 				catch(Discord.Net.HttpException exception)
 				{

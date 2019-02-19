@@ -43,15 +43,7 @@ namespace Botwinder.modules
 			this.Client.Events.MessageDeleted += OnMessageDeleted;
 			this.Client.Events.MessageUpdated += OnMessageUpdated;
 			this.Client.Events.UserBanned += OnUserBanned;
-			this.Client.Events.UserUnbanned += async (user, guild) => {
-				Server server;
-				if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
-				    this.RecentlyUnbannedUserIDs.Contains(user.Id) )
-					return;
-
-				await LogUnban(server, user.GetUsername(), user.Id, null);
-			};
-
+			this.Client.Events.UserUnbanned += OnUserUnbanned;
 			this.Client.Events.LogWarning += LogWarning;
 			this.Client.Events.LogBan += LogBan;
 			this.Client.Events.LogUnban += LogUnban;
@@ -389,6 +381,15 @@ namespace Botwinder.modules
 			}
 			await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
 		}
+
+		private async Task OnUserUnbanned(SocketUser user, SocketGuild guild)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
+			    this.RecentlyUnbannedUserIDs.Contains(user.Id) )
+				return;
+
+			await LogUnban(server, user.GetUsername(), user.Id, null);		}
 
 		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy)
 		{
