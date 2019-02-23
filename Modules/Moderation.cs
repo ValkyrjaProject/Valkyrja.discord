@@ -1142,15 +1142,27 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe("Please specify a name for the new temporary channel.");
+					await e.SendReplySafe("Usage: `tempChannel <name>` or `tempChannel [userLimit] <name>`");
 					return;
 				}
 
+				int limit = 0;
+				bool limited = int.TryParse(e.MessageArgs[0], out limit);
+				StringBuilder name = new StringBuilder();
+				for(int i = limited ? 1 : 0; i < e.MessageArgs.Length; i++)
+				{
+					name.Append(e.MessageArgs[i]);
+					name.Append(" ");
+				}
 				string responseString = string.Format(TempChannelConfirmString, e.TrimmedMessage);
 
 				try
 				{
-					RestVoiceChannel tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(e.TrimmedMessage);
+					RestVoiceChannel tempChannel = null;
+					if( limited )
+					tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => c.UserLimit = limit);
+					else
+					tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString());
 
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
