@@ -1142,7 +1142,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe("Usage: `tempChannel <name>` or `tempChannel [userLimit] <name>`");
+					await e.SendReplySafe($"Usage: `{e.Server.Config.CommandPrefix}tempChannel <name>` or `{e.Server.Config.CommandPrefix}tempChannel [userLimit] <name>`");
 					return;
 				}
 
