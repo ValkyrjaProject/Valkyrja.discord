@@ -471,20 +471,22 @@ namespace Botwinder.modules
 					return;
 
 				this.RecentlyUnbannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
+				if( string.IsNullOrWhiteSpace(userName) )
+					userName = "<unknown>";
 
 				if( server.Config.ModChannelEmbeds )
 				{
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(new Color(server.Config.ModChannelColor), "", "User Unbanned",
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName ?? "<unknown>", userId.ToString(),
+							userName, userId.ToString(),
 							DateTime.UtcNow));
 				}
 				else
 				{
 					await logChannel.SendMessageSafe(
 						GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							userName ?? "", userId.ToString(),
+							userName, userId.ToString(),
 							Utils.GetTimestamp()));
 				}
 			}
