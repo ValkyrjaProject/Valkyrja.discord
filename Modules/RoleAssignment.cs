@@ -828,10 +828,39 @@ namespace Botwinder.modules
 						if( discordRole == null )
 							continue;
 
-						if( assignRoles )
-							await user.AddRoleAsync(discordRole);
-						else
+						if( !assignRoles )
+						{
 							await user.RemoveRoleAsync(discordRole);
+							return;
+						}
+						//else...
+						Int64 groupId = server.Roles.ContainsKey(discordRole.Id) ? server.Roles[discordRole.Id].PublicRoleGroupId : 0;
+						if( groupId != 0 )
+						{
+							List<guid> groupRoleIds = server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId).Select(r => r.Value.RoleId).ToList();
+							int userHasCount = user.Roles.Count(r => groupRoleIds.Any(id => id == r.Id));
+
+							RoleGroupConfig groupConfig = null;
+							if( userHasCount > 0 )
+							{
+								ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+								groupConfig = dbContext.PublicRoleGroups.FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
+								dbContext.Dispose();
+
+								while( userHasCount > groupConfig.RoleLimit && groupRoleIds.Any() )
+								{
+									IRole roleToRemove = server.Guild.GetRole(groupRoleIds.Last());
+									groupRoleIds.Remove(groupRoleIds.Last());
+									if( roleToRemove == null || user.Roles.All(r => r.Id != roleToRemove.Id) )
+										continue;
+
+									await user.RemoveRoleAsync(roleToRemove);
+									userHasCount--;
+								}
+							}
+						}
+
+						await user.AddRoleAsync(discordRole);
 					}
 				}
 				catch(Exception e)
