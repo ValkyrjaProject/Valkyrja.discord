@@ -847,7 +847,7 @@ namespace Botwinder.modules
 								groupConfig = dbContext.PublicRoleGroups.FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
 								dbContext.Dispose();
 
-								while( userHasCount > groupConfig.RoleLimit && groupRoleIds.Any() )
+								while( userHasCount >= groupConfig.RoleLimit && groupRoleIds.Any() )
 								{
 									IRole roleToRemove = server.Guild.GetRole(groupRoleIds.Last());
 									groupRoleIds.Remove(groupRoleIds.Last());
