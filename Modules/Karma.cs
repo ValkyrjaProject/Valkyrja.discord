@@ -81,13 +81,13 @@ namespace Botwinder.modules
 				}
 
 				userData.KarmaCount -= 1;
+				dbContext.SaveChanges();
 
 				await e.SendReplySafe(string.Format("**{0}** just {1} one of {2} {3}! {4} {5} left.",
 					e.Message.Author.GetNickname(), e.Server.Config.KarmaConsumeVerb,
 					(this.Client.IsGlobalAdmin(e.Message.Author.Id) ? "her" : "their"), e.Server.Config.KarmaCurrency,
 					(this.Client.IsGlobalAdmin(e.Message.Author.Id) ? "She has" : "They have"), userData.KarmaCount));// Because i can :P
 
-				dbContext.SaveChanges();
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
@@ -139,15 +139,15 @@ namespace Botwinder.modules
 					userNames.Append((count++ == 0 ? "" : count == users.Count ? ", and " : ", ") + e.Server.Guild.GetUser(mentionedUser.UserId).GetNickname());
 				}
 
+				if( count > 0 )
+					dbContext.SaveChanges();
+
 				string response = string.Format("**{0}** received a {1} of friendship from **{2}** =]",
 					userNames, e.Server.Config.KarmaCurrencySingular, e.Message.Author.GetNickname());
 				if( count < users.Count )
 					response += "\nBut I couldn't give out more, as you don't have any left =(";
+
 				await e.SendReplySafe(response);
-
-				if( count > 0 )
-					dbContext.SaveChanges();
-
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);

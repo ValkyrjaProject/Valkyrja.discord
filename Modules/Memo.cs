@@ -62,7 +62,6 @@ namespace Botwinder.modules
 					if( user == null )
 					{
 						response = NotFoundString;
-						dbContext.Dispose();
 					}
 					else
 					{
@@ -82,8 +81,8 @@ namespace Botwinder.modules
 						response = string.Format(MemoString, e.CommandId, userData.Memo);
 				}
 
-				await e.SendReplySafe(response);
 				dbContext.Dispose();
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 

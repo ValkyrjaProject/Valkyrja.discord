@@ -90,7 +90,6 @@ namespace Botwinder.modules
 
 					await VerifyUsers(e.Server, mentionedUsers); // actually verify people
 					response = string.Format(VerifiedString, mentionedUsers.Select(u => u.UserId).ToMentions());
-					dbContext.SaveChanges();
 				}
 				else if( string.IsNullOrEmpty(e.TrimmedMessage) ) // Verify the author.
 				{
@@ -104,8 +103,11 @@ namespace Botwinder.modules
 					response = MentionedString;
 				}
 
-				await e.SendReplyUnsafe(response);
+				if( mentionedUsers.Any() )
+					dbContext.SaveChanges();
+
 				dbContext.Dispose();
+				await e.SendReplyUnsafe(response);
 			};
 			commands.Add(newCommand);
 
