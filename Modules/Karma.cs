@@ -162,17 +162,13 @@ namespace Botwinder.modules
 				return;
 
 			Server server;
-			if( !(message.Channel is SocketTextChannel channel) ||
-			    !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
-			    (server = this.Client.Servers[channel.Guild.Id]) == null )
+			if( !(message.Channel is SocketTextChannel channel) || !this.Client.Servers.ContainsKey(channel.Guild.Id) || (server = this.Client.Servers[channel.Guild.Id]) == null )
 				return;
 			if( !(message.Author is SocketGuildUser user) || message.Author.IsBot )
 				return;
 			if( !this.Client.IsPremium(server) && !this.Client.IsTrialServer(server.Id) )
 				return;
-			if( !server.Config.KarmaEnabled ||
-			    message.MentionedUsers == null || !message.MentionedUsers.Any() ||
-			    !this.RegexKarma.Match(message.Content).Success )
+			if( !server.Config.KarmaEnabled || message.MentionedUsers == null || !message.MentionedUsers.Any() || !this.RegexKarma.Match(message.Content).Success )
 				return;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
