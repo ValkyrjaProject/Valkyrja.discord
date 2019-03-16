@@ -147,8 +147,8 @@ namespace Botwinder.modules
 				if( count < users.Count )
 					response += "\nBut I couldn't give out more, as you don't have any left =(";
 
-				await e.SendReplySafe(response);
 				dbContext.Dispose();
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 

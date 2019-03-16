@@ -732,8 +732,7 @@ namespace Botwinder.modules
 
 				try
 				{
-					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(banDurationHours),
-						warning.ToString(), e.Message.Author as SocketGuildUser,
+					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(banDurationHours), warning.ToString(), e.Message.Author as SocketGuildUser,
 						e.Command.Id.ToLower() == "silentban", e.Command.Id.ToLower() == "purgeban");
 					dbContext.SaveChanges();
 				} catch(Exception exception)
