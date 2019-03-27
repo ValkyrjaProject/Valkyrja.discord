@@ -42,6 +42,7 @@ namespace Botwinder.modules
 			this.Client.Events.UserVoiceStateUpdated += OnUserVoice;
 			this.Client.Events.MessageDeleted += OnMessageDeleted;
 			this.Client.Events.MessageUpdated += OnMessageUpdated;
+			this.Client.Events.MessageReceived += OnMessageReceived;
 			this.Client.Events.UserBanned += OnUserBanned;
 			this.Client.Events.UserUnbanned += OnUserUnbanned;
 			this.Client.Events.LogWarning += LogWarning;
@@ -342,6 +343,40 @@ namespace Botwinder.modules
 								"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
 								"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
 					}
+				}
+			}
+			catch(HttpException) { }
+			catch(Exception exception)
+			{
+				await this.HandleException(exception, "OnMessageUpdated", server.Id);
+			}
+		}
+
+		private async Task OnMessageReceived(SocketMessage message)
+		{
+			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
+				return;
+
+			if( message == null || !(message.Channel is SocketTextChannel channel) )
+				return;
+
+			Server server;
+			if( !this.Client.Servers.ContainsKey(channel.Guild.Id) || (server = this.Client.Servers[channel.Guild.Id]) == null ||
+			    server.Config.IgnoreBots && message.Author.IsBot || !(message.Author is SocketGuildUser user) )
+				return;
+
+			try
+			{
+				SocketTextChannel logChannel;
+				if( server.Config.AlertChannelId != 0 && (logChannel = server.Guild.GetTextChannel(server.Config.AlertChannelId)) != null &&
+				    server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content) )
+				{
+					await logChannel.SendMessageAsync("", embed:
+						GetLogEmbed(new Color(server.Config.AlertChannelColor), user?.GetAvatarUrl(),
+							"Alert triggered", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
+							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Id,
+							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
 				}
 			}
 			catch(HttpException) { }
