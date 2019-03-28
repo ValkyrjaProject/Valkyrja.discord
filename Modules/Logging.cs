@@ -382,7 +382,7 @@ namespace Botwinder.modules
 			catch(HttpException) { }
 			catch(Exception exception)
 			{
-				await this.HandleException(exception, "OnMessageUpdated", server.Id);
+				await this.HandleException(exception, "OnMessageReceived", server.Id);
 			}
 		}
 
