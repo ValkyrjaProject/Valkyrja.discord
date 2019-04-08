@@ -25,8 +25,11 @@ namespace Botwinder.modules
 		private static string ErrorGroupNotFound = "I did not find a group based on that expression.";
 		private static string ErrorRoleNotFoundId = "Role not found. Use with roleID parameter.\n(Use the `getRole` command to get the ID)";
 		private static string ErrorPromoteEveryone = "Failed to assign the role to more than 10 people - aborting. (Assuming wrong permissions or hierarchy.)";
+		private static string ErrorKickWithoutRole = "Failed to kick more than 10 people - aborting. (Assuming wrong permissions, hierarchy, or Discord derps much.)";
 		private static string PromoteEveryoneResponseString = "I will assign a role to everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
 		private static string DemoteEveryoneResponseString = "I will remove a role from everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
+		private static string WorkingOnItString = "Working on it. This may take some time so please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
+		private static string FoundCountString = "There are {0} members without any role.";
 
 		private BotwinderClient Client;
 
@@ -750,6 +753,65 @@ namespace Botwinder.modules
 					return;
 
 				string response = exceptions > 10 ? ErrorPromoteEveryone : ($"Done! I've removed `{role.Name}` from `{count}` member" + (count != 1 ? "s." : "."));
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+
+// !countWithoutRoles
+			newCommand = new Command("countWithoutRoles");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Count how many users do not have any role.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				await e.SendReplySafe(WorkingOnItString);
+				await e.Server.Guild.DownloadUsersAsync();
+				int count = e.Server.Guild.Users.Count(u => !u.IsBot && u.Roles.Any(r => r.Id != e.Server.Id));
+				await e.SendReplySafe(string.Format(FoundCountString, count));
+			};
+			commands.Add(newCommand);
+
+// !kickWithoutRoles
+			newCommand = new Command("kickWithoutRoles");
+			newCommand.Type = CommandType.LargeOperation;
+			newCommand.Description = "Kick all the users who do not have any role.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.KickMembers )
+				{
+					await e.SendReplySafe(ErrorPermissionsString);
+					return;
+				}
+
+				await e.SendReplySafe(WorkingOnItString);
+				await e.Server.Guild.DownloadUsersAsync();
+				List<SocketGuildUser> users = e.Server.Guild.Users.ToList();
+
+				int i = 0;
+				int count = 0;
+				int exceptions = 0;
+				bool canceled = await e.Operation.While(() => i < users.Count, async () => {
+					try
+					{
+						SocketGuildUser user = users[i++];
+						if( user.IsBot || user.Roles.Any(r => r.Id != e.Server.Id) )
+							return false;
+
+						await user.KickAsync();
+						count++;
+					}
+					catch(Exception)
+					{
+						if( ++exceptions > 10 )
+							return true;
+					}
+
+					return false;
+				});
+
+				if( canceled )
+					return;
+
+				string response = exceptions > 10 ? ErrorKickWithoutRole : $"Done! I've kicked `{count}` members who had no roles! You know what to press to pay respects!";
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
