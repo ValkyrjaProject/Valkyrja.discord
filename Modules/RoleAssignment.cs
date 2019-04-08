@@ -774,7 +774,7 @@ namespace Botwinder.modules
 			newCommand = new Command("kickWithoutRoles");
 			newCommand.Type = CommandType.LargeOperation;
 			newCommand.Description = "Kick all the users who do not have any role.";
-			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.KickMembers )
 				{
