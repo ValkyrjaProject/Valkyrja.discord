@@ -793,7 +793,7 @@ namespace Botwinder.modules
 					try
 					{
 						SocketGuildUser user = users[i++];
-						if( user.IsBot || user.Roles.Any(r => r.Id != e.Server.Id) )
+						if( user.IsBot || e.Server.Guild.OwnerId == user.Id || user.Roles.Any(r => r.Id != e.Server.Id) )
 							return false;
 
 						await user.KickAsync();
