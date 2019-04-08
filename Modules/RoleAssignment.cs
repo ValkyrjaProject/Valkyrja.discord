@@ -29,7 +29,7 @@ namespace Botwinder.modules
 		private static string PromoteEveryoneResponseString = "I will assign a role to everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
 		private static string DemoteEveryoneResponseString = "I will remove a role from everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
 		private static string WorkingOnItString = "Working on it. This may take some time so please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
-		private static string FoundCountString = "There are {0} members without any role.";
+		private static string FoundCountString = "There are `{0}` members without any role.";
 
 		private BotwinderClient Client;
 
@@ -765,7 +765,7 @@ namespace Botwinder.modules
 			newCommand.OnExecute += async e => {
 				await e.SendReplySafe(WorkingOnItString);
 				await e.Server.Guild.DownloadUsersAsync();
-				int count = e.Server.Guild.Users.Count(u => !u.IsBot && u.Roles.Any(r => r.Id != e.Server.Id));
+				int count = e.Server.Guild.Users.Count(u => !u.IsBot && u.Roles.All(r => r.Id == e.Server.Id));
 				await e.SendReplySafe(string.Format(FoundCountString, count));
 			};
 			commands.Add(newCommand);
