@@ -72,7 +72,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 				string response = InvalidParametersString;
 
@@ -265,7 +265,7 @@ namespace Botwinder.modules
 
 			Server server = this.Client.Servers[this.HashedValues[hashCode].ServerId];
 
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 			UserData userData = dbContext.GetOrAddUser(server.Id, userId);
 
 			if( await VerifyUsers(server, new List<UserData>{userData}) )

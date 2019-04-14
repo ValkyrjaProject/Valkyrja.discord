@@ -98,7 +98,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				string response = "";
 
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
@@ -231,7 +231,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				StringBuilder response = new StringBuilder();
 
 				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);

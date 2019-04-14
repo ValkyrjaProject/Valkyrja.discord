@@ -96,7 +96,7 @@ namespace Botwinder.modules
 			if( !this.Client.IsPremium(server) && !this.Client.IsTrialServer(server.Id) )
 				return;
 
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 
 			UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
 			if( !string.IsNullOrEmpty(message.Content) )

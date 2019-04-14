@@ -312,7 +312,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -393,7 +393,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -483,7 +483,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
 				if( channel == null )
 				{
@@ -518,7 +518,7 @@ namespace Botwinder.modules
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				string responseString = "";
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
 				if( channel == null )
 				{
@@ -571,7 +571,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -672,7 +672,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -772,7 +772,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -818,7 +818,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -864,7 +864,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -947,7 +947,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 
 				if( mentionedUsers.Count == 0 )
@@ -1163,7 +1163,7 @@ namespace Botwinder.modules
 					else
 						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString());
 
-					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
 					if( channel == null )
 					{
@@ -1203,7 +1203,7 @@ namespace Botwinder.modules
 			    (role = server.Guild.GetRole(server.Config.MuteRoleId)) == null )
 				return;
 
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 			UserData userData = dbContext.GetOrAddUser(user.Guild.Id, user.Id);
 
 			if( userData.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) )
@@ -1229,7 +1229,7 @@ namespace Botwinder.modules
 		public async Task Update(IBotwinderClient iClient)
 		{
 			BotwinderClient client = iClient as BotwinderClient;
-			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
+			ServerContext dbContext = ServerContext.Create(client.DbConnectionString, true);
 			bool save = false;
 			DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);
 
@@ -1329,7 +1329,7 @@ namespace Botwinder.modules
 			string durationString = GetDurationString(duration);
 			string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 
 			UserData userData = dbContext.GetOrAddUser(serverid, userid);
 			userData.BannedUntil = bannedUntil;

@@ -153,7 +153,7 @@ namespace Botwinder.modules
 			newCommand.Description = "`createTempRole name time` Create a role with specified name, which will be destroyed after specified time (e.g. `7d` or `12h` or `1d12h`)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				RoleConfig roleConfig = await CreateTempRole(e, dbContext);
 				if( roleConfig != null )
 					dbContext.SaveChanges();
@@ -167,7 +167,7 @@ namespace Botwinder.modules
 			newCommand.Description = "`createTempRole name time` Create a role with specified name, which will be destroyed after specified time (e.g. `7d` or `12h` or `1d12h`) This role will also become a public - use the `join` command to get it.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
 				RoleConfig roleConfig = await CreateTempRole(e, dbContext);
 				if( roleConfig != null )
 				{
@@ -938,7 +938,7 @@ namespace Botwinder.modules
 				return;
 
 			BotwinderClient client = iClient as BotwinderClient;
-			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
+			ServerContext dbContext = ServerContext.Create(client.DbConnectionString, true);
 
 			List<RoleConfig> rolesToRemove = new List<RoleConfig>();
 			foreach( RoleConfig roleConfig in dbContext.Roles.Where(r => r.DeleteAtTime > DateTime.MinValue + TimeSpan.FromMinutes(1) && r.DeleteAtTime < DateTime.UtcNow) )
