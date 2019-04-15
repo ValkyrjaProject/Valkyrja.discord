@@ -68,7 +68,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 
 				if( userData.KarmaCount <= 0 )
@@ -105,7 +105,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 				if( userData.KarmaCount == 0 )
 				{
@@ -171,7 +171,7 @@ namespace Botwinder.modules
 			if( !server.Config.KarmaEnabled || message.MentionedUsers == null || !message.MentionedUsers.Any() || !this.RegexKarma.Match(message.Content).Success )
 				return;
 
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 			UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
 			IEnumerable<UserData> mentionedUserData = message.MentionedUsers.Select(u => dbContext.GetOrAddUser(server.Id, u.Id));

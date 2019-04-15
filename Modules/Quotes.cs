@@ -87,7 +87,7 @@ namespace Botwinder.modules
 			newCommand.Description = "Remove the last created quote.";
 			newCommand.RequiredPermissions = PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				string response = "There ain't no quotes here! Add some first :]";
 
 				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
@@ -116,7 +116,7 @@ namespace Botwinder.modules
 			newCommand.Description = "Add a new quote! Use with a username or mention as the first parameter, and the text as second. (Or you can just use a message ID.)";
 			newCommand.RequiredPermissions = PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString, true);
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				string response = "I've no idea what are you trying to tell me.\nUse with a username or mention as the first parameter, and the text as second. (Or you can just use a message ID.)";
 				Quote quote = null;
 
