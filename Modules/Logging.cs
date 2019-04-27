@@ -470,6 +470,8 @@ namespace Botwinder.modules
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
+				if( string.IsNullOrEmpty(userName) )
+					userName = "<unknown>";
 
 				if( server.Config.ModChannelEmbeds )
 				{
@@ -477,7 +479,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(color, "", "User Banned " + duration,
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName ?? "<unknown>", userId.ToString(),
+							userName, userId.ToString(),
 							DateTime.UtcNow,
 							"Reason", reason));
 				}

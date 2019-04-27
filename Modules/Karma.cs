@@ -105,14 +105,12 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
+				UserData userData = await this.Client.DbAccessManager.GetReadOnlyUserData(e.Server.Id, e.Message.Author.Id);
 				if( userData.KarmaCount == 0 )
 				{
 					await e.SendReplySafe(string.Format("Umm... I'm sorry **{0}**, you don't have any {1} left =(",
 						e.Message.Author.GetNickname(), e.Server.Config.KarmaCurrency));
 
-					dbContext.Dispose();
 					return;
 				}
 
@@ -121,33 +119,30 @@ namespace Botwinder.modules
 					await e.SendReplySafe(string.Format("You have to @mention your friend who will receive the {0}. You can mention up to {1} people at the same time.",
 						e.Server.Config.KarmaCurrencySingular, e.Server.Config.KarmaLimitMentions));
 
-					dbContext.Dispose();
 					return;
 				}
 
 				int count = 0;
 				StringBuilder userNames = new StringBuilder();
-				List<UserData> users = this.Client.GetMentionedUsersData(dbContext, e);
-				foreach(UserData mentionedUser in users)
-				{
+				List<guid> mentionedUserIds = this.Client.GetMentionedUserIds(e);
+				await this.Client.DbAccessManager.ForEachModifyUserData(e.Server.Id, mentionedUserIds, (mentionedId, mentionedData) => {
 					if( userData.KarmaCount == 0 )
-						break;
+						return true;
 
 					userData.KarmaCount--;
-					mentionedUser.KarmaCount++;
+					mentionedData.KarmaCount++;
+					userNames.Append((count++ == 0 ? "" : count == mentionedUserIds.Count ? ", and " : ", ") + (e.Server.Guild.GetUser(mentionedData.UserId)?.GetNickname() ?? "Unknown"));
 
-					userNames.Append((count++ == 0 ? "" : count == users.Count ? ", and " : ", ") + e.Server.Guild.GetUser(mentionedUser.UserId).GetNickname());
-				}
+					return false;
+				});
 
-				if( count > 0 )
-					dbContext.SaveChanges();
+				await this.Client.DbAccessManager.ModifyUserData(userData.ServerId, userData.UserId, u => u.KarmaCount = userData.KarmaCount);
 
 				string response = string.Format("**{0}** received a {1} of friendship from **{2}** =]",
 					userNames, e.Server.Config.KarmaCurrencySingular, e.Message.Author.GetNickname());
-				if( count < users.Count )
+				if( count < mentionedUserIds.Count )
 					response += "\nBut I couldn't give out more, as you don't have any left =(";
 
-				dbContext.Dispose();
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);

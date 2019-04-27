@@ -312,34 +312,29 @@ namespace Botwinder.modules
 					return;
 				}
 
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
-
-				if( mentionedUsers.Count == 0 )
+				List<guid> mentionedUserIds = this.Client.GetMentionedUserIds(e);
+				if( mentionedUserIds.Count == 0 )
 				{
 					await e.SendReplySafe(BanNotFoundString);
-					dbContext.Dispose();
 					return;
 				}
 
-				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
+				if( mentionedUserIds.Count + 1 > e.MessageArgs.Length )
 				{
 					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
-					dbContext.Dispose();
 					return;
 				}
 
 				int muteDurationMinutes = 0;
 				try
 				{
-					Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
-					Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
-					Match minuteMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+m", RegexOptions.IgnoreCase);
+					Match dayMatch = Regex.Match(e.MessageArgs[mentionedUserIds.Count], "\\d+d", RegexOptions.IgnoreCase);
+					Match hourMatch = Regex.Match(e.MessageArgs[mentionedUserIds.Count], "\\d+h", RegexOptions.IgnoreCase);
+					Match minuteMatch = Regex.Match(e.MessageArgs[mentionedUserIds.Count], "\\d+m", RegexOptions.IgnoreCase);
 
-					if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out muteDurationMinutes) )
+					if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUserIds.Count], out muteDurationMinutes) )
 					{
 						await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
-						dbContext.Dispose();
 						return;
 					}
 
@@ -353,23 +348,19 @@ namespace Botwinder.modules
 				catch(Exception)
 				{
 					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
-					dbContext.Dispose();
 					return;
 				}
 
 				string response = "ò_ó";
-
 				try
 				{
-					response = await Mute(e.Server, mentionedUsers, TimeSpan.FromMinutes(muteDurationMinutes), role, e.Message.Author as SocketGuildUser);
-					dbContext.SaveChanges();
+					response = await Mute(e.Server, mentionedUserIds, TimeSpan.FromMinutes(muteDurationMinutes), role, e.Message.Author as SocketGuildUser);
 				} catch(Exception exception)
 				{
 					await this.Client.LogException(exception, e);
 					response = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
 
-				dbContext.Dispose();
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
@@ -1343,7 +1334,7 @@ namespace Botwinder.modules
 		/// <summary> Ban the User - this will also ban them as soon as they join the server, if they are not there right now. </summary>
 		/// <param name="duration">Use zero for permanent ban.</param>
 		/// <param name="silent">Set to true to not PM the user information about the ban (time, server, reason)</param>
-		public async Task<string> Ban(Server server, List<UserData> users, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false)
+		public async Task<string> Ban(Server server, List<guid> users, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false)
 		{
 			DateTime bannedUntil = DateTime.MaxValue;
 			if( duration.TotalHours >= 1 )
@@ -1352,13 +1343,14 @@ namespace Botwinder.modules
 				duration = TimeSpan.Zero;
 
 			string durationString = GetDurationString(duration);
+			string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 
 			string response = "";
 			List<guid> banned = new List<guid>();
-			foreach( UserData userData in users )
+			foreach( guid userId in users )
 			{
 				SocketGuildUser user = null;
-				if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
+				if( !silent && (user = server.Guild.GetUser(userId)) != null )
 				{
 					try
 					{
@@ -1371,14 +1363,8 @@ namespace Botwinder.modules
 
 				try
 				{
-					if( this.Client.Events.LogBan != null )
-						await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
-
-					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
-					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
-					userData.BannedUntil = bannedUntil;
-					userData.AddWarning(logMessage);
-					banned.Add(userData.UserId);
+					await server.Guild.AddBanAsync(userId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
+					banned.Add(userId);
 				}
 				catch(Discord.Net.HttpException ex)
 				{
@@ -1391,13 +1377,24 @@ namespace Botwinder.modules
 				}
 			}
 
+			await this.Client.DbAccessManager.ForEachModifyUserData(server.Id, banned, async (id, data) => {
+				data.BannedUntil = bannedUntil;
+				data.AddWarning(logMessage);
+				if( this.Client.Events.LogBan != null )
+				{
+					SocketGuildUser user = server.Guild.GetUser(id);
+					await this.Client.Events.LogBan(server, user?.GetUsername() ?? data.LastUsername, data.UserId, reason, durationString.ToString(), bannedBy);
+				}
+				return false;
+			});
+
 			if( banned.Any() )
 				response = string.Format(BanConfirmString, banned.ToMentions());
 
 			return response;
 		}
 
-		public async Task Ban(Server server, UserData userData, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false)
+		public async Task Ban(Server server, guid userId, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false)
 		{
 			DateTime bannedUntil = DateTime.MaxValue;
 			if( duration.TotalHours >= 1 )
@@ -1408,7 +1405,7 @@ namespace Botwinder.modules
 			string durationString = GetDurationString(duration);
 
 			SocketGuildUser user = null;
-			if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
+			if( !silent && (user = server.Guild.GetUser(userId)) != null )
 			{
 				try
 				{
@@ -1419,28 +1416,26 @@ namespace Botwinder.modules
 				catch(Exception) { }
 			}
 
-			if( this.Client.Events.LogBan != null )
-				await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString, bannedBy);
+			await server.Guild.AddBanAsync(userId, (deleteMessages ? 1 : 0), reason);
 
-			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
-			userData.BannedUntil = bannedUntil;
-			userData.AddWarning($"Banned {durationString} with reason: {reason}");
+			await this.Client.DbAccessManager.ModifyUserData(server.Id, userId, async data => {
+				data.BannedUntil = bannedUntil;
+				data.AddWarning($"Banned {durationString} with reason: {reason}");
+				if( this.Client.Events.LogBan != null )
+					await this.Client.Events.LogBan(server, user?.GetUsername() ?? data.LastUsername, userId, reason, durationString, bannedBy);
+			});
 		}
 
-		public async Task<string> UnBan(Server server, List<UserData> users, SocketGuildUser unbannedBy = null)
+		public async Task<string> UnBan(Server server, List<guid> userIds, SocketGuildUser unbannedBy = null)
 		{
 			string response = "";
 			List<guid> unbanned = new List<guid>();
-			foreach( UserData userData in users )
+			foreach( guid userId in userIds )
 			{
 				try
 				{
-					await server.Guild.RemoveBanAsync(userData.UserId);
-					unbanned.Add(userData.UserId);
-					userData.BannedUntil = DateTime.MinValue;
-
-					if( this.Client.Events.LogUnban != null )
-						await this.Client.Events.LogUnban(server, userData.LastUsername, userData.UserId, unbannedBy);
+					await server.Guild.RemoveBanAsync(userId);
+					unbanned.Add(userId);
 				}
 				catch(Discord.Net.HttpException exception)
 				{
@@ -1449,14 +1444,21 @@ namespace Botwinder.modules
 						response = ErrorPermissionHierarchyString;
 					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 					{
-						userData.BannedUntil = DateTime.MinValue;
+						unbanned.Add(userId);
 						response = NotFoundString;
 					}
 					else throw;
 				}
 			}
 
-			if( unbanned.Any() )
+			await this.Client.DbAccessManager.ForEachModifyUserData(server.Id, unbanned, async (id, data) => {
+				data.BannedUntil = DateTime.MinValue;
+				if( this.Client.Events.LogUnban != null )
+					await this.Client.Events.LogUnban(server, data.LastUsername, id, unbannedBy);
+				return false;
+			});
+
+			if( unbanned.Any() && string.IsNullOrEmpty(response) )
 				response = string.Format(UnbanConfirmString, unbanned.ToMentions());
 
 			return response;
@@ -1464,37 +1466,40 @@ namespace Botwinder.modules
 
 
 // Mute
-		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
+		public async Task Mute(Server server, guid userId, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 			string durationString = GetDurationString(duration);
 
-			SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+			SocketGuildUser user = server.Guild.GetUser(userId);
 			await user.AddRoleAsync(role);
 
-			userData.MutedUntil = mutedUntil;
-			userData.AddWarning($"Muted {durationString}");
+			await this.Client.DbAccessManager.ModifyUserData(server.Id, userId, userData => {
+				userData.MutedUntil = mutedUntil;
+				userData.AddWarning($"Muted {durationString}");
+			});
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, $"<@{userData.UserId}>"));
+				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, $"<@{userId}>"));
 
 			if( this.Client.Events.LogMute != null )
 				await this.Client.Events.LogMute(server, user, durationString, mutedBy);
 		}
 
-		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
+		public async Task<string> Mute(Server server, List<guid> userIds, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 			string durationString = GetDurationString(duration);
 
 			string response = "";
 			List<guid> muted = new List<guid>();
-			foreach( UserData userData in users )
+
+			foreach( guid userId in userIds )
 			{
 				try
 				{
-					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					SocketGuildUser user = server.Guild.GetUser(userId);
 					if( user == null )
 					{
 						response = NotFoundString;
@@ -1502,10 +1507,7 @@ namespace Botwinder.modules
 					}
 
 					await user.AddRoleAsync(role);
-
-					userData.MutedUntil = mutedUntil;
-					userData.AddWarning($"Muted {durationString}");
-					muted.Add(userData.UserId);
+					muted.Add(user.Id);
 
 					if( this.Client.Events.LogMute != null )
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
@@ -1520,6 +1522,12 @@ namespace Botwinder.modules
 					else throw;
 				}
 			}
+
+			await this.Client.DbAccessManager.ForEachModifyUserData(server.Id, muted, (id, data) => {
+				data.MutedUntil = mutedUntil;
+				data.AddWarning($"Muted {durationString}");
+				return Task.FromResult(false);
+			});
 
 			string mentions = muted.ToMentions();
 			if( muted.Any() )
@@ -1546,7 +1554,6 @@ namespace Botwinder.modules
 
 					await user.RemoveRoleAsync(role);
 					unmuted.Add(userData.UserId);
-					userData.MutedUntil = DateTime.MinValue;
 
 					if( this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
@@ -1565,28 +1572,29 @@ namespace Botwinder.modules
 				}
 			}
 
+			await this.Client.DbAccessManager.ForEachModifyUserData(server.Id, unmuted, (id, data) => {
+				data.MutedUntil = DateTime.MinValue;
+				return Task.FromResult(false);
+			});
+
 			if( unmuted.Any() )
 				response = string.Format(UnmuteConfirmString, unmuted.ToMentions());
 
 			return response;
 		}
 
-		public async Task<string> MuteChannel(ChannelConfig channelConfig, TimeSpan duration, SocketGuildUser mutedBy = null)
+		public async Task<string> MuteChannel(Server server, guid channelId, TimeSpan duration, SocketGuildUser mutedBy = null)
 		{
-			Server server;
-			if( !this.Client.Servers.ContainsKey(channelConfig.ServerId) || (server = this.Client.Servers[channelConfig.ServerId]) == null )
-				throw new Exception("Server not found.");
-
 			string response = MuteChannelConfirmString;
 			try
 			{
 				IRole role = server.Guild.EveryoneRole;
-				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
+				SocketGuildChannel channel = server.Guild.GetChannel(channelId);
 				OverwritePermissions permissions = channel.GetPermissionOverwrite(role) ?? new OverwritePermissions();
 				permissions = permissions.Modify(sendMessages: PermValue.Deny);
 				await channel.AddPermissionOverwriteAsync(role, permissions);
 
-				channelConfig.MutedUntil = DateTime.UtcNow + duration;
+				await server.ModifyChannel(channelId, c => c.MutedUntil = DateTime.UtcNow + duration);
 
 				if( this.Client.Events.LogMutedChannel != null )
 					await this.Client.Events.LogMutedChannel(server, channel, GetDurationString(duration), mutedBy);
@@ -1603,19 +1611,15 @@ namespace Botwinder.modules
 			return response;
 		}
 
-		public async Task<string> UnmuteChannel(ChannelConfig channelConfig, SocketUser unmutedBy = null)
+		public async Task<string> UnmuteChannel(Server server, guid channelId, SocketUser unmutedBy = null)
 		{
-			Server server;
-			if( !this.Client.Servers.ContainsKey(channelConfig.ServerId) || (server = this.Client.Servers[channelConfig.ServerId]) == null )
-				throw new Exception("Server not found.");
-
 			string response = UnmuteChannelConfirmString;
 			try
 			{
-				channelConfig.MutedUntil = DateTime.MinValue;
+				await server.ModifyChannel(channelId, c => c.MutedUntil = DateTime.MinValue);
 
 				IRole role = server.Guild.EveryoneRole;
-				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
+				SocketGuildChannel channel = server.Guild.GetChannel(channelId);
 				if( channel == null )
 					return NotFoundChannelString;
 
