@@ -1224,7 +1224,8 @@ namespace Botwinder.modules
 
 			//Channels
 			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
-			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.Temporary || (c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow)) )
+			List<ChannelConfig> channels = await this.Client.DbAccessManager.GetReadOnlyChannelConfig(c => c.Temporary || (c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow));
+			foreach( ChannelConfig channelConfig in channels )
 			{
 				Server server;
 				if( !client.Servers.ContainsKey(channelConfig.ServerId) ||
@@ -1234,7 +1235,7 @@ namespace Botwinder.modules
 				//Muted channels
 				if( channelConfig.MutedUntil > minTime && channelConfig.MutedUntil < DateTime.UtcNow )
 				{
-					await UnmuteChannel(channelConfig, client.DiscordClient.CurrentUser);
+					await UnmuteChannel(server, channelConfig.ChannelId, client.DiscordClient.CurrentUser);
 					continue;
 				}
 
@@ -1250,7 +1251,6 @@ namespace Botwinder.modules
 					try
 					{
 						await channel.DeleteAsync();
-						channelConfig.Temporary = false;
 						channelsToRemove.Add(channelConfig);
 						continue;
 					}
@@ -1259,7 +1259,12 @@ namespace Botwinder.modules
 			}
 
 			if( channelsToRemove.Any() )
+			{
+				ServerContext dbContext = ServerContext.Create(this.Client.DbAccessManager.DbConnectionString);
 				dbContext.Channels.RemoveRange(channelsToRemove);
+				dbContext.SaveChanges();
+				dbContext.Dispose();
+			}
 
 
 			//Users
