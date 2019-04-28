@@ -424,7 +424,8 @@ namespace Botwinder.modules
 			    this.RecentlyUnbannedUserIDs.Contains(user.Id) )
 				return;
 
-			await LogUnban(server, user.GetUsername(), user.Id, null);		}
+			await LogUnban(server, user.GetUsername(), user.Id, null);
+		}
 
 		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy)
 		{
@@ -615,14 +616,14 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(new Color(server.Config.ModChannelColor), user?.GetAvatarUrl(), "User Unmuted",
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							user.GetUsername(), user.Id.ToString(),
+							user?.GetUsername() ?? "<unknown>", user?.Id.ToString() ?? "<unknown>",
 							DateTime.UtcNow));
 				}
 				else
 				{
 					await logChannel.SendMessageSafe(
 						GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							user.GetUsername(), user.Id.ToString(),
+							user?.GetUsername() ?? "<unknown>", user?.Id.ToString() ?? "<unknown>",
 							Utils.GetTimestamp()));
 				}
 			}

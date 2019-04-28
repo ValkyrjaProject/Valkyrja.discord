@@ -1220,8 +1220,6 @@ namespace Botwinder.modules
 		public async Task Update(IBotwinderClient iClient)
 		{
 			BotwinderClient client = iClient as BotwinderClient;
-			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-			bool save = false;
 			DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);
 
 			//Channels
@@ -1237,7 +1235,6 @@ namespace Botwinder.modules
 				if( channelConfig.MutedUntil > minTime && channelConfig.MutedUntil < DateTime.UtcNow )
 				{
 					await UnmuteChannel(channelConfig, client.DiscordClient.CurrentUser);
-					save = true;
 					continue;
 				}
 
@@ -1255,7 +1252,6 @@ namespace Botwinder.modules
 						await channel.DeleteAsync();
 						channelConfig.Temporary = false;
 						channelsToRemove.Add(channelConfig);
-						save = true;
 						continue;
 					}
 					catch(Exception) { }
@@ -1267,7 +1263,8 @@ namespace Botwinder.modules
 
 
 			//Users
-			foreach( UserData userData in dbContext.UserDatabase.Where(ud => ud.BannedUntil > minTime || ud.MutedUntil > minTime) )
+			List<UserData> users = await this.Client.DbAccessManager.GetReadOnlyUserData(ud => ud.BannedUntil > minTime || ud.MutedUntil > minTime);
+			foreach( UserData userData in users )
 			{
 				try
 				{
@@ -1277,8 +1274,7 @@ namespace Botwinder.modules
 					if( userData.BannedUntil > minTime && userData.BannedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
 					{
-						await UnBan(server, new List<UserData>{userData}, server.Guild.CurrentUser);
-						save = true;
+						await UnBan(server, new List<guid>{userData.UserId}, server.Guild.CurrentUser);
 
 						//else: ban them if they're on the server - implement if the ID pre-ban doesn't work.
 					}
@@ -1289,8 +1285,7 @@ namespace Botwinder.modules
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
 					    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null )
 					{
-						await UnMute(server, new List<UserData>{userData}, role, server.Guild.CurrentUser);
-						save = true;
+						await UnMute(server, new List<guid>{userData.UserId}, role, server.Guild.CurrentUser);
 					}
 				}
 				catch(Discord.Net.HttpException ex)
@@ -1299,17 +1294,13 @@ namespace Botwinder.modules
 						await this.HandleException(ex, "Update Moderation", userData.ServerId);
 				}
 			}
-
-			if( save )
-				dbContext.SaveChanges();
-			dbContext.Dispose();
 		}
 
 
 
 // Ban
 
-		public Task AddBan(guid serverid, guid userid, TimeSpan duration, string reason)
+		public async Task AddBan(guid serverid, guid userid, TimeSpan duration, string reason)
 		{
 			DateTime bannedUntil = DateTime.MaxValue;
 			if( duration.TotalHours >= 1 )
@@ -1320,15 +1311,11 @@ namespace Botwinder.modules
 			string durationString = GetDurationString(duration);
 			string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-
-			UserData userData = dbContext.GetOrAddUser(serverid, userid);
-			userData.BannedUntil = bannedUntil;
-			userData.AddWarning(logMessage);
-
-			dbContext.SaveChanges();
-			dbContext.Dispose();
-			return Task.CompletedTask;
+			await this.Client.DbAccessManager.ModifyUserData(serverid, userid, userData => {
+				userData.BannedUntil = bannedUntil;
+				userData.AddWarning(logMessage);
+				return Task.CompletedTask;
+			});
 		}
 
 		/// <summary> Ban the User - this will also ban them as soon as they join the server, if they are not there right now. </summary>
@@ -1477,6 +1464,7 @@ namespace Botwinder.modules
 			await this.Client.DbAccessManager.ModifyUserData(server.Id, userId, userData => {
 				userData.MutedUntil = mutedUntil;
 				userData.AddWarning($"Muted {durationString}");
+				return Task.CompletedTask;
 			});
 
 			SocketTextChannel logChannel;
@@ -1540,23 +1528,21 @@ namespace Botwinder.modules
 			return response;
 		}
 
-		public async Task<string> UnMute(Server server, List<UserData> users, IRole role, SocketGuildUser unmutedBy = null)
+		public async Task<string> UnMute(Server server, List<guid> users, IRole role, SocketGuildUser unmutedBy = null)
 		{
 			string response = "";
 			List<guid> unmuted = new List<guid>();
-			foreach( UserData userData in users )
+			foreach( guid userId in users )
 			{
 				try
 				{
-					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					SocketGuildUser user = server.Guild.GetUser(userId);
 					if(user == null)
 						continue;
 
 					await user.RemoveRoleAsync(role);
-					unmuted.Add(userData.UserId);
+					unmuted.Add(userId);
 
-					if( this.Client.Events.LogUnmute != null )
-						await this.Client.Events.LogUnmute(server, user, unmutedBy);
 				}
 				catch(Discord.Net.HttpException exception)
 				{
@@ -1565,19 +1551,22 @@ namespace Botwinder.modules
 						response = ErrorPermissionHierarchyString;
 					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
 					{
-						userData.MutedUntil = DateTime.MinValue;
+						unmuted.Add(userId);
 						response = NotFoundString;
 					}
 					else throw;
 				}
 			}
 
-			await this.Client.DbAccessManager.ForEachModifyUserData(server.Id, unmuted, (id, data) => {
+			await this.Client.DbAccessManager.ForEachModifyUserData(server.Id, unmuted, async (id, data) => {
 				data.MutedUntil = DateTime.MinValue;
-				return Task.FromResult(false);
+				SocketGuildUser user = server.Guild.GetUser(id);
+				if( this.Client.Events.LogUnmute != null )
+					await this.Client.Events.LogUnmute(server, user, unmutedBy);
+				return false;
 			});
 
-			if( unmuted.Any() )
+			if( unmuted.Any() && string.IsNullOrEmpty(response) )
 				response = string.Format(UnmuteConfirmString, unmuted.ToMentions());
 
 			return response;
