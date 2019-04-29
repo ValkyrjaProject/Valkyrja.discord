@@ -424,7 +424,8 @@ namespace Botwinder.modules
 			    this.RecentlyUnbannedUserIDs.Contains(user.Id) )
 				return;
 
-			await LogUnban(server, user.GetUsername(), user.Id, null);		}
+			await LogUnban(server, user.GetUsername(), user.Id, null);
+		}
 
 		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy)
 		{
@@ -470,6 +471,8 @@ namespace Botwinder.modules
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
+				if( string.IsNullOrEmpty(userName) )
+					userName = "<unknown>";
 
 				if( server.Config.ModChannelEmbeds )
 				{
@@ -477,7 +480,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(color, "", "User Banned " + duration,
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName ?? "<unknown>", userId.ToString(),
+							userName, userId.ToString(),
 							DateTime.UtcNow,
 							"Reason", reason));
 				}
@@ -613,14 +616,14 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(new Color(server.Config.ModChannelColor), user?.GetAvatarUrl(), "User Unmuted",
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							user.GetUsername(), user.Id.ToString(),
+							user?.GetUsername() ?? "<unknown>", user?.Id.ToString() ?? "<unknown>",
 							DateTime.UtcNow));
 				}
 				else
 				{
 					await logChannel.SendMessageSafe(
 						GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							user.GetUsername(), user.Id.ToString(),
+							user?.GetUsername() ?? "<unknown>", user?.Id.ToString() ?? "<unknown>",
 							Utils.GetTimestamp()));
 				}
 			}
