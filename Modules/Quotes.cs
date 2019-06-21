@@ -41,7 +41,7 @@ namespace Botwinder.modules
 				else if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
 					int count = quotes.Count();
-					Int64 id = Utils.Random.Next(0, count - 1);
+					Int64 id = Utils.Random.Next(0, count);
 					response = quotes.FirstOrDefault(q => q.Id == id)?.ToString();
 				}
 				else
@@ -67,8 +67,11 @@ namespace Botwinder.modules
 						quotes = quotes.Where(q => q.Username.ToLower().Contains(username) ||
 						                           (!string.IsNullOrEmpty(nickname) && q.Username.ToLower().Contains(nickname)));
 						int count = quotes.Count();
-						id = Utils.Random.Next(0, count < 1 ? 0 : (count - 1));
-						response = quotes.Skip((int) id).FirstOrDefault()?.ToString();
+						if( count > 0 )
+						{
+							id = Utils.Random.Next(0, count);
+							response = quotes.Skip((int) id).FirstOrDefault()?.ToString();
+						}
 					}
 				}
 

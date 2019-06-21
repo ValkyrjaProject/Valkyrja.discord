@@ -23,15 +23,15 @@ namespace Botwinder.modules
 		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
 		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
 
-		private readonly TimeSpan UpdateDelay = TimeSpan.FromMinutes(2);
-		private DateTime LastUpdateTime = DateTime.UtcNow;
+		//private readonly TimeSpan UpdateDelay = TimeSpan.FromMinutes(2);
+		//private DateTime LastUpdateTime = DateTime.UtcNow;
 
 		private readonly Color AntispamColor = new Color(255, 0, 255);
 		private readonly Color AntispamLightColor = new Color(255, 0, 206);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
-		public bool DoUpdate{ get; set; } = true;
+		public bool DoUpdate{ get; set; } = false;
 
 		public List<Command> Init(IBotwinderClient iClient)
 		{
@@ -911,7 +911,8 @@ namespace Botwinder.modules
 
 		public Task Update(IBotwinderClient iClient)
 		{
-			if( this.LastUpdateTime + this.UpdateDelay > DateTime.UtcNow )
+			return Task.CompletedTask;
+			/*if( this.LastUpdateTime + this.UpdateDelay > DateTime.UtcNow )
 				return Task.CompletedTask;
 
 			this.LastUpdateTime = DateTime.UtcNow;
@@ -919,7 +920,7 @@ namespace Botwinder.modules
 			this.RecentlyBannedUserIDs.Clear();
 			this.RecentlyUnbannedUserIDs.Clear();
 
-			return Task.CompletedTask;
+			return Task.CompletedTask;*/
 		}
 	}
 }
