@@ -1139,6 +1139,12 @@ namespace Botwinder.modules
 			newCommand.Description = "Creates a temporary voice channel. This channel will be destroyed when it becomes empty, with grace period of three minutes since it's creation.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
+				if( e.Server.Config.TempChannelCategoryId == 0 )
+				{
+					await e.SendReplySafe("This command has to be configured on the config page (social) <https://valkyrja.app/config>");
+					return;
+				}
+
 				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
 				{
 					await e.SendReplySafe($"Usage: `{e.Server.Config.CommandPrefix}tempChannel <name>` or `{e.Server.Config.CommandPrefix}tempChannel [userLimit] <name>`");
@@ -1159,7 +1165,10 @@ namespace Botwinder.modules
 				{
 					RestVoiceChannel tempChannel = null;
 					if( limited )
-						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => c.UserLimit = limit);
+						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => {
+							c.CategoryId = e.Server.Config.TempChannelCategoryId;
+							c.UserLimit = limit;
+						});
 					else
 						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString());
 
