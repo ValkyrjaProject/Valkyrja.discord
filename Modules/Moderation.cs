@@ -1159,7 +1159,7 @@ namespace Botwinder.modules
 					name.Append(e.MessageArgs[i]);
 					name.Append(" ");
 				}
-				string responseString = string.Format(TempChannelConfirmString, e.TrimmedMessage);
+				string responseString = string.Format(TempChannelConfirmString, name.ToString());
 
 				try
 				{
