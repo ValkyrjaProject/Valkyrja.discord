@@ -13,8 +13,8 @@
     <ProjectReference Include="..\ServerSpecific\Botwinder.specific.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Core" Version="2.0.0-beta2-00012" />
-    <PackageReference Include="Discord.Net.Rest" Version="2.0.0-beta2-00012" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta2-00012" />
+    <PackageReference Include="Discord.Net.Core" Version="2.2.0-dev-dev" />
+    <PackageReference Include="Discord.Net.Rest" Version="2.2.0-dev-dev" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.2.0-dev-dev" />
   </ItemGroup>
 </Project>
