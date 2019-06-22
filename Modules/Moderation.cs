@@ -1170,7 +1170,7 @@ namespace Botwinder.modules
 							c.UserLimit = limit;
 						});
 					else
-						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString());
+						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => c.CategoryId = e.Server.Config.TempChannelCategoryId);
 
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
