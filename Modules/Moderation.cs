@@ -1173,7 +1173,7 @@ namespace Botwinder.modules
 						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => c.CategoryId = e.Server.Config.TempChannelCategoryId);
 
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
+					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == tempChannel.Id);
 					if( channel == null )
 					{
 						channel = new ChannelConfig{
@@ -1277,6 +1277,12 @@ namespace Botwinder.modules
 						continue;
 					}
 					catch(Exception) { }
+				}
+				else if( channel == null )
+				{
+					channelConfig.Temporary = false;
+					channelsToRemove.Add(channelConfig);
+					save = true;
 				}
 			}
 
