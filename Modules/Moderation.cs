@@ -40,11 +40,8 @@ namespace Botwinder.modules
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
 		private const string BanReasonTooLongString = "Ban reason has 512 characters limit.\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <https://valkyrja.app/config>";
-		private const string TempChannelConfirmString = "Here you go! <3\n_(Temporary channel `{0}` was created.)_";
 
 		private BotwinderClient Client;
-
-		private TimeSpan TempChannelDelay = TimeSpan.FromMinutes(3);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -1133,72 +1130,6 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
-// !tempChannel
-			newCommand = new Command("tempChannel");
-			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Creates a temporary voice channel. This channel will be destroyed when it becomes empty, with grace period of three minutes since it's creation.";
-			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
-			newCommand.OnExecute += async e => {
-				if( e.Server.Config.TempChannelCategoryId == 0 )
-				{
-					await e.SendReplySafe("This command has to be configured on the config page (social) <https://valkyrja.app/config>");
-					return;
-				}
-
-				if( string.IsNullOrWhiteSpace(e.TrimmedMessage) )
-				{
-					await e.SendReplySafe($"Usage: `{e.Server.Config.CommandPrefix}tempChannel <name>` or `{e.Server.Config.CommandPrefix}tempChannel [userLimit] <name>`");
-					return;
-				}
-
-				int limit = 0;
-				bool limited = int.TryParse(e.MessageArgs[0], out limit);
-				StringBuilder name = new StringBuilder();
-				for(int i = limited ? 1 : 0; i < e.MessageArgs.Length; i++)
-				{
-					name.Append(e.MessageArgs[i]);
-					name.Append(" ");
-				}
-				string responseString = string.Format(TempChannelConfirmString, name.ToString());
-
-				try
-				{
-					RestVoiceChannel tempChannel = null;
-					if( limited )
-						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => {
-							c.CategoryId = e.Server.Config.TempChannelCategoryId;
-							c.UserLimit = limit;
-						});
-					else
-						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => c.CategoryId = e.Server.Config.TempChannelCategoryId);
-
-					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == tempChannel.Id);
-					if( channel == null )
-					{
-						channel = new ChannelConfig{
-							ServerId = e.Server.Id,
-							ChannelId = tempChannel.Id
-						};
-
-						dbContext.Channels.Add(channel);
-					}
-
-					channel.Temporary = true;
-					dbContext.SaveChanges();
-					dbContext.Dispose();
-				}
-				catch(Exception exception)
-				{
-					await this.Client.LogException(exception, e);
-					responseString = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
-				}
-				await e.SendReplySafe(responseString);
-			};
-			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("tmp"));
-			commands.Add(newCommand.CreateAlias("tc"));
-
 			return commands;
 		}
 
@@ -1244,7 +1175,7 @@ namespace Botwinder.modules
 
 			//Channels
 			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
-			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.Temporary || (c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow)) )
+			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow) )
 			{
 				Server server;
 				if( !client.Servers.ContainsKey(channelConfig.ServerId) ||
@@ -1255,33 +1186,6 @@ namespace Botwinder.modules
 				if( channelConfig.MutedUntil > minTime && channelConfig.MutedUntil < DateTime.UtcNow )
 				{
 					await UnmuteChannel(channelConfig, client.DiscordClient.CurrentUser);
-					save = true;
-					continue;
-				}
-
-				//Temporary voice channels
-				if( !channelConfig.Temporary )
-					continue;
-
-				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);
-				if( channel != null &&
-				    channel.CreatedAt < DateTimeOffset.UtcNow - this.TempChannelDelay &&
-				    !channel.Users.Any() )
-				{
-					try
-					{
-						await channel.DeleteAsync();
-						channelConfig.Temporary = false;
-						channelsToRemove.Add(channelConfig);
-						save = true;
-						continue;
-					}
-					catch(Exception) { }
-				}
-				else if( channel == null )
-				{
-					channelConfig.Temporary = false;
-					channelsToRemove.Add(channelConfig);
 					save = true;
 				}
 			}
