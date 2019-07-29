@@ -917,6 +917,13 @@ namespace Botwinder.modules
 										continue;
 
 									await user.RemoveRoleAsync(roleToRemove);
+									try
+									{
+										if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage msg )
+											await msg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
+									}
+									catch(Exception) { } //Potential permission issue?
+
 									userHasCount--;
 								}
 							}
