@@ -922,7 +922,10 @@ namespace Botwinder.modules
 										if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage msg )
 											await msg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
 									}
-									catch(Exception) { } //Potential permission issue?
+									catch(Exception e)
+									{
+										await this.HandleException(e, "Failed to remove reaction.", server.Id);
+									}
 
 									userHasCount--;
 								}
