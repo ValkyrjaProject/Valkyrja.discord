@@ -104,6 +104,7 @@ namespace Botwinder.modules
 			newCommand = new Command("mentionRole");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Mention a role with a message. Use with the name of the role as the first parameter and the message will be the rest.";
+			newCommand.DeleteRequest = true;
 			newCommand.RequiredPermissions = PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
