@@ -27,6 +27,7 @@ namespace Botwinder.modules
 		private readonly Regex ProfileParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 		private readonly Regex ProfileOptionRegex = new Regex("--?\\w+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 		private readonly Regex ProfileEmptyOptionRegex = new Regex("--?\\w+(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+		private readonly Regex UserIdRegex = new Regex("\\d+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -168,6 +169,50 @@ namespace Botwinder.modules
 				{
 					await e.Channel.SendMessageAsync("", embed: GetProfileEmbed(dbContext, e.Server, e.Message.Author as SocketGuildUser));
 				}
+
+				dbContext.Dispose();
+			};
+			commands.Add(newCommand);
+
+// !sendProfile
+			newCommand = new Command("sendProfile");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Send your profile to preconfigured introduction channel. Get Help: setProfile --help";
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )
+				{
+					await e.SendReplySafe("User profiles are a subscriber-only feature.");
+					return;
+				}
+
+				IMessageChannel channel = null;
+				if( !e.Server.Config.ProfileEnabled || e.Server.Config.ProfileChannelId == 0 || (channel = e.Server.Guild.GetTextChannel(e.Server.Config.ProfileChannelId)) == null )
+				{
+					await e.SendReplySafe("User profiles do not have a channel configured.");
+					return;
+				}
+
+				List<IMessage> messages = new List<IMessage>();
+				guid lastMessage = 0;
+				int downloadedCount = 0;
+				do
+				{
+					IMessage[] downloaded = await channel.GetMessagesAsync(lastMessage, Direction.After, 100, CacheMode.AllowDownload).Flatten().ToArray();
+					lastMessage = messages.FirstOrDefault()?.Id ?? 0;
+					downloadedCount = downloaded.Length;
+					if( downloaded.Any() )
+						messages.AddRange(downloaded);
+				} while( downloadedCount >= 100 && lastMessage > 0 );
+
+				IMessage message = messages.FirstOrDefault(m => guid.TryParse(this.UserIdRegex.Match(m.Content).Value, out guid id) && id == e.Message.Author.Id);
+				if( message != null )
+					await message.DeleteAsync();
+
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+
+				await channel.SendMessageAsync($"<@{e.Message.Author.Id}>'s introduction:", embed: GetProfileEmbed(dbContext, e.Server, e.Message.Author as SocketGuildUser));
+				await e.SendReplySafe("It haz been done.");
 
 				dbContext.Dispose();
 			};
