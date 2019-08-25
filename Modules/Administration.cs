@@ -159,6 +159,77 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !createPublicRoles
+			newCommand = new Command("createPublicRoles");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Create public roles with specified names. The first argument will be used as a name for the new role group, followed by a list of whitespace delimited arguments, use quotes to use spaces.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
+				if( e.MessageArgs.Length < 2 )
+				{
+					await e.SendReplySafe(e.Command.Description);
+					return;
+				}
+
+				StringBuilder response = new StringBuilder("Roles created:\n");
+
+				Int64 groupId = 1;
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				IEnumerable<RoleGroupConfig> roleGroups = dbContext.PublicRoleGroups.Where(g => g.ServerId == e.Server.Id);
+				foreach( RoleGroupConfig group in roleGroups )
+				{
+					if( groupId < group.GroupId )
+						groupId = group.GroupId;
+				}
+
+				RoleGroupConfig roleGroup = new RoleGroupConfig(){
+					ServerId = e.Server.Id,
+					GroupId = groupId,
+					Name = e.MessageArgs[0],
+					RoleLimit = 1
+				};
+				dbContext.PublicRoleGroups.Add(roleGroup);
+
+				bool save = true;
+				for( int i = 1; i < e.MessageArgs.Length; i++ )
+				{
+					try
+					{
+						RestRole role = await e.Server.Guild.CreateRoleAsync(e.MessageArgs[i], GuildPermissions.None);
+
+						RoleConfig roleConfig = new RoleConfig(){
+							ServerId = e.Server.Id,
+							RoleId = role.Id,
+							PermissionLevel = RolePermissionLevel.Public,
+							PublicRoleGroupId = groupId
+						};
+						dbContext.Roles.Add(roleConfig);
+
+						response.AppendLine($"`{role.Id}` | `{role.Name}`");
+					}
+					catch(Exception)
+					{
+						save = false;
+						response.AppendLine($"__Something went wrong__ :/");
+						break;
+					}
+				}
+
+				if( save )
+				{
+					dbContext.SaveChanges();
+				}
+				dbContext.Dispose();
+
+				await e.SendReplySafe(response.ToString());
+			};
+			commands.Add(newCommand);
+
 // !createTempRole
 			newCommand = new Command("createTempRole");
 			newCommand.Type = CommandType.Standard;
