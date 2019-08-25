@@ -130,6 +130,35 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !createRoles
+			newCommand = new Command("createRoles");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Create roles with specified names. List of whitespace delimited arguments, use quotes to use spaces.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
+				{
+					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					return;
+				}
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await e.SendReplySafe(e.Command.Description);
+					return;
+				}
+
+				StringBuilder response = new StringBuilder("Roles created:\n");
+
+				for( int i = 0; i < e.MessageArgs.Length; i++ )
+				{
+					RestRole role = await e.Server.Guild.CreateRoleAsync(e.MessageArgs[i], GuildPermissions.None);
+					response.AppendLine($"`{role.Id}` | `{role.Name}`");
+				}
+
+				await e.SendReplySafe(response.ToString());
+			};
+			commands.Add(newCommand);
+
 // !createTempRole
 			newCommand = new Command("createTempRole");
 			newCommand.Type = CommandType.Standard;
