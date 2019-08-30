@@ -115,11 +115,14 @@ namespace Botwinder.modules
 				Quote quote = quotes.FirstOrDefault(q => q.Id == id);
 				if( quote != null )
 				{
+					dbContext.Quotes.Remove(quote);
 					if( quote.Id != count - 1 )
 					{
-						dbContext.Quotes.First(q => q.ServerId == e.Server.Id && q.Id == count - 1).Id = quote.Id;
+						Quote replacement = dbContext.Quotes.First(q => q.ServerId == e.Server.Id && q.Id == count - 1);
+						Quote newReplacement = replacement.Clone(quote.Id);
+						dbContext.Quotes.Remove(replacement);
+						dbContext.Quotes.Add(newReplacement);
 					}
-					dbContext.Quotes.Remove(quote);
 					dbContext.SaveChanges();
 				}
 
