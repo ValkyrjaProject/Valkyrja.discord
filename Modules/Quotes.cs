@@ -87,27 +87,43 @@ namespace Botwinder.modules
 // !removeQuote
 			newCommand = new Command("removeQuote");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Remove the last created quote.";
+			newCommand.Description = "Remove the last created quote, or specify ID to be removed.";
 			newCommand.RequiredPermissions = PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				string response = "There ain't no quotes here! Add some first :]";
-
 				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
-
-				if( quotes.Any() )
+				if( !quotes.Any() )
 				{
-					int id = quotes.Count() - 1;
-					Quote quote = quotes.FirstOrDefault(q => q.Id == id);
-					if( quote != null )
-					{
-						response = "Removed:\n" + quote.ToString();
-						dbContext.Quotes.Remove(quote);
-						dbContext.SaveChanges();
-					}
+					await e.SendReplySafe("There ain't no quotes here! Add some first :]");
+					dbContext.Dispose();
+					return;
 				}
 
-				await e.SendReplySafe(response);
+				Int64 id = 0;
+				int count = quotes.Count();
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					id = count - 1;
+				}
+				else if( !Int64.TryParse(e.TrimmedMessage, out id) || id >= count || id < 0 )
+				{
+					await e.SendReplySafe("Invalid argument.");
+					dbContext.Dispose();
+					return;
+				}
+
+				Quote quote = quotes.FirstOrDefault(q => q.Id == id);
+				if( quote != null )
+				{
+					if( quote.Id != count - 1 )
+					{
+						dbContext.Quotes.First(q => q.ServerId == e.Server.Id && q.Id == count - 1).Id = quote.Id;
+					}
+					dbContext.Quotes.Remove(quote);
+					dbContext.SaveChanges();
+				}
+
+				await e.SendReplySafe($"Removed:\n {quote.ToString()}");
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
