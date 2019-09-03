@@ -245,6 +245,10 @@ namespace Botwinder.modules
 						case "--description":
 							embedBuilder.WithDescription(value);
 							break;
+						case "--color":
+							uint color = uint.Parse(value.TrimStart('#'), System.Globalization.NumberStyles.AllowHexSpecifier);
+							embedBuilder.WithColor(color);
+							break;
 						case "--fieldName":
 							embedBuilder.AddField(currentField = new EmbedFieldBuilder().WithName(value));
 							break;
