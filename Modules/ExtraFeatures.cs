@@ -227,7 +227,7 @@ namespace Botwinder.modules
 							return;
 						}
 
-						currentField.IsInline = true;
+						currentField.WithIsInline(true);
 						continue;
 					}
 
