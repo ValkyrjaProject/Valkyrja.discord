@@ -150,7 +150,6 @@ namespace Botwinder.modules
 			newCommand = new Command("cheatsheet");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Send an embed cheatsheet with various moderation commands.";
-			newCommand.DeleteRequest = true;
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				EmbedBuilder embedBuilder = new EmbedBuilder();
