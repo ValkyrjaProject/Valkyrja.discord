@@ -154,36 +154,37 @@ namespace Botwinder.modules
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				EmbedBuilder embedBuilder = new EmbedBuilder();
-				embedBuilder.WithTitle("Moderation commands").WithColor(16711816).WithFields(new EmbedFieldBuilder()
-					.WithName($"`{e.Server.Config.CommandPrefix}op`").WithValue("Distinguish yourself as a moderator when addressing people, and allow the use of `!mute`, `!kick` & `!ban` commands.")
-					.WithName($"`{e.Server.Config.CommandPrefix}mute @user(s) duration`").WithValue("Mute mentioned user(s) for `duration` (use `m`, `h` and `d`, e.g. 1h15m. This will effectively move them to the `#chill-zone` channel.")
-					.WithName($"`{e.Server.Config.CommandPrefix}kick @user(s) reason`").WithValue("Kick mentioned `@users` (or IDs) with specific `reason`.")
-					.WithName($"`{e.Server.Config.CommandPrefix}ban @user(s) duration reason`").WithValue("Ban mentioned `@users` (or IDs) for `duration` (use `h` and `d`, e.g. 1d12h, or zero `0d` for permanent) with specific `reason`.")
-					.WithName("`reason`").WithValue("Reason parameter of the above `kick` and `ban` commands is stored in the database as a _warning_ and also PMed to the user. Please provide proper descriptions.")
-					.WithName($"`{e.Server.Config.CommandPrefix}issueWarning @user(s) message`").WithValue("The same as `addWarning`, but also PM this message to the user(s)")
-					.WithName($"`{e.Server.Config.CommandPrefix}addWarning @user(s) message`").WithValue("Add a `message` to the database, taking notes of peoples naughty actions.")
-					.WithName($"`{e.Server.Config.CommandPrefix}removeWarning @user`").WithValue("Remove the last added warning from the `@user` (or ID)")
-					.WithName($"`{e.Server.Config.CommandPrefix}whois @user`").WithValue("Search for a `@user` (or ID, or name) who is present on the server.")
-					.WithName($"`{e.Server.Config.CommandPrefix}find expression`").WithValue("Search for a user using more complex search through all the past nicknames, etc... This will also go through people who are not on the server anymore.")
-					.WithName($"`whois/find`").WithValue("Both whois and find commands will return information about the user, when was their account created, when did they join, their past names and nicknames, and all the previous warnings and bans.")
+				embedBuilder.WithTitle("Moderation commands").WithColor(16711816).WithFields(
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}op`").WithValue("Distinguish yourself as a moderator when addressing people, and allow the use of `!mute`, `!kick` & `!ban` commands."),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}mute @user(s) duration`").WithValue("Mute mentioned user(s) for `duration` (use `m`, `h` and `d`, e.g. 1h15m. This will effectively move them to the `#chill-zone` channel."),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}kick @user(s) reason`").WithValue("Kick mentioned `@users` (or IDs) with specific `reason`."),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}ban @user(s) duration reason`").WithValue("Ban mentioned `@users` (or IDs) for `duration` (use `h` and `d`, e.g. 1d12h, or zero `0d` for permanent) with specific `reason`."),
+					new EmbedFieldBuilder().WithName("`reason`").WithValue("Reason parameter of the above `kick` and `ban` commands is stored in the database as a _warning_ and also PMed to the user. Please provide proper descriptions."),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}issueWarning @user(s) message`").WithValue("The same as `addWarning`, but also PM this message to the user(s)"),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}addWarning @user(s) message`").WithValue("Add a `message` to the database, taking notes of peoples naughty actions."),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}removeWarning @user`").WithValue("Remove the last added warning from the `@user` (or ID)"),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}whois @user`").WithValue("Search for a `@user` (or ID, or name) who is present on the server."),
+					new EmbedFieldBuilder().WithName($"`{e.Server.Config.CommandPrefix}find expression`").WithValue("Search for a user using more complex search through all the past nicknames, etc... This will also go through people who are not on the server anymore."),
+					new EmbedFieldBuilder().WithName($"`whois/find`").WithValue("Both whois and find commands will return information about the user, when was their account created, when did they join, their past names and nicknames, and all the previous warnings and bans.")
 				);
 
 				RestUserMessage msg = await e.Channel.SendMessageAsync(embed: embedBuilder.Build());
 				await msg.PinAsync();
 
 				embedBuilder = new EmbedBuilder();
-				embedBuilder.WithTitle("Moderation guidelines").WithColor(16711816).WithDescription("for implementing the [theory](http://rhea-ayase.eu/articles/2017-04/Moderation-guidelines) in real situations.\n").WithFields(new EmbedFieldBuilder()
-					.WithName("__Talking to people__").WithValue("~")
-					.WithName("Don't use threats.").WithValue("a) **Imposed consequences** - what you can do with your power (kick, ban,...) These are direct threads, avoid them.\nb) **Natural consequences** - implied effects of members actions. These can include \"the community is growing to dislike you,\" or \"see you as racist,\" etc...")
-					.WithName("Identify what is the underlying problem.").WithValue("a) **Motivation problem** - the member is not motivated to behave in acceptable manner - is a troll or otherwise enjoys being mean to people.\nb) **Ability problem** - the member may be direct without \"filters\" and their conversation often comes off as offensive while they just state things the way they see them: http://www.mit.edu/~jcb/tact.html")
-					.WithName("Conversation should follow:").WithValue("1) **Explain** the current situation / problem.\n2) **Establish safety** - you're not trying to ban them or discourage them from participating.\n3) **Call to action** - make sure to end the conversation with an agreement about what steps will be taken towards improvement.\n")
-					.WithName("__Taking action__").WithValue("~")
-					.WithName("Always log every action").WithValue("with `warnings`, and always check every member and their history.")
-					.WithName("Contents of our channels should not be disrespectful towards anyone, think about minorities.").WithValue("a) Discussion topic going wild, the use of racial/homophobic or other improper language should be pointed out with an explanation that it is not cool towards minorities within our community.\nb) A member being plain disrespectful on purpose... Mute them, see their reaction to moderation talk and act on it.")
-					.WithName("Posting or even spamming inappropriate content").WithValue("should result in immediate mute and only then followed by explaining correct behavior based on all of the above points.")
-					.WithName("Repeated offense").WithValue("a) 1d ban, 3d ban, 7d ban - are your options depending on how severe it is.\nb) Permanent ban should be brought up for discussion with the rest of the team.")
-					.WithName("Member is disrespectful to the authority.").WithValue("If you get into conflict yourself, someone is disrespectful to you as a moderator, trolling and challenging your authority - step back and ask for help, mention `@Staff` in the mod channel, and let 3rd party deal with it.")
-				);
+				embedBuilder.WithTitle("Moderation guidelines").WithColor(16711816).WithDescription("for implementing the [theory](http://rhea-ayase.eu/articles/2017-04/Moderation-guidelines) in real situations.\n")
+					.WithFields(
+						new EmbedFieldBuilder().WithName("__Talking to people__").WithValue("~"),
+						new EmbedFieldBuilder().WithName("Don't use threats.").WithValue("a) **Imposed consequences** - what you can do with your power (kick, ban,...) These are direct threads, avoid them.\nb) **Natural consequences** - implied effects of members actions. These can include \"the community is growing to dislike you,\" or \"see you as racist,\" etc..."),
+						new EmbedFieldBuilder().WithName("Identify what is the underlying problem.").WithValue("a) **Motivation problem** - the member is not motivated to behave in acceptable manner - is a troll or otherwise enjoys being mean to people.\nb) **Ability problem** - the member may be direct without \"filters\" and their conversation often comes off as offensive while they just state things the way they see them: http://www.mit.edu/~jcb/tact.html"),
+						new EmbedFieldBuilder().WithName("Conversation should follow:").WithValue("1) **Explain** the current situation / problem.\n2) **Establish safety** - you're not trying to ban them or discourage them from participating.\n3) **Call to action** - make sure to end the conversation with an agreement about what steps will be taken towards improvement.\n"),
+						new EmbedFieldBuilder().WithName("__Taking action__").WithValue("~"),
+						new EmbedFieldBuilder().WithName("Always log every action").WithValue("with `warnings`, and always check every member and their history."),
+						new EmbedFieldBuilder().WithName("Contents of our channels should not be disrespectful towards anyone, think about minorities.").WithValue("a) Discussion topic going wild, the use of racial/homophobic or other improper language should be pointed out with an explanation that it is not cool towards minorities within our community.\nb) A member being plain disrespectful on purpose... Mute them, see their reaction to moderation talk and act on it."),
+						new EmbedFieldBuilder().WithName("Posting or even spamming inappropriate content").WithValue("should result in immediate mute and only then followed by explaining correct behavior based on all of the above points."),
+						new EmbedFieldBuilder().WithName("Repeated offense").WithValue("a) 1d ban, 3d ban, 7d ban - are your options depending on how severe it is.\nb) Permanent ban should be brought up for discussion with the rest of the team."),
+						new EmbedFieldBuilder().WithName("Member is disrespectful to the authority.").WithValue("If you get into conflict yourself, someone is disrespectful to you as a moderator, trolling and challenging your authority - step back and ask for help, mention `@Staff` in the mod channel, and let 3rd party deal with it.")
+					);
 
 				msg = await e.Channel.SendMessageAsync(embed: embedBuilder.Build());
 				await msg.PinAsync();
