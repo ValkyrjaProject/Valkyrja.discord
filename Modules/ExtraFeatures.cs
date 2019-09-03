@@ -20,6 +20,8 @@ namespace Botwinder.modules
 		private const string ErrorTooManyFound = "I found more than one role with that expression, please be more specific.";
 		private const string ErrorUnknownString = "Unknown error, please poke <@{0}> to take a look x_x";
 		private const string TempChannelConfirmString = "Here you go! <3\n_(Temporary channel `{0}` was created.)_";
+		private readonly Regex EmbedParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+		private readonly Regex EmbedOptionRegex = new Regex("--?\\w+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
 		private BotwinderClient Client;
 
@@ -187,6 +189,81 @@ namespace Botwinder.modules
 
 				msg = await e.Channel.SendMessageAsync(embed: embedBuilder.Build());
 				await msg.PinAsync();
+			};
+			commands.Add(newCommand);
+
+// !embed
+			newCommand = new Command("embed");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Build an embed. Use without arguments for help.";
+			newCommand.DeleteRequest = true;
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( string.IsNullOrEmpty(e.TrimmedMessage) || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" )
+				{
+					await e.SendReplySafe("```md\nCreate an embed using the following parameters:\n" +
+					                      "[ --title       ] Short title\n" +
+					                      "[ --description ] Short description\n" +
+					                      "[ --fieldName   ] Short name of a field - every field has to begin with a name\n" +
+					                      "[ --fieldValue  ] Text value of a field - has to follow a name\n" +
+					                      "[ --fieldInline ] Use to set the field as inline.\n" +
+					                      "Where you can repeat the field* options multiple times.\n```"
+					);
+					return;
+				}
+
+				EmbedFieldBuilder currentField = null;
+				EmbedBuilder embedBuilder = new EmbedBuilder();
+				MatchCollection matches = this.EmbedParamRegex.Matches(e.TrimmedMessage);
+				foreach( Match match in matches )
+				{
+					string optionString = this.EmbedOptionRegex.Match(match.Value).Value;
+					if( optionString == "--fieldInline" )
+					{
+						if( currentField == null )
+						{
+							await e.SendReplySafe($"`fieldInline` can not precede `fieldName`.");
+							return;
+						}
+
+						currentField.IsInline = true;
+						continue;
+					}
+
+					string value = match.Value.Substring(optionString.Length + 1);
+					if( value.Length >= UserProfileOption.ValueCharacterLimit )
+					{
+						await e.SendReplySafe($"`{optionString}` is too long! (It's {value.Length} characters while the limit is {UserProfileOption.ValueCharacterLimit})");
+						return;
+					}
+
+					switch(optionString)
+					{
+						case "--title":
+							embedBuilder.WithTitle(value);
+							break;
+						case "--description":
+							embedBuilder.WithDescription(value);
+							break;
+						case "--fieldName":
+							embedBuilder.AddField(currentField = new EmbedFieldBuilder().WithName(value));
+							break;
+						case "--fieldValue":
+							if( currentField == null )
+							{
+								await e.SendReplySafe($"`fieldValue` can not precede `fieldName`.");
+								return;
+							}
+
+							currentField.WithValue(value);
+							break;
+						default:
+							await e.SendReplySafe($"Unknown option: `{optionString}`");
+							return;
+					}
+				}
+
+				await e.Channel.SendMessageAsync(embed: embedBuilder.Build());
 			};
 			commands.Add(newCommand);
 
