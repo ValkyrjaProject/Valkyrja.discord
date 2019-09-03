@@ -205,9 +205,10 @@ namespace Botwinder.modules
 					                      "[ --title       ] Short title\n" +
 					                      "[ --description ] Short description\n" +
 					                      "[ --color       ] #rrggbb hex color used for the embed stripe.\n" +
+					                      "[ --image       ] URL of a Hjuge image in the bottom.\n" +
+					                      "[ --thumbnail   ] URL of a smol image on the side.\n" +
 					                      "[ --fieldName   ] Short name of a field - every field has to begin with a name\n" +
 					                      "[ --fieldValue  ] Text value of a field - has to follow a name\n" +
-					                      "[ --fieldInline ] Use to set the field as inline.\n" +
 					                      "Where you can repeat the field* options multiple times.\n```"
 					);
 					return;
