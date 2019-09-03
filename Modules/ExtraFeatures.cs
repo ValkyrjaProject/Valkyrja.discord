@@ -196,7 +196,6 @@ namespace Botwinder.modules
 			newCommand = new Command("embed");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Build an embed. Use without arguments for help.";
-			newCommand.DeleteRequest = true;
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" )
