@@ -176,7 +176,7 @@ namespace Botwinder.modules
 				embedBuilder.WithTitle("Moderation guidelines").WithColor(16711816).WithDescription("for implementing the [theory](http://rhea-ayase.eu/articles/2017-04/Moderation-guidelines) in real situations.\n")
 					.WithFields(
 						new EmbedFieldBuilder().WithName("__Talking to people__").WithValue("~"),
-						new EmbedFieldBuilder().WithName("Don't use threats.").WithValue("a) **Imposed consequences** - what you can do with your power (kick, ban,...) These are direct threads, avoid them.\nb) **Natural consequences** - implied effects of members actions. These can include \"the community is growing to dislike you,\" or \"see you as racist,\" etc..."),
+						new EmbedFieldBuilder().WithName("Don't use threats.").WithValue("a) **Imposed consequences** - what you can do with your power (kick, ban,...) These are direct threats, avoid them.\nb) **Natural consequences** - implied effects of members actions. These can include \"the community is growing to dislike you,\" or \"see you as racist,\" etc..."),
 						new EmbedFieldBuilder().WithName("Identify what is the underlying problem.").WithValue("a) **Motivation problem** - the member is not motivated to behave in acceptable manner - is a troll or otherwise enjoys being mean to people.\nb) **Ability problem** - the member may be direct without \"filters\" and their conversation often comes off as offensive while they just state things the way they see them: http://www.mit.edu/~jcb/tact.html"),
 						new EmbedFieldBuilder().WithName("Conversation should follow:").WithValue("1) **Explain** the current situation / problem.\n2) **Establish safety** - you're not trying to ban them or discourage them from participating.\n3) **Call to action** - make sure to end the conversation with an agreement about what steps will be taken towards improvement.\n"),
 						new EmbedFieldBuilder().WithName("__Taking action__").WithValue("~"),
@@ -204,6 +204,7 @@ namespace Botwinder.modules
 					await e.SendReplySafe("```md\nCreate an embed using the following parameters:\n" +
 					                      "[ --title       ] Short title\n" +
 					                      "[ --description ] Short description\n" +
+					                      "[ --color       ] #rrggbb hex color used for the embed stripe.\n" +
 					                      "[ --fieldName   ] Short name of a field - every field has to begin with a name\n" +
 					                      "[ --fieldValue  ] Text value of a field - has to follow a name\n" +
 					                      "[ --fieldInline ] Use to set the field as inline.\n" +
