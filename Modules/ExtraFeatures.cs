@@ -246,6 +246,12 @@ namespace Botwinder.modules
 						case "--description":
 							embedBuilder.WithDescription(value);
 							break;
+						case "--image":
+							embedBuilder.WithImageUrl(value);
+							break;
+						case "--thumbnail":
+							embedBuilder.WithThumbnailUrl(value);
+							break;
 						case "--color":
 							uint color = uint.Parse(value.TrimStart('#'), System.Globalization.NumberStyles.AllowHexSpecifier);
 							embedBuilder.WithColor(color);
