@@ -201,6 +201,7 @@ namespace Botwinder.modules
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" )
 				{
 					await e.SendReplySafe("```md\nCreate an embed using the following parameters:\n" +
+					                      "[ --channel     ] Channel where to send the embed.\n" +
 					                      "[ --title       ] Short title\n" +
 					                      "[ --description ] Short description\n" +
 					                      "[ --color       ] #rrggbb hex color used for the embed stripe.\n" +
@@ -213,6 +214,7 @@ namespace Botwinder.modules
 					return;
 				}
 
+				SocketTextChannel channel = e.Channel;
 				EmbedFieldBuilder currentField = null;
 				EmbedBuilder embedBuilder = new EmbedBuilder();
 				MatchCollection matches = this.EmbedParamRegex.Matches(e.TrimmedMessage);
@@ -231,7 +233,13 @@ namespace Botwinder.modules
 						continue;
 					}
 
-					string value = match.Value.Substring(optionString.Length + 1);
+					string value = match.Value.Substring(optionString.Length + 1).Trim();
+					if( string.IsNullOrWhiteSpace(value) )
+					{
+						await e.SendReplySafe($"Invalid value for `{optionString}`");
+						return;
+					}
+
 					if( value.Length >= UserProfileOption.ValueCharacterLimit )
 					{
 						await e.SendReplySafe($"`{optionString}` is too long! (It's {value.Length} characters while the limit is {UserProfileOption.ValueCharacterLimit})");
@@ -240,6 +248,13 @@ namespace Botwinder.modules
 
 					switch(optionString)
 					{
+						case "--channel":
+							if( !guid.TryParse(value.Trim('<', '>', '#'), out guid id) || (channel = e.Server.Guild.GetTextChannel(id)) == null )
+							{
+								await e.SendReplySafe($"Channel {value} not found.");
+								return;
+							}
+							break;
 						case "--title":
 							embedBuilder.WithTitle(value);
 							break;
@@ -274,7 +289,7 @@ namespace Botwinder.modules
 					}
 				}
 
-				await e.Channel.SendMessageAsync(embed: embedBuilder.Build());
+				await channel.SendMessageAsync(embed: embedBuilder.Build());
 			};
 			commands.Add(newCommand);
 
