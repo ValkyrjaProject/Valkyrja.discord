@@ -226,6 +226,7 @@ namespace Botwinder.modules
 					if( optionString == "--debug" )
 					{
 						debug = true;
+						continue;
 					}
 
 					if( optionString == "--fieldInline" ) //Undocumented, doesn't seem to work?
