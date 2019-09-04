@@ -21,7 +21,7 @@ namespace Botwinder.modules
 		private const string ErrorUnknownString = "Unknown error, please poke <@{0}> to take a look x_x";
 		private const string TempChannelConfirmString = "Here you go! <3\n_(Temporary channel `{0}` was created.)_";
 		//private readonly Regex EmbedParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
-		private readonly Regex EmbedParamRegex = new Regex("--?\\w+.*?(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+		private readonly Regex EmbedParamRegex = new Regex("--?\\w+.*?(?=\\s--?\\w|$)", RegexOptions.Singleline | RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 		private readonly Regex EmbedOptionRegex = new Regex("--?\\w+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
 		private BotwinderClient Client;
@@ -227,7 +227,8 @@ namespace Botwinder.modules
 
 					if( optionString == "--debug" )
 					{
-						debug = true;
+						if( this.Client.IsGlobalAdmin(e.Message.Author.Id) || this.Client.IsSupportTeam(e.Message.Author.Id) )
+							debug = true;
 						continue;
 					}
 
@@ -245,8 +246,8 @@ namespace Botwinder.modules
 						continue;
 					}
 
-					string value = match.Value.Substring(optionString.Length + 1).Trim();
-					if( string.IsNullOrWhiteSpace(value) )
+					string value;
+					if( match.Value.Length <= optionString.Length || string.IsNullOrWhiteSpace(value  = match.Value.Substring(optionString.Length + 1).Trim()) )
 					{
 						await e.SendReplySafe($"Invalid value for `{optionString}`");
 						return;
@@ -304,7 +305,7 @@ namespace Botwinder.modules
 						case "--fieldName":
 							if( currentField != null && currentField.Value == null )
 							{
-								await e.SendReplySafe($"Field {currentField.Name} is missing a value!");
+								await e.SendReplySafe($"Field `{currentField.Name}` is missing a value!");
 								return;
 							}
 
@@ -322,7 +323,7 @@ namespace Botwinder.modules
 
 							currentField.WithValue(value);
 							if( debug )
-								await e.SendReplySafe($"Setting value:\n```\n{value}\n```\n\n...for field:`{currentField.Name}`");
+								await e.SendReplySafe($"Setting value:\n```\n{value}\n```\n...for field:`{currentField.Name}`");
 
 							break;
 						default:
@@ -333,7 +334,7 @@ namespace Botwinder.modules
 
 				if( currentField != null && currentField.Value == null )
 				{
-					await e.SendReplySafe($"Field {currentField.Name} is missing a value!");
+					await e.SendReplySafe($"Field `{currentField.Name}` is missing a value!");
 					return;
 				}
 
