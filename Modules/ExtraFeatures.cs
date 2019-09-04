@@ -20,7 +20,8 @@ namespace Botwinder.modules
 		private const string ErrorTooManyFound = "I found more than one role with that expression, please be more specific.";
 		private const string ErrorUnknownString = "Unknown error, please poke <@{0}> to take a look x_x";
 		private const string TempChannelConfirmString = "Here you go! <3\n_(Temporary channel `{0}` was created.)_";
-		private readonly Regex EmbedParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+		//private readonly Regex EmbedParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+		private readonly Regex EmbedParamRegex = new Regex("--?\\w+.*?(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 		private readonly Regex EmbedOptionRegex = new Regex("--?\\w+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
 		private BotwinderClient Client;
@@ -207,8 +208,9 @@ namespace Botwinder.modules
 					                      "[ --color       ] #rrggbb hex color used for the embed stripe.\n" +
 					                      "[ --image       ] URL of a Hjuge image in the bottom.\n" +
 					                      "[ --thumbnail   ] URL of a smol image on the side.\n" +
-					                      "[ --fieldName   ] Short name of a field - every field has to begin with a name\n" +
-					                      "[ --fieldValue  ] Text value of a field - has to follow a name\n" +
+					                      "[ --fieldName   ] Create a new field with specified name.\n" +
+					                      "[ --fieldValue  ] Text value of a field - has to follow a name.\n" +
+					                      "[ --fieldInline ] Use to set the field as inline.\n" +
 					                      "Where you can repeat the field* options multiple times.\n```"
 					);
 					return;
@@ -218,8 +220,8 @@ namespace Botwinder.modules
 				SocketTextChannel channel = e.Channel;
 				EmbedFieldBuilder currentField = null;
 				EmbedBuilder embedBuilder = new EmbedBuilder();
-				MatchCollection matches = this.EmbedParamRegex.Matches(e.TrimmedMessage);
-				foreach( Match match in matches )
+
+				foreach( Match match in this.EmbedParamRegex.Matches(e.TrimmedMessage) )
 				{
 					string optionString = this.EmbedOptionRegex.Match(match.Value).Value;
 
@@ -229,7 +231,7 @@ namespace Botwinder.modules
 						continue;
 					}
 
-					if( optionString == "--fieldInline" ) //Undocumented, doesn't seem to work?
+					if( optionString == "--fieldInline" )
 					{
 						if( currentField == null )
 						{
@@ -266,37 +268,50 @@ namespace Botwinder.modules
 							}
 							if( debug )
 								await e.SendReplySafe($"Channel set: `{channel.Name}`");
+
 							break;
 						case "--title":
 							embedBuilder.WithTitle(value);
 							if( debug )
 								await e.SendReplySafe($"Title set: `{value}`");
+
 							break;
 						case "--description":
 							embedBuilder.WithDescription(value);
 							if( debug )
 								await e.SendReplySafe($"Description set: `{value}`");
+
 							break;
 						case "--image":
 							embedBuilder.WithImageUrl(value);
 							if( debug )
 								await e.SendReplySafe($"Image URL set: `{value}`");
+
 							break;
 						case "--thumbnail":
 							embedBuilder.WithThumbnailUrl(value);
 							if( debug )
 								await e.SendReplySafe($"Thumbnail URL set: `{value}`");
+
 							break;
 						case "--color":
 							uint color = uint.Parse(value.TrimStart('#'), System.Globalization.NumberStyles.AllowHexSpecifier);
 							embedBuilder.WithColor(color);
 							if( debug )
 								await e.SendReplySafe($"Color `{value}` set.");
+
 							break;
 						case "--fieldName":
+							if( currentField != null && currentField.Value == null )
+							{
+								await e.SendReplySafe($"Field {currentField.Name} is missing a value!");
+								return;
+							}
+
 							embedBuilder.AddField(currentField = new EmbedFieldBuilder().WithName(value));
 							if( debug )
 								await e.SendReplySafe($"Creating new field `{currentField.Name}`");
+
 							break;
 						case "--fieldValue":
 							if( currentField == null )
@@ -308,11 +323,18 @@ namespace Botwinder.modules
 							currentField.WithValue(value);
 							if( debug )
 								await e.SendReplySafe($"Setting value:\n```\n{value}\n```\n\n...for field:`{currentField.Name}`");
+
 							break;
 						default:
 							await e.SendReplySafe($"Unknown option: `{optionString}`");
 							return;
 					}
+				}
+
+				if( currentField != null && currentField.Value == null )
+				{
+					await e.SendReplySafe($"Field {currentField.Name} is missing a value!");
+					return;
 				}
 
 				await channel.SendMessageAsync(embed: embedBuilder.Build());
