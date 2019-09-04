@@ -214,6 +214,7 @@ namespace Botwinder.modules
 					return;
 				}
 
+				bool debug = false;
 				SocketTextChannel channel = e.Channel;
 				EmbedFieldBuilder currentField = null;
 				EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -221,7 +222,13 @@ namespace Botwinder.modules
 				foreach( Match match in matches )
 				{
 					string optionString = this.EmbedOptionRegex.Match(match.Value).Value;
-					if( optionString == "--fieldInline" )
+
+					if( optionString == "--debug" )
+					{
+						debug = true;
+					}
+
+					if( optionString == "--fieldInline" ) //Undocumented, doesn't seem to work?
 					{
 						if( currentField == null )
 						{
@@ -230,6 +237,8 @@ namespace Botwinder.modules
 						}
 
 						currentField.WithIsInline(true);
+						if( debug )
+							await e.SendReplySafe($"Setting inline for field `{currentField.Name}`");
 						continue;
 					}
 
@@ -254,25 +263,39 @@ namespace Botwinder.modules
 								await e.SendReplySafe($"Channel {value} not found.");
 								return;
 							}
+							if( debug )
+								await e.SendReplySafe($"Channel set: `{channel.Name}`");
 							break;
 						case "--title":
 							embedBuilder.WithTitle(value);
+							if( debug )
+								await e.SendReplySafe($"Title set: `{value}`");
 							break;
 						case "--description":
 							embedBuilder.WithDescription(value);
+							if( debug )
+								await e.SendReplySafe($"Description set: `{value}`");
 							break;
 						case "--image":
 							embedBuilder.WithImageUrl(value);
+							if( debug )
+								await e.SendReplySafe($"Image URL set: `{value}`");
 							break;
 						case "--thumbnail":
 							embedBuilder.WithThumbnailUrl(value);
+							if( debug )
+								await e.SendReplySafe($"Thumbnail URL set: `{value}`");
 							break;
 						case "--color":
 							uint color = uint.Parse(value.TrimStart('#'), System.Globalization.NumberStyles.AllowHexSpecifier);
 							embedBuilder.WithColor(color);
+							if( debug )
+								await e.SendReplySafe($"Color `{value}` set.");
 							break;
 						case "--fieldName":
 							embedBuilder.AddField(currentField = new EmbedFieldBuilder().WithName(value));
+							if( debug )
+								await e.SendReplySafe($"Creating new field `{currentField.Name}`");
 							break;
 						case "--fieldValue":
 							if( currentField == null )
@@ -282,6 +305,8 @@ namespace Botwinder.modules
 							}
 
 							currentField.WithValue(value);
+							if( debug )
+								await e.SendReplySafe($"Setting value:\n```\n{value}\n```\n\n...for field:`{currentField.Name}`");
 							break;
 						default:
 							await e.SendReplySafe($"Unknown option: `{optionString}`");
