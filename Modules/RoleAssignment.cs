@@ -719,6 +719,7 @@ namespace Botwinder.modules
 						return;
 				}
 
+				string name = "unknown";
 				try
 				{
 					foreach( ReactionAssignedRole role in roles )
@@ -729,6 +730,8 @@ namespace Botwinder.modules
 						IRole discordRole = server.Guild.GetRole(role.RoleId);
 						if( discordRole == null )
 							continue;
+
+						name = discordRole.Name;
 
 						if( !assignRoles )
 						{
@@ -778,6 +781,7 @@ namespace Botwinder.modules
 				catch(Exception e)
 				{
 					await this.HandleException(e, "Reaction Assigned Roles", server.Id);
+					await server.Guild.Owner.SendMessageAsync($"I am unable to assign an EmojiReaction role `{name}` - Please Fix The Permissions!");
 				}
 			}
 		}
