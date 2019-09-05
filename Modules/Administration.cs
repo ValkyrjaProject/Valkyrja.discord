@@ -86,11 +86,11 @@ namespace Botwinder.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				ReactionAssignedRole reactionRole = dbContext.ReactionAssignedRoles.FirstOrDefault(r => r.ServerId == e.Server.Id && r.MessageId == messageId && r.Emoji == emoji);
 				if( reactionRole == null )
-					reactionRole = new ReactionAssignedRole(){
+					dbContext.ReactionAssignedRoles.Add(reactionRole = new ReactionAssignedRole(){
 						ServerId = e.Server.Id,
 						MessageId = messageId,
 						Emoji = emoji
-					};
+					});
 				else if( reactionRole.RoleId == role.Id )
 				{
 					await e.SendReplySafe("Already exists.");
@@ -104,7 +104,6 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("getrole"));
 
 // !membersOf
 			newCommand = new Command("membersOf");
