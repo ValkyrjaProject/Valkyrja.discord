@@ -68,13 +68,13 @@ namespace Botwinder.modules
 			newCommand.Description = "Add an emoji reaction assigned role to a message.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				if( e.MessageArgs.Length < 3 || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" || !guid.TryParse(e.MessageArgs[0], out guid messageId) )
+				if( e.MessageArgs == null || e.MessageArgs.Length < 3 || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" || !guid.TryParse(e.MessageArgs[0], out guid messageId) )
 				{
 					await e.SendReplySafe($"Usage: `{e.Server.Config.CommandPrefix}{e.CommandId} <messageId> <emoji> <roleId or name expression>`");
 					return;
 				}
 
-				string emoji = e.MessageArgs[1];
+				string emoji = e.MessageArgs[1].Trim(':');
 
 				SocketRole role = e.Server.GetRole(e.MessageArgs[2], out string response);
 				if( role == null )
@@ -101,6 +101,7 @@ namespace Botwinder.modules
 				reactionRole.RoleId = role.Id;
 				dbContext.SaveChanges();
 				dbContext.Dispose();
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("getrole"));
