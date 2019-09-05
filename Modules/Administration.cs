@@ -88,7 +88,7 @@ namespace Botwinder.modules
 				if( reactionRole == null )
 					reactionRole = new ReactionAssignedRole(){
 						ServerId = e.Server.Id,
-						RoleId = role.Id,
+						MessageId = messageId,
 						Emoji = emoji
 					};
 				else if( reactionRole.RoleId == role.Id )
