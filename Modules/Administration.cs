@@ -16,8 +16,6 @@ namespace Botwinder.modules
 	public class Administration: IModule
 	{
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
-		private static string ErrorTooManyFound = "I found more than one role with that expression, please be more specific.";
-		private static string ErrorRoleNotFound = "I did not find a role based on that expression.";
 
 		private BotwinderClient Client;
 
@@ -64,44 +62,67 @@ namespace Botwinder.modules
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("getrole"));
 
+// !addEmojiRole
+			newCommand = new Command("addEmojiRole");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Add an emoji reaction assigned role to a message.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( e.MessageArgs.Length < 3 || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" || !guid.TryParse(e.MessageArgs[0], out guid messageId) )
+				{
+					await e.SendReplySafe($"Usage: `{e.Server.Config.CommandPrefix}{e.CommandId} <messageId> <emoji> <roleId or name expression>`");
+					return;
+				}
+
+				string emoji = e.MessageArgs[1];
+
+				SocketRole role = e.Server.GetRole(e.MessageArgs[2], out string response);
+				if( role == null )
+				{
+					await e.SendReplySafe(response);
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ReactionAssignedRole reactionRole = dbContext.ReactionAssignedRoles.FirstOrDefault(r => r.ServerId == e.Server.Id && r.MessageId == messageId && r.Emoji == emoji);
+				if( reactionRole == null )
+					reactionRole = new ReactionAssignedRole(){
+						ServerId = e.Server.Id,
+						RoleId = role.Id,
+						Emoji = emoji
+					};
+				else if( reactionRole.RoleId == role.Id )
+				{
+					await e.SendReplySafe("Already exists.");
+					dbContext.Dispose();
+					return;
+				}
+
+				reactionRole.RoleId = role.Id;
+				dbContext.SaveChanges();
+				dbContext.Dispose();
+			};
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("getrole"));
+
 // !membersOf
 			newCommand = new Command("membersOf");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Display a list of members of a role.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				string expression = e.TrimmedMessage;
-
-				guid id = 0;
-				IEnumerable<SocketRole> roles = e.Server.Guild.Roles;
-				IEnumerable<SocketRole> foundRoles = null;
-				SocketRole role = null;
-
-				if( !(guid.TryParse(expression, out id) && (role = e.Server.Guild.GetRole(id)) != null) &&
-					!(foundRoles = roles.Where(r => r.Name == expression)).Any() &&
-				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
-				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(expression.ToLower()))).Any() )
-				{
-					await e.SendReplySafe(ErrorRoleNotFound);
-					return;
-				}
-
-				if( foundRoles.Count() > 1 )
-				{
-					await e.SendReplySafe(ErrorTooManyFound);
-					return;
-				}
-
+				SocketRole role = e.Server.GetRole(e.TrimmedMessage, out string response);
 				if( role == null )
 				{
-					role = foundRoles.First();
+					await e.SendReplySafe(response);
+					return;
 				}
 
 				await e.Server.Guild.DownloadUsersAsync();
 				List<string> names = role.Members.Select(u => u.GetUsername()).ToList();
 				names.Sort();
 
-				string response = names.Count == 0 ? "Nobody has this role." : $"Members of `{role.Name}` are:\n" + names.ToNamesList();
+				response = names.Count == 0 ? "Nobody has this role." : $"Members of `{role.Name}` are:\n" + names.ToNamesList();
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
