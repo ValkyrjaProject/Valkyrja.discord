@@ -16,6 +16,7 @@ namespace Botwinder.modules
 	public class Administration: IModule
 	{
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
+		private Regex EmojiNameRegex = new Regex("\\w+", RegexOptions.Compiled);
 
 		private BotwinderClient Client;
 
@@ -74,7 +75,12 @@ namespace Botwinder.modules
 					return;
 				}
 
-				string emoji = e.MessageArgs[1].Trim(':');
+				Match emoji = this.EmojiNameRegex.Match(e.MessageArgs[1]);
+				if( !emoji.Success )
+				{
+					await e.SendReplySafe("What emoji again?");
+					return;
+				}
 
 				SocketRole role = e.Server.GetRole(e.MessageArgs[2], out string response);
 				if( role == null )
@@ -84,12 +90,12 @@ namespace Botwinder.modules
 				}
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				ReactionAssignedRole reactionRole = dbContext.ReactionAssignedRoles.FirstOrDefault(r => r.ServerId == e.Server.Id && r.MessageId == messageId && r.Emoji == emoji);
+				ReactionAssignedRole reactionRole = dbContext.ReactionAssignedRoles.FirstOrDefault(r => r.ServerId == e.Server.Id && r.MessageId == messageId && r.Emoji == emoji.Value);
 				if( reactionRole == null )
 					dbContext.ReactionAssignedRoles.Add(reactionRole = new ReactionAssignedRole(){
 						ServerId = e.Server.Id,
 						MessageId = messageId,
-						Emoji = emoji
+						Emoji = emoji.Value
 					});
 				else if( reactionRole.RoleId == role.Id )
 				{
