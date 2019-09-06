@@ -319,7 +319,7 @@ namespace Botwinder.modules
 					return;
 				}
 
-				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
+				if( mentionedUsers.Count + 1 < e.MessageArgs.Length )
 				{
 					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
