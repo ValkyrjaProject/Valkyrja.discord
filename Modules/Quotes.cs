@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
@@ -83,6 +84,50 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("quote"));
+
+// !findQuote
+			newCommand = new Command("findQuote");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Search for a quote with a message content expression.";
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				StringBuilder response = new StringBuilder();
+
+				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
+
+				if( !quotes.Any() )
+				{
+					response.Append("There ain't no quotes here! Add some first :]");
+				}
+				else if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					response.Append("What am I looking for?");
+				}
+				else
+				{
+					quotes = quotes.Where(q => q.Value.Contains(e.TrimmedMessage));
+					int count = quotes.Count();
+					if( count > 3 )
+					{
+						response.Append("I found too many, displaying only the first three. Be more specific!");
+					}
+					else if( count == 0 )
+					{
+						response.Append("I didn't find no such quote.");
+					}
+
+					foreach( Quote quote in quotes.Take(3) )
+					{
+						response.AppendLine($"\n**Quote `{quote.Id}`:**")
+							.AppendLine(quote.ToString());
+					}
+				}
+
+				dbContext.Dispose();
+				await e.SendReplySafe(response.ToString());
+			};
+			commands.Add(newCommand);
 
 // !removeQuote
 			newCommand = new Command("removeQuote");
