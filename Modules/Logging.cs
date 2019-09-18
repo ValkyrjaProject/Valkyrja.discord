@@ -23,9 +23,6 @@ namespace Botwinder.modules
 		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
 		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
 
-		//private readonly TimeSpan UpdateDelay = TimeSpan.FromMinutes(2);
-		//private DateTime LastUpdateTime = DateTime.UtcNow;
-
 		private readonly Color AntispamColor = new Color(255, 0, 255);
 		private readonly Color AntispamLightColor = new Color(255, 0, 206);
 
@@ -94,12 +91,15 @@ namespace Botwinder.modules
 					{
 						await this.Client.SendRawMessageToChannel(channel,
 							string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
-								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+									server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
 								.Replace("@everyone", "@-everyone").Replace("@here", "@-here"));
 					}
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnUserJoined", server.Id);
@@ -133,12 +133,15 @@ namespace Botwinder.modules
 					{
 						await this.Client.SendRawMessageToChannel(channel,
 							string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+									server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
 								.Replace("@everyone", "@-everyone").Replace("@here", "@-here"));
 					}
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnUserLeft", server.Id);
@@ -171,7 +174,7 @@ namespace Botwinder.modules
 
 					if( server.Config.VoiceChannelEmbeds )
 					{
-						switch(change)
+						switch( change )
 						{
 							case -1:
 								await channel.SendMessageAsync("", embed:
@@ -197,11 +200,12 @@ namespace Botwinder.modules
 							default:
 								throw new ArgumentOutOfRangeException();
 						}
+
 						return;
 					}
 
 					string message = "";
-					switch(change)
+					switch( change )
 					{
 						case -1:
 							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
@@ -219,7 +223,10 @@ namespace Botwinder.modules
 					await channel.SendMessageSafe(message);
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnUserVoice", server.Id);
@@ -266,7 +273,7 @@ namespace Botwinder.modules
 							auditEntry = await server.Guild.GetAuditLogsAsync(10)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted && (auditData = e.Data as MessageDeleteAuditLogData) != null && auditData.ChannelId == c.Id && (Utils.GetTimeFromId(e.Id) + TimeSpan.FromMinutes(5)) > DateTime.UtcNow);
 							//One huge line because black magic from .NET Core?
 						}
-						catch(Exception) { }
+						catch( Exception ) { }
 					}
 
 					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
@@ -292,7 +299,10 @@ namespace Botwinder.modules
 					}
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnMessageDeleted", server.Id);
@@ -345,7 +355,10 @@ namespace Botwinder.modules
 					}
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnMessageUpdated", server.Id);
@@ -379,7 +392,10 @@ namespace Botwinder.modules
 							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "OnMessageReceived", server.Id);
@@ -453,7 +469,10 @@ namespace Botwinder.modules
 							"Warning", warning));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogBan", server.Id);
@@ -477,7 +496,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(color, "", "User Banned " + duration,
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName ?? "<unknown>", userId.ToString(),
+							userName ?? "<unknown>", $"`{userId.ToString()}`",
 							DateTime.UtcNow,
 							"Reason", reason));
 				}
@@ -490,7 +509,10 @@ namespace Botwinder.modules
 							"Reason", reason));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogBan", server.Id);
@@ -514,7 +536,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(new Color(server.Config.ModChannelColor), "", "User Unbanned",
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName, userId.ToString(),
+							userName, $"`{userId.ToString()}`",
 							DateTime.UtcNow));
 				}
 				else
@@ -525,7 +547,10 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogUnban", server.Id);
@@ -548,7 +573,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(color, "", "User Kicked",
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName ?? "<unknown>", userId.ToString(),
+							userName ?? "<unknown>", $"`{userId.ToString()}`",
 							DateTime.UtcNow,
 							"Reason", reason));
 				}
@@ -561,7 +586,10 @@ namespace Botwinder.modules
 							"Reason", reason));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogKick", server.Id);
@@ -582,7 +610,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(color, user?.GetAvatarUrl(), "User muted " + duration,
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							user.GetUsername(), user.Id.ToString(),
+							user.GetUsername(), $"`{user.Id.ToString()}`",
 							DateTime.UtcNow));
 				}
 				else
@@ -593,7 +621,10 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogMute", server.Id);
@@ -613,7 +644,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(new Color(server.Config.ModChannelColor), user?.GetAvatarUrl(), "User Unmuted",
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							user.GetUsername(), user.Id.ToString(),
+							user.GetUsername(), $"`{user.Id.ToString()}`",
 							DateTime.UtcNow));
 				}
 				else
@@ -624,7 +655,10 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogUnmute", server.Id);
@@ -644,7 +678,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(color, "", "Channel muted " + duration,
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							"#" + channel.Name, channel.Id.ToString(),
+							"#" + channel.Name, $"`{channel.Id.ToString()}`",
 							DateTime.UtcNow));
 				}
 				else
@@ -655,7 +689,10 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogMute", server.Id);
@@ -675,7 +712,7 @@ namespace Botwinder.modules
 					await logChannel.SendMessageAsync("", embed:
 						GetLogEmbed(new Color(server.Config.ModChannelColor), "", "Channel Unmuted",
 							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							"#" + channel.Name, channel.Id.ToString(),
+							"#" + channel.Name, $"`{channel.Id.ToString()}`",
 							DateTime.UtcNow));
 				}
 				else
@@ -686,7 +723,10 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogUnmute", server.Id);
@@ -715,7 +755,10 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogPublicRoleJoin", server.Id);
@@ -743,7 +786,10 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogPublicRoleLeave", server.Id);
@@ -772,7 +818,10 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogPromote", server.Id);
@@ -801,7 +850,10 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
 				}
 			}
-			catch(HttpException) { }
+			catch( HttpException )
+			{
+				server.HandleHttpException();
+			}
 			catch(Exception exception)
 			{
 				await this.HandleException(exception, "LogDemote", server.Id);
