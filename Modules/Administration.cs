@@ -311,7 +311,7 @@ namespace Botwinder.modules
 				await e.Server.Guild.CreateRoleAsync("green", GuildPermissions.None, new Color(46,204,113));
 
 				await e.SendReplySafe("I've created them roles, but you're gonna have to set them up yourself at <https://valkyrja.app/config> because I don't know the details!\n" +
-				                      "_You can use my colour emojis to set them up as reaction assigned roles. Get them in Valhalla: https://discord.gg/XgVvkXx_");
+				                      $"_You can use my colour emojis to set them up as reaction assigned roles. Get them in Valhalla: {GlobalConfig.DiscordInvite}_");
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("createColorRoles"));

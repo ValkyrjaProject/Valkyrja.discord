@@ -398,7 +398,7 @@ namespace Botwinder.modules
 				.AddField("Server", "Water cooled DualZeeon with 32x 3.8GHz, 64GB ECC memory and ~20TB raid5. [It's pink!](https://persephone.cloud)")
 				.AddField("Author", "A girl who inspires the desolate white space of Linux world with the delicate C# letters of simplified artificial intelligence. Also a [Mountain Biker](https://rhea-ayase.eu/mtb)")
 				.AddField("Web-Author", "[Her fiancé](https://github.com/SpyTec), also a professional slacker.")
-				.AddField("Questions?", "Direct them to the [Valhalla](https://discord.gg/XgVvkXx), Valkyrja's support server.");
+				.AddField("Questions?", $"Direct them to the [Valhalla]({GlobalConfig.DiscordInvite}), Valkyrja's support server.");
 
 			SocketRole highestRole = user.Roles.Where(r => r.Color.RawValue != 0).OrderByDescending(r => r.Position).FirstOrDefault();
 			if( highestRole != null )

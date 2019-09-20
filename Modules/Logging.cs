@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
@@ -96,9 +97,9 @@ namespace Botwinder.modules
 					}
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -138,9 +139,9 @@ namespace Botwinder.modules
 					}
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -223,9 +224,9 @@ namespace Botwinder.modules
 					await channel.SendMessageSafe(message);
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -299,9 +300,9 @@ namespace Botwinder.modules
 					}
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -355,9 +356,9 @@ namespace Botwinder.modules
 					}
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -392,9 +393,9 @@ namespace Botwinder.modules
 							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -469,9 +470,9 @@ namespace Botwinder.modules
 							"Warning", warning));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -509,9 +510,9 @@ namespace Botwinder.modules
 							"Reason", reason));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -547,9 +548,9 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -586,9 +587,9 @@ namespace Botwinder.modules
 							"Reason", reason));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -621,9 +622,9 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -655,9 +656,9 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -689,9 +690,9 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -723,9 +724,9 @@ namespace Botwinder.modules
 							Utils.GetTimestamp()));
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -755,9 +756,9 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -786,9 +787,9 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -818,9 +819,9 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -850,9 +851,9 @@ namespace Botwinder.modules
 					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
 				}
 			}
-			catch( HttpException )
+			catch( HttpException exception )
 			{
-				server.HandleHttpException();
+				await server.HandleHttpException(exception);
 			}
 			catch(Exception exception)
 			{
@@ -861,13 +862,13 @@ namespace Botwinder.modules
 		}
 
 
-		public static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen,
+		private static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen,
 			guid timestampId, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 			=> GetLogMessage(titleRed, infoGreen, nameGold, idGreen,
 				Utils.GetTimestamp(Utils.GetTimeFromId(timestampId)),
 				tag1, msg1, tag2, msg2);
 
-		public static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen,
+		private static string GetLogMessage(string titleRed, string infoGreen, string nameGold, string idGreen,
 			string timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 		{
 			msg1 = msg1.Replace('`', '\'');
@@ -910,13 +911,13 @@ namespace Botwinder.modules
 		}
 
 
-		public static Embed GetLogEmbed(Color color, string iconUrl, string title, string description, string name, string id,
+		private static Embed GetLogEmbed(Color color, string iconUrl, string title, string description, string name, string id,
 			guid timestampId, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 			=> GetLogEmbed(color, iconUrl, title, description, name, id,
 				Utils.GetTimeFromId(timestampId),
 				tag1, msg1, tag2, msg2);
 
-		public static Embed GetLogEmbed(Color color, string iconUrl,string title, string description, string name, string id,
+		private static Embed GetLogEmbed(Color color, string iconUrl,string title, string description, string name, string id,
 			DateTime timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
 		{
 			if( msg1.Length > 1000 )
@@ -945,7 +946,7 @@ namespace Botwinder.modules
 			return embedBuilder.Build();
 		}
 
-		public static Embed GetLogSmolEmbed(Color color, string title, string titleIconUrl, string description, string footer, DateTime timestamp)
+		private static Embed GetLogSmolEmbed(Color color, string title, string titleIconUrl, string description, string footer, DateTime timestamp)
 		{
 			EmbedBuilder embedBuilder = new EmbedBuilder{
 					Color = color,
