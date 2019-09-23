@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -19,10 +20,40 @@ namespace Botwinder.modules
 {
 	public class Logging: IModule
 	{
+		private class Message
+		{
+			public MessageType DesiredType;
+			public Embed LogEmbed;
+			public string LogString;
+			public SocketTextChannel Channel;
+
+			public async Task Send()
+			{
+				if( this.DesiredType == MessageType.Embed )
+					await this.Channel.SendMessageAsync(embed: this.LogEmbed);
+				else if( this.DesiredType == MessageType.String )
+					await this.Channel.SendMessageSafe(this.LogString);
+			}
+		}
+
+		private enum MessageType
+		{
+			Embed,
+			String
+		}
+
 		private BotwinderClient Client;
 
 		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
 		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
+
+		private const int MessageQueueThreshold = 5;
+		private const int MessageQueueFileThreshold = 50;
+		private readonly List<Message> MessageQueue= new List<Message>();
+		private readonly TimeSpan UpdateDelay = TimeSpan.FromSeconds(MessageQueueThreshold);
+		private Task UpdateTask;
+		private CancellationTokenSource UpdateCancel;
+		private readonly SemaphoreSlim MessageQueueLock = new SemaphoreSlim(0, 1);
 
 		private readonly Color AntispamColor = new Color(255, 0, 255);
 		private readonly Color AntispamLightColor = new Color(255, 0, 206);
@@ -57,7 +88,85 @@ namespace Botwinder.modules
 			this.Client.Events.LogPromote += LogPromote;
 			this.Client.Events.LogDemote += LogDemote;
 
+			if( this.UpdateTask == null )
+			{
+				this.UpdateCancel = new CancellationTokenSource();
+				this.UpdateTask = Task.Run(QueueUpdate, this.UpdateCancel.Token);
+			}
+
 			return new List<Command>();
+		}
+
+		private async Task QueueUpdate()
+		{
+			while( !this.UpdateCancel.IsCancellationRequested )
+			{
+				DateTime frameTime = DateTime.UtcNow;
+				guid serverId = 0;
+
+				while( this.MessageQueue.Any() )
+				{
+					await this.MessageQueueLock.WaitAsync();
+					SocketTextChannel channel = this.MessageQueue.First().Channel;
+					try
+					{
+						StringBuilder logText = new StringBuilder();
+						serverId = channel.Guild.Id;
+						List<Message> channelQueue = this.MessageQueue.Where(m => m.Channel.Id == channel.Id).ToList();
+						if( channelQueue.Count > MessageQueueThreshold )
+						{
+							//Group the messages.
+							bool sendAsFile = channelQueue.Count > MessageQueueFileThreshold;
+							foreach( Message logMsg in channelQueue )
+							{
+								if( !sendAsFile && logText.Length + logMsg.LogString.Length >= GlobalConfig.MessageCharacterLimit )
+								{
+									await channel.SendMessageSafe(logText.ToString());
+									logText.Clear();
+								}
+
+								logText.AppendLine(logMsg.LogString); // lock, you may need a lock for these loops... //trim the message? make sure deleted/edited messages can not be more than a few hundred chars at most... send it as a file?
+							}
+
+							if( sendAsFile )
+							{
+								using( Stream stream = new MemoryStream() )
+								{
+									using( StreamWriter writer = new StreamWriter(stream) )
+										writer.Write(logText.ToString());
+									string timestamp = Utils.GetTimestamp();
+									await channel.SendFileAsync(stream, timestamp, $"`{timestamp}` - large number of log messages.");
+								}
+							}
+							else if( logText.Length > 0 )
+								await channel.SendMessageSafe(logText.ToString());
+						}
+						else
+						{
+							//Send the messages one by one.
+							foreach( Message logMsg in channelQueue )
+								await logMsg.Send();
+						}
+					}
+					catch( HttpException exception )
+					{
+						if( this.Client.Servers.ContainsKey(serverId) )
+							this.Client.Servers[serverId]?.HandleHttpException(exception);
+					}
+					catch( Exception exception )
+					{
+						await this.HandleException(exception, "LogMessageQueue", serverId);
+					}
+
+					this.MessageQueue.RemoveAll(m => m.Channel.Id == channel.Id);
+					this.MessageQueueLock.Release();
+				}
+
+				TimeSpan deltaTime = DateTime.UtcNow - frameTime;
+				if( this.Client.GlobalConfig.LogDebug )
+					Console.WriteLine($"BotwinderClient: LogQueueUpdate loop took: {deltaTime.TotalMilliseconds} ms");
+				await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(1000, (this.UpdateDelay - deltaTime).TotalMilliseconds)));
+			}
 		}
 
 		private async Task OnUserJoined(SocketGuildUser user)
@@ -79,22 +188,21 @@ namespace Botwinder.modules
 						return;
 
 					string joinMessage = string.Format(server.Config.LogMessageJoin, user.GetUsername());
-					if( server.Config.ActivityChannelEmbeds && joinMessage.Length < 255 )
-					{
-						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
-						await channel.SendMessageAsync("", embed:
-							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
-								joinMessage,
-								user.GetAvatarUrl(), $"UserId: {user.Id}",
-								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
-					}
-					else
-					{
-						await this.Client.SendRawMessageToChannel(channel,
-							string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
-									server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
-								.Replace("@everyone", "@-everyone").Replace("@here", "@-here"));
-					}
+					DateTime accountCreated = Utils.GetTimeFromId(user.Id);
+					Message msg = new Message(){
+						Channel = channel,
+						DesiredType = (server.Config.ActivityChannelEmbeds && joinMessage.Length < 255) ? MessageType.Embed : MessageType.String,
+						LogEmbed = GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
+							joinMessage,
+							user.GetAvatarUrl(), $"UserId: {user.Id}",
+							"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated),
+						LogString = string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
+								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
+					};
+					await this.MessageQueueLock.WaitAsync();
+					this.MessageQueue.Add(msg);
+					this.MessageQueueLock.Release();
 				}
 			}
 			catch( HttpException exception )
@@ -121,22 +229,22 @@ namespace Botwinder.modules
 				if( server.Config.LogLeave && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
 				{
 					string leaveMessage = string.Format(server.Config.LogMessageLeave, user.GetUsername());
-					if( server.Config.ActivityChannelEmbeds && leaveMessage.Length < 255 )
-					{
-						DateTime accountCreated = Utils.GetTimeFromId(user.Id);
-						await channel.SendMessageAsync("", embed:
-							GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
-								leaveMessage,
-								user.GetAvatarUrl(), $"UserId: {user.Id}",
-								"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated));
-					}
-					else
-					{
-						await this.Client.SendRawMessageToChannel(channel,
-							string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-									server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
-								.Replace("@everyone", "@-everyone").Replace("@here", "@-here"));
-					}
+					DateTime accountCreated = Utils.GetTimeFromId(user.Id);
+
+					Message msg = new Message(){
+						Channel = channel,
+						DesiredType = (server.Config.ActivityChannelEmbeds && leaveMessage.Length < 255) ? MessageType.Embed : MessageType.String,
+						LogEmbed = GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
+							leaveMessage,
+							user.GetAvatarUrl(), $"UserId: {user.Id}",
+							"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated),
+						LogString = string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
+								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
+					};
+					await this.MessageQueueLock.WaitAsync();
+					this.MessageQueue.Add(msg);
+					this.MessageQueueLock.Release();
 				}
 			}
 			catch( HttpException exception )
@@ -173,55 +281,44 @@ namespace Botwinder.modules
 					int change = originalState.VoiceChannel == null ? 1 :
 						newState.VoiceChannel == null ? -1 : 0;
 
-					if( server.Config.VoiceChannelEmbeds )
-					{
-						switch( change )
-						{
-							case -1:
-								await channel.SendMessageAsync("", embed:
-									GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
-										user.GetUsername() + " left the voice channel:",
-										user.GetAvatarUrl(), $"{originalState.VoiceChannel.Name}",
-										Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
-								break;
-							case 1:
-								await channel.SendMessageAsync("", embed:
-									GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
-										user.GetUsername() + " joined the voice channel:",
-										user.GetAvatarUrl(), $"{newState.VoiceChannel.Name}",
-										Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
-								break;
-							case 0:
-								await channel.SendMessageAsync("", embed:
-									GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
-										user.GetUsername() + " switched voice channels:",
-										user.GetAvatarUrl(), $"From {originalState.VoiceChannel.Name} to {newState.VoiceChannel.Name}",
-										Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
-								break;
-							default:
-								throw new ArgumentOutOfRangeException();
-						}
-
-						return;
-					}
-
 					string message = "";
+					Embed embed = null;
 					switch( change )
 					{
 						case -1:
 							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
+							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
+								user.GetUsername() + " left the voice channel:",
+								user.GetAvatarUrl(), $"{originalState.VoiceChannel.Name}",
+								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
 						case 1:
 							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
+							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
+								user.GetUsername() + " joined the voice channel:",
+								user.GetAvatarUrl(), $"{newState.VoiceChannel.Name}",
+								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
 						case 0:
 							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
+							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
+								user.GetUsername() + " switched voice channels:",
+								user.GetAvatarUrl(), $"From {originalState.VoiceChannel.Name} to {newState.VoiceChannel.Name}",
+								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
 						default:
 							throw new ArgumentOutOfRangeException();
 					}
 
-					await channel.SendMessageSafe(message);
+					Message msg = new Message(){
+						Channel = channel,
+						DesiredType = (server.Config.VoiceChannelEmbeds) ? MessageType.Embed : MessageType.String,
+						LogEmbed = embed,
+						LogString = message
+					};
+					await this.MessageQueueLock.WaitAsync();
+					this.MessageQueue.Add(msg);
+					this.MessageQueueLock.Release();
 				}
 			}
 			catch( HttpException exception )
@@ -279,25 +376,24 @@ namespace Botwinder.modules
 
 					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
 					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsername()) : "");
-					if( server.Config.LogChannelEmbeds )
-					{
-						Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
-						await logChannel.SendMessageAsync("", embed:
-							GetLogEmbed(color, user?.GetAvatarUrl(), title, "in #" + channel.Name,
-								message.Author.GetUsername(), message.Author.Id.ToString(),
-								message.Id,
-								"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-								message.Attachments.Any() ? "Files" : "", attachment.ToString()));
-					}
-					else
-					{
-						await logChannel.SendMessageSafe(
-							GetLogMessage(title, "#" + channel.Name,
-								message.Author.GetUsername(), message.Author.Id.ToString(),
-								message.Id,
-								"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-								message.Attachments.Any() ? "Files" : "", attachment.ToString()));
-					}
+					Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
+					Message msg = new Message(){
+						Channel = channel,
+						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
+						LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), title, "in #" + channel.Name,
+							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Id,
+							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							message.Attachments.Any() ? "Files" : "", attachment.ToString()),
+						LogString = GetLogMessage(title, "#" + channel.Name,
+							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Id,
+							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							message.Attachments.Any() ? "Files" : "", attachment.ToString())
+					};
+					await this.MessageQueueLock.WaitAsync();
+					this.MessageQueue.Add(msg);
+					this.MessageQueueLock.Release();
 				}
 			}
 			catch( HttpException exception )
@@ -334,26 +430,21 @@ namespace Botwinder.modules
 					    server.IgnoredChannels.Contains(channel.Id) ||
 					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
 				{
-
-					if( server.Config.LogChannelEmbeds )
-					{
-						await logChannel.SendMessageAsync("", embed:
-							GetLogEmbed(new Color(server.Config.LogMessagesColor), user?.GetAvatarUrl(),
-								"Message Edited", "in #" + channel.Name,
-								updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
-								updatedMessage.Id,
-								"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-								"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
-					}
-					else
-					{
-						await logChannel.SendMessageSafe(
-							GetLogMessage("Message Edited", "#" + channel.Name,
-								updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
-								updatedMessage.Id,
-								"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
-								"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
-					}
+					Message msg = new Message(){
+						Channel = channel,
+						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
+						LogEmbed = GetLogEmbed(new Color(server.Config.LogMessagesColor), user?.GetAvatarUrl(),
+							"Message Edited", "in #" + channel.Name,
+							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+							updatedMessage.Id,
+							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")),
+						LogString = GetLogMessage("Message Edited", "#" + channel.Name,
+							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+							updatedMessage.Id,
+							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
+							"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"))
+					};
 				}
 			}
 			catch( HttpException exception )
@@ -385,12 +476,19 @@ namespace Botwinder.modules
 				if( server.Config.AlertChannelId != 0 && (logChannel = server.Guild.GetTextChannel(server.Config.AlertChannelId)) != null &&
 				    server.Config.AlertChannelId != message.Channel.Id && server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content) )
 				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.AlertChannelColor), user?.GetAvatarUrl(),
+					Message msg = new Message(){
+						Channel = channel,
+						DesiredType = MessageType.Embed,
+						LogEmbed = GetLogEmbed(new Color(server.Config.AlertChannelColor), user?.GetAvatarUrl(),
 							"Alert triggered", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
-							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")));
+							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")),
+						LogString = ""
+					};
+					await this.MessageQueueLock.WaitAsync();
+					this.MessageQueue.Add(msg);
+					this.MessageQueueLock.Release();
 				}
 			}
 			catch( HttpException exception )
@@ -406,16 +504,17 @@ namespace Botwinder.modules
 
 		private async Task OnUserBanned(SocketUser user, SocketGuild guild)
 		{
+			await Task.Delay(300); //Ensure that this event gets triggered after our own event.
+
 			Server server;
-			if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
-			    this.RecentlyBannedUserIDs.Contains(user.Id) )
+			if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null )
 				return;
 
 			BanAuditLogData auditData = null;
 			RestAuditLogEntry auditEntry = null;
 			if( guild.CurrentUser.GuildPermissions.ViewAuditLog )
 			{
-				await Task.Delay(500);
+				await Task.Delay(300);
 				try
 				{
 					auditEntry = await guild.GetAuditLogsAsync(10)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.Ban && (auditData = e.Data as BanAuditLogData) != null && auditData.Target.Id == user.Id);
@@ -431,17 +530,21 @@ namespace Botwinder.modules
 				reason = ban.Reason;
 				await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
 			}
-			await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
+			if( !this.RecentlyBannedUserIDs.Contains(user.Id) )
+				await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
 		}
 
 		private async Task OnUserUnbanned(SocketUser user, SocketGuild guild)
 		{
+			await Task.Delay(300); //Ensure that this event gets triggered after our own event.
+
 			Server server;
 			if( !this.Client.Servers.ContainsKey(guild.Id) || (server = this.Client.Servers[guild.Id]) == null ||
 			    this.RecentlyUnbannedUserIDs.Contains(user.Id) )
 				return;
 
-			await LogUnban(server, user.GetUsername(), user.Id, null);		}
+			await LogUnban(server, user.GetUsername(), user.Id, null);
+		}
 
 		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy)
 		{
@@ -451,30 +554,29 @@ namespace Botwinder.modules
 				if( !server.Config.LogWarnings || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				if( server.Config.ModChannelEmbeds )
-				{
-					Color color = new Color(server.Config.LogWarningColor);
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, "", "User warned",
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userNames.ToNamesList() ?? "<unknown>", userIds.Select(id => id.ToString()).ToNamesList(),
-							DateTime.UtcNow,
-							"Warning", warning));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							userNames.ToNamesList() ?? "", userIds.Select(id => id.ToString()).ToNamesList(),
-							Utils.GetTimestamp(),
-							"Warning", warning));
-				}
+				Color color = new Color(server.Config.LogWarningColor);
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(color, "", "User warned",
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						userNames.ToNamesList() ?? "<unknown>", userIds.Select(id => id.ToString()).ToNamesList(),
+						DateTime.UtcNow,
+						"Warning", warning),
+					LogString = GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						userNames.ToNamesList() ?? "", userIds.Select(id => id.ToString()).ToNamesList(),
+						Utils.GetTimestamp(),
+						"Warning", warning)
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
 				await server.HandleHttpException(exception);
 			}
-			catch(Exception exception)
+			catch( Exception exception )
 			{
 				await this.HandleException(exception, "LogBan", server.Id);
 			}
@@ -490,25 +592,23 @@ namespace Botwinder.modules
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
-
-				if( server.Config.ModChannelEmbeds )
-				{
-					Color color = issuedBy?.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, "", "User Banned " + duration,
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName ?? "<unknown>", $"`{userId.ToString()}`",
-							DateTime.UtcNow,
-							"Reason", reason));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							userName ?? "", userId.ToString(),
-							Utils.GetTimestamp(),
-							"Reason", reason));
-				}
+				Color color = issuedBy?.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(color, "", "User Banned " + duration,
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						userName ?? "<unknown>", $"`{userId.ToString()}`",
+						DateTime.UtcNow,
+						"Reason", reason),
+					LogString = GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						userName ?? "", userId.ToString(),
+						Utils.GetTimestamp(),
+						"Reason", reason)
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -529,24 +629,24 @@ namespace Botwinder.modules
 					return;
 
 				this.RecentlyUnbannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
+
 				if( string.IsNullOrWhiteSpace(userName) )
 					userName = "<unknown>";
 
-				if( server.Config.ModChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.ModChannelColor), "", "User Unbanned",
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName, $"`{userId.ToString()}`",
-							DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							userName, userId.ToString(),
-							Utils.GetTimestamp()));
-				}
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), "", "User Unbanned",
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						userName, $"`{userId.ToString()}`",
+						DateTime.UtcNow),
+					LogString = GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						userName, userId.ToString(),
+						Utils.GetTimestamp())
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -568,24 +668,23 @@ namespace Botwinder.modules
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
-				if( server.Config.ModChannelEmbeds )
-				{
-					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, "", "User Kicked",
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							userName ?? "<unknown>", $"`{userId.ToString()}`",
-							DateTime.UtcNow,
-							"Reason", reason));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							userName ?? "", userId.ToString(),
-							Utils.GetTimestamp(),
-							"Reason", reason));
-				}
+				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(color, "", "User Kicked",
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						userName ?? "<unknown>", $"`{userId.ToString()}`",
+						DateTime.UtcNow,
+						"Reason", reason),
+					LogString = GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						userName ?? "", userId.ToString(),
+						Utils.GetTimestamp(),
+						"Reason", reason)
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -605,22 +704,21 @@ namespace Botwinder.modules
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				if( server.Config.ModChannelEmbeds )
-				{
-					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, user?.GetAvatarUrl(), "User muted " + duration,
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							user.GetUsername(), $"`{user.Id.ToString()}`",
-							DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							user.GetUsername(), user.Id.ToString(),
-							Utils.GetTimestamp()));
-				}
+				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), "User muted " + duration,
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						user.GetUsername(), $"`{user.Id.ToString()}`",
+						DateTime.UtcNow),
+					LogString = GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						user.GetUsername(), user.Id.ToString(),
+						Utils.GetTimestamp())
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -640,21 +738,20 @@ namespace Botwinder.modules
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				if( server.Config.ModChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.ModChannelColor), user?.GetAvatarUrl(), "User Unmuted",
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							user.GetUsername(), $"`{user.Id.ToString()}`",
-							DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							user.GetUsername(), user.Id.ToString(),
-							Utils.GetTimestamp()));
-				}
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), user?.GetAvatarUrl(), "User Unmuted",
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						user.GetUsername(), $"`{user.Id.ToString()}`",
+						DateTime.UtcNow),
+					LogString = GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						user.GetUsername(), user.Id.ToString(),
+						Utils.GetTimestamp())
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -673,22 +770,21 @@ namespace Botwinder.modules
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				if( server.Config.ModChannelEmbeds )
-				{
-					Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(color, "", "Channel muted " + duration,
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							"#" + channel.Name, $"`{channel.Id.ToString()}`",
-							DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("Channel Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							"#" + channel.Name, channel.Id.ToString(),
-							Utils.GetTimestamp()));
-				}
+				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(color, "", "Channel muted " + duration,
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"#" + channel.Name, $"`{channel.Id.ToString()}`",
+						DateTime.UtcNow),
+					LogString = GetLogMessage("Channel Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						"#" + channel.Name, channel.Id.ToString(),
+						Utils.GetTimestamp())
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -708,21 +804,20 @@ namespace Botwinder.modules
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				if( server.Config.ModChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogEmbed(new Color(server.Config.ModChannelColor), "", "Channel Unmuted",
-							"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							"#" + channel.Name, $"`{channel.Id.ToString()}`",
-							DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe(
-						GetLogMessage("Channel Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-							"#" + channel.Name, channel.Id.ToString(),
-							Utils.GetTimestamp()));
-				}
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), "", "Channel Unmuted",
+						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"#" + channel.Name, $"`{channel.Id.ToString()}`",
+						DateTime.UtcNow),
+					LogString = GetLogMessage("Channel Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+						"#" + channel.Name, channel.Id.ToString(),
+						Utils.GetTimestamp())
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -743,18 +838,18 @@ namespace Botwinder.modules
 				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 					return;
 
-				if( server.Config.LogChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-							user.GetUsername() + " joined a publicRole:",
-							user.GetAvatarUrl(), roleName,
-							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role.");
-				}
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+						user.GetUsername() + " joined a publicRole:",
+						user.GetAvatarUrl(), roleName,
+						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role."
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -774,18 +869,18 @@ namespace Botwinder.modules
 				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 					return;
 
-				if( server.Config.LogChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-							user.GetUsername() + " left a publicRole:",
-							user.GetAvatarUrl(), roleName,
-							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role.");
-				}
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+						user.GetUsername() + " left a publicRole:",
+						user.GetAvatarUrl(), roleName,
+						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role."
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -805,19 +900,19 @@ namespace Botwinder.modules
 				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 					return;
 
-				if( server.Config.LogChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-							user.GetUsername() + $" was promoted to the {roleName} memberRole.",
-							user.GetAvatarUrl(),
-							"Promoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__");
-				}
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+						user.GetUsername() + $" was promoted to the {roleName} memberRole.",
+						user.GetAvatarUrl(),
+						"Promoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__"
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{
@@ -837,19 +932,19 @@ namespace Botwinder.modules
 				if( !server.Config.LogPromotions || (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) == null )
 					return;
 
-				if( server.Config.LogChannelEmbeds )
-				{
-					await logChannel.SendMessageAsync("", embed:
-						GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-							user.GetUsername() + $" was demoted from the {roleName} memberRole.",
-							user.GetAvatarUrl(),
-							"Demoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-							Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow));
-				}
-				else
-				{
-					await logChannel.SendMessageSafe($"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__");
-				}
+				Message msg = new Message(){
+					Channel = logChannel,
+					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
+					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
+						user.GetUsername() + $" was demoted from the {roleName} memberRole.",
+						user.GetAvatarUrl(),
+						"Demoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__"
+				};
+				await this.MessageQueueLock.WaitAsync();
+				this.MessageQueue.Add(msg);
+				this.MessageQueueLock.Release();
 			}
 			catch( HttpException exception )
 			{

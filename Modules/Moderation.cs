@@ -1290,14 +1290,17 @@ namespace Botwinder.modules
 
 				try
 				{
+					Task logBan = null;
 					if( this.Client.Events.LogBan != null )
-						await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
+						logBan = this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
 
 					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
 					userData.BannedUntil = bannedUntil;
 					userData.AddWarning(logMessage);
 					banned.Add(userData.UserId);
+					if( logBan != null )
+						await logBan;
 				}
 				catch(Discord.Net.HttpException ex)
 				{
@@ -1338,12 +1341,15 @@ namespace Botwinder.modules
 				catch(Exception) { }
 			}
 
+			Task logBan = null;
 			if( this.Client.Events.LogBan != null )
-				await this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString, bannedBy);
+				logBan = this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString, bannedBy);
 
 			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
 			userData.BannedUntil = bannedUntil;
 			userData.AddWarning($"Banned {durationString} with reason: {reason}");
+			if( logBan != null )
+				await logBan;
 		}
 
 		public async Task<string> UnBan(Server server, List<UserData> users, SocketGuildUser unbannedBy = null)
