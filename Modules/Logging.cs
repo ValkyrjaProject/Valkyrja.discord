@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -139,12 +138,15 @@ namespace Botwinder.modules
 								if( this.Client.GlobalConfig.LogDebug )
 									Console.WriteLine("Logging.Queue: send as file");
 								using( Stream stream = new MemoryStream() )
+								using( StreamWriter writer = new StreamWriter(stream) )
 								{
-									using( StreamWriter writer = new StreamWriter(stream) )
-										writer.Write(logText.ToString());
+									writer.WriteLine(logText.ToString());
+									writer.Flush();
+									stream.Position = 0;
 									string timestamp = Utils.GetTimestamp();
-									await channel.SendFileAsync(stream, timestamp, $"`{timestamp}` - large number of log messages.");
+									await channel.SendFileAsync(stream, $"{timestamp}.txt", $"`{timestamp}` - large number of log messages.");
 								}
+
 								if( this.Client.GlobalConfig.LogDebug )
 									Console.WriteLine("Logging.Queue: send as file DONE");
 							}
