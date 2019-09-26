@@ -253,7 +253,7 @@ namespace Botwinder.modules
 				if( this.Client.GlobalConfig.LogDebug )
 				{
 					if( !this.HashedValues.ContainsKey(hashCode) )
-						Console.WriteLine("Verification: Received PM `${hashCode}` - not in the dictionary.");
+						Console.WriteLine($"Verification: Received PM `{hashCode}` - not in the dictionary.");
 					else if( this.HashedValues[hashCode].UserId != userId )
 						Console.WriteLine("Verification: Found a hashCode, but the userid does not fit.");
 					else if( !this.Client.Servers.ContainsKey(this.HashedValues[hashCode].ServerId) )
