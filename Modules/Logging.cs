@@ -108,6 +108,8 @@ namespace Botwinder.modules
 				{
 					await this.MessageQueueLock.WaitAsync();
 					SocketTextChannel channel = this.MessageQueue.First().Channel;
+					if( this.Client.GlobalConfig.LogDebug )
+						Console.WriteLine($"Logging.Queue: handle messages for channel {channel.Id}");
 					try
 					{
 						StringBuilder logText = new StringBuilder();
@@ -117,6 +119,8 @@ namespace Botwinder.modules
 						{
 							//Group the messages.
 							bool sendAsFile = channelQueue.Count > MessageQueueFileThreshold;
+							if( this.Client.GlobalConfig.LogDebug )
+								Console.WriteLine("Logging.Queue: group the messages");
 							foreach( Message logMsg in channelQueue )
 							{
 								if( !sendAsFile && logText.Length + logMsg.LogString.Length >= GlobalConfig.MessageCharacterLimit )
@@ -125,11 +129,15 @@ namespace Botwinder.modules
 									logText.Clear();
 								}
 
-								logText.AppendLine(logMsg.LogString); // lock, you may need a lock for these loops... //trim the message? make sure deleted/edited messages can not be more than a few hundred chars at most... send it as a file?
+								logText.AppendLine(logMsg.LogString);
 							}
+							if( this.Client.GlobalConfig.LogDebug )
+								Console.WriteLine("Logging.Queue: group the messages DONE");
 
 							if( sendAsFile )
 							{
+								if( this.Client.GlobalConfig.LogDebug )
+									Console.WriteLine("Logging.Queue: send as file");
 								using( Stream stream = new MemoryStream() )
 								{
 									using( StreamWriter writer = new StreamWriter(stream) )
@@ -137,6 +145,8 @@ namespace Botwinder.modules
 									string timestamp = Utils.GetTimestamp();
 									await channel.SendFileAsync(stream, timestamp, $"`{timestamp}` - large number of log messages.");
 								}
+								if( this.Client.GlobalConfig.LogDebug )
+									Console.WriteLine("Logging.Queue: send as file DONE");
 							}
 							else if( logText.Length > 0 )
 								await channel.SendMessageSafe(logText.ToString());
@@ -144,8 +154,16 @@ namespace Botwinder.modules
 						else
 						{
 							//Send the messages one by one.
+							if( this.Client.GlobalConfig.LogDebug )
+								Console.WriteLine("Logging.Queue: send one by one");
 							foreach( Message logMsg in channelQueue )
+							{
+								if( this.Client.GlobalConfig.LogDebug && !string.IsNullOrWhiteSpace(logMsg.LogString) )
+									Console.WriteLine(logMsg.LogString);
 								await logMsg.Send();
+							}
+							if( this.Client.GlobalConfig.LogDebug )
+								Console.WriteLine("Logging.Queue: send one by one DONE");
 						}
 					}
 					catch( HttpException exception )
