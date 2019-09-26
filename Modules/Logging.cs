@@ -53,7 +53,7 @@ namespace Botwinder.modules
 		private readonly TimeSpan UpdateDelay = TimeSpan.FromSeconds(MessageQueueThreshold);
 		private Task UpdateTask;
 		private CancellationTokenSource UpdateCancel;
-		private readonly SemaphoreSlim MessageQueueLock = new SemaphoreSlim(0, 1);
+		private readonly SemaphoreSlim MessageQueueLock = new SemaphoreSlim(1, 1);
 
 		private readonly Color AntispamColor = new Color(255, 0, 255);
 		private readonly Color AntispamLightColor = new Color(255, 0, 206);
