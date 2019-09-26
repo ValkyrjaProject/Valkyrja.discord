@@ -196,8 +196,8 @@ namespace Botwinder.modules
 
 			try
 			{
-				SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
-				if( server.Config.LogJoin && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
+				SocketTextChannel logChannel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
+				if( server.Config.LogJoin && logChannel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageJoin) )
 				{
 					if( server.Config.AntispamInvites && server.Config.AntispamInvitesBan && (this.Client.RegexDiscordInvites?.Match(user.Username).Success ?? false) )
 						return;
@@ -208,7 +208,7 @@ namespace Botwinder.modules
 					string joinMessage = string.Format(server.Config.LogMessageJoin, user.GetUsername());
 					DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 					Message msg = new Message(){
-						Channel = channel,
+						Channel = logChannel,
 						DesiredType = (server.Config.ActivityChannelEmbeds && joinMessage.Length < 255) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
 							joinMessage,
@@ -243,14 +243,14 @@ namespace Botwinder.modules
 
 			try
 			{
-				SocketTextChannel channel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
-				if( server.Config.LogLeave && channel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
+				SocketTextChannel logChannel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
+				if( server.Config.LogLeave && logChannel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
 				{
 					string leaveMessage = string.Format(server.Config.LogMessageLeave, user.GetUsername());
 					DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 
 					Message msg = new Message(){
-						Channel = channel,
+						Channel = logChannel,
 						DesiredType = (server.Config.ActivityChannelEmbeds && leaveMessage.Length < 255) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
 							leaveMessage,
@@ -289,9 +289,9 @@ namespace Botwinder.modules
 
 			try
 			{
-				SocketTextChannel channel;
+				SocketTextChannel logChannel;
 				if( server.Config.VoiceChannelId != 0 &&
-				    (channel = server.Guild.GetTextChannel(server.Config.VoiceChannelId)) != null )
+				    (logChannel = server.Guild.GetTextChannel(server.Config.VoiceChannelId)) != null )
 				{
 					if( originalState.VoiceChannel == null && newState.VoiceChannel == null )
 						throw new ArgumentNullException("Logging.VoiceState.VoiceChannel(s) are null.");
@@ -329,7 +329,7 @@ namespace Botwinder.modules
 					}
 
 					Message msg = new Message(){
-						Channel = channel,
+						Channel = logChannel,
 						DesiredType = (server.Config.VoiceChannelEmbeds) ? MessageType.Embed : MessageType.String,
 						LogEmbed = embed,
 						LogString = message
@@ -396,7 +396,7 @@ namespace Botwinder.modules
 					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsername()) : "");
 					Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
 					Message msg = new Message(){
-						Channel = channel,
+						Channel = logChannel,
 						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), title, "in #" + channel.Name,
 							message.Author.GetUsername(), message.Author.Id.ToString(),
@@ -449,7 +449,7 @@ namespace Botwinder.modules
 					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
 				{
 					Message msg = new Message(){
-						Channel = channel,
+						Channel = logChannel,
 						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogEmbed(new Color(server.Config.LogMessagesColor), user?.GetAvatarUrl(),
 							"Message Edited", "in #" + channel.Name,
@@ -495,7 +495,7 @@ namespace Botwinder.modules
 				    server.Config.AlertChannelId != message.Channel.Id && server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content) )
 				{
 					Message msg = new Message(){
-						Channel = channel,
+						Channel = logChannel,
 						DesiredType = MessageType.Embed,
 						LogEmbed = GetLogEmbed(new Color(server.Config.AlertChannelColor), user?.GetAvatarUrl(),
 							"Alert triggered", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
