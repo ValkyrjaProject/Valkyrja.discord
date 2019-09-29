@@ -465,6 +465,9 @@ namespace Botwinder.modules
 							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
 							"After", updatedMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"))
 					};
+					await this.MessageQueueLock.WaitAsync();
+					this.MessageQueue.Add(msg);
+					this.MessageQueueLock.Release();
 				}
 			}
 			catch( HttpException exception )
