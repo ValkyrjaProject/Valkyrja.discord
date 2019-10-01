@@ -96,7 +96,8 @@ namespace Botwinder.modules
 
 					RoleGroupConfig groupConfig = groupConfigs.ContainsKey(groupRole.Key) ? groupConfigs[groupRole.Key] : new RoleGroupConfig();
 					string name = string.IsNullOrEmpty(groupConfig.Name) ? ("Group #" + groupRole.Key.ToString()) : groupConfig.Name;
-					responseBuilder.Append($"\n\n**{name}** - you can join {groupConfig.RoleLimit} of these:\n");
+					string limitVerbose = groupConfig.RoleLimit == 0 ? "any" : groupConfig.RoleLimit;
+					responseBuilder.Append($"\n\n**{name}** - you can join {limitVerbose} of these:\n");
 
 					responseBuilder.Append(GetRoleNames(groupRole.Value));
 				}
