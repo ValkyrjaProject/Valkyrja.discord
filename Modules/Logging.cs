@@ -546,6 +546,9 @@ namespace Botwinder.modules
 				catch(Exception) { }
 			}
 
+			if( this.RecentlyBannedUserIDs.Contains(user.Id) )
+				return;
+
 			string reason = "unknown";
 			RestBan ban = await server.Guild.GetBanAsync(user);
 			if( ban != null )
@@ -553,8 +556,8 @@ namespace Botwinder.modules
 				reason = ban.Reason;
 				await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
 			}
-			if( !this.RecentlyBannedUserIDs.Contains(user.Id) )
-				await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
+
+			await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
 		}
 
 		private async Task OnUserUnbanned(SocketUser user, SocketGuild guild)
