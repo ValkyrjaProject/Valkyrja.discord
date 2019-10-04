@@ -1140,7 +1140,7 @@ namespace Botwinder.modules
 				int interval = 0;
 
 				if( !string.IsNullOrWhiteSpace(e.TrimmedMessage) && int.TryParse(e.TrimmedMessage, out interval) && interval > 0 )
-					response = "Y'all can now send one message every `{interval}` seconds.";
+					response = $"Y'all can now send one message every `{interval}` seconds.";
 				else
 					interval = 0;
 
