@@ -1130,6 +1130,25 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
+// !slow
+			newCommand = new Command("slow");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Enable or disable slowmode in the current channel. Use with a number parameter to specify message interval in seconds.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				string response = "Slowmode disabled.";
+				int interval = 0;
+
+				if( !string.IsNullOrWhiteSpace(e.TrimmedMessage) && int.TryParse(e.TrimmedMessage, out interval) && interval > 0 )
+					response = "Y'all can now send one message every `{interval}` seconds.";
+				else
+					interval = 0;
+
+				await e.Channel.ModifyAsync(c => c.SlowModeInterval = interval);
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+
 			return commands;
 		}
 
