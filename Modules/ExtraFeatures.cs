@@ -297,6 +297,12 @@ namespace Botwinder.modules
 							break;
 						case "--color":
 							uint color = uint.Parse(value.TrimStart('#'), System.Globalization.NumberStyles.AllowHexSpecifier);
+							if( color > uint.Parse("FFFFFF", System.Globalization.NumberStyles.AllowHexSpecifier) )
+							{
+								await e.SendReplySafe("Color out of range.");
+								return;
+							}
+
 							embedBuilder.WithColor(color);
 							if( debug )
 								await e.SendReplySafe($"Color `{value}` set.");
