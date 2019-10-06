@@ -203,8 +203,9 @@ namespace Botwinder.modules
 				{
 					await e.SendReplySafe("```md\nCreate an embed using the following parameters:\n" +
 					                      "[ --channel     ] Channel where to send the embed.\n" +
-					                      "[ --title       ] Short title\n" +
-					                      "[ --description ] Short description\n" +
+					                      "[ --title       ] Title\n" +
+					                      "[ --description ] Description\n" +
+					                      "[ --footer      ] Footer\n" +
 					                      "[ --color       ] #rrggbb hex color used for the embed stripe.\n" +
 					                      "[ --image       ] URL of a Hjuge image in the bottom.\n" +
 					                      "[ --thumbnail   ] URL of a smol image on the side.\n" +
@@ -272,13 +273,37 @@ namespace Botwinder.modules
 
 							break;
 						case "--title":
+							if( value.Length > 256 )
+							{
+								await e.SendReplySafe($"`--title` is too long (`{value.Length} > 256`)");
+								return;
+							}
+
 							embedBuilder.WithTitle(value);
 							if( debug )
 								await e.SendReplySafe($"Title set: `{value}`");
 
 							break;
 						case "--description":
+							if( value.Length > 2048 )
+							{
+								await e.SendReplySafe($"`--description` is too long (`{value.Length} > 2048`)");
+								return;
+							}
+
 							embedBuilder.WithDescription(value);
+							if( debug )
+								await e.SendReplySafe($"Description set: `{value}`");
+
+							break;
+						case "--footer":
+							if( value.Length > 2048 )
+							{
+								await e.SendReplySafe($"`--footer` is too long (`{value.Length} > 2048`)");
+								return;
+							}
+
+							embedBuilder.WithFooter(value);
 							if( debug )
 								await e.SendReplySafe($"Description set: `{value}`");
 
@@ -309,9 +334,21 @@ namespace Botwinder.modules
 
 							break;
 						case "--fieldName":
+							if( value.Length > 256 )
+							{
+								await e.SendReplySafe($"`--fieldName` is too long (`{value.Length} > 256`)\n```\n{value}\n```");
+								return;
+							}
+
 							if( currentField != null && currentField.Value == null )
 							{
 								await e.SendReplySafe($"Field `{currentField.Name}` is missing a value!");
+								return;
+							}
+
+							if( embedBuilder.Fields.Count >= 25 )
+							{
+								await e.SendReplySafe("Too many fields! (Limit is 25)");
 								return;
 							}
 
@@ -321,6 +358,12 @@ namespace Botwinder.modules
 
 							break;
 						case "--fieldValue":
+							if( value.Length > 1024 )
+							{
+								await e.SendReplySafe($"`--fieldValue` is too long (`{value.Length} > 1024`)\n```\n{value}\n```");
+								return;
+							}
+
 							if( currentField == null )
 							{
 								await e.SendReplySafe($"`fieldValue` can not precede `fieldName`.");
