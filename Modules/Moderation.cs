@@ -743,16 +743,18 @@ namespace Botwinder.modules
 			};
 			commands.Add(newCommand);
 
-			newCommand = newCommand.CreateCopy("silentban");
+			newCommand = newCommand.CreateCopy("silentBan");
 			newCommand.Description = "Use with the same parameters like `ban`. The _reason_ message will not be sent to the user (hence silent.)";
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("silentban"));
 
-			newCommand = newCommand.CreateCopy("purgeban");
+			newCommand = newCommand.CreateCopy("purgeBan");
 			newCommand.Description = "Use with the same parameters like `ban`. The difference is that this command will also delete all the messages of the user in last 24 hours.";
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("purgeban"));
 
-// !quickban
-			newCommand = new Command("quickban");
+// !quickBan
+			newCommand = new Command("quickBan");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. You can mention several people at once. (This command has to be first configured via `config` or <https://valkyrja.app/config>.)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
@@ -802,9 +804,10 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("quickban"));
 
-// !unban
-			newCommand = new Command("unban");
+// !unBan
+			newCommand = new Command("unBan");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Use with parameter `@user` where `@user` = user mention or id;";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
@@ -848,6 +851,7 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("unban"));
 
 // !addWarning
 			newCommand = new Command("addWarning");
