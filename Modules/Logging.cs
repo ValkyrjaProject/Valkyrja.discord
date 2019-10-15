@@ -28,17 +28,28 @@ namespace Botwinder.modules
 
 			public async Task Send()
 			{
-				if( this.DesiredType == MessageType.Embed )
-					await this.Channel.SendMessageAsync(embed: this.LogEmbed);
-				else if( this.DesiredType == MessageType.String )
-					await this.Channel.SendMessageSafe(this.LogString);
+				switch( this.DesiredType )
+				{
+					case MessageType.Embed:
+						await this.Channel.SendMessageAsync(embed: this.LogEmbed);
+						break;
+					case MessageType.String:
+						await this.Channel.SendMessageSafe(this.LogString);
+						break;
+					case MessageType.Both:
+						await this.Channel.SendMessageAsync(this.LogString, embed: this.LogEmbed);
+						break;
+					default:
+						throw new ArgumentException();
+				}
 			}
 		}
 
 		private enum MessageType
 		{
 			Embed,
-			String
+			String,
+			Both
 		}
 
 		private BotwinderClient Client;
@@ -46,8 +57,8 @@ namespace Botwinder.modules
 		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
 		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
 
-		private const int MessageQueueThreshold = 5;
-		private const int MessageQueueFileThreshold = 50;
+		private const int MessageQueueThreshold = 10;
+		private const int MessageQueueFileThreshold = 100;
 		private readonly List<Message> MessageQueue= new List<Message>();
 		private readonly TimeSpan UpdateDelay = TimeSpan.FromSeconds(MessageQueueThreshold);
 		private Task UpdateTask;
@@ -501,13 +512,13 @@ namespace Botwinder.modules
 				{
 					Message msg = new Message(){
 						Channel = logChannel,
-						DesiredType = MessageType.Embed,
+						DesiredType = MessageType.Both,
 						LogEmbed = GetLogEmbed(new Color(server.Config.AlertChannelColor), user?.GetAvatarUrl(),
 							"Alert triggered", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")),
-						LogString = ""
+						LogString = server.Config.AlertRoleMention == 0 ? "" : $"{server.Config.AlertRoleMention}"
 					};
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
