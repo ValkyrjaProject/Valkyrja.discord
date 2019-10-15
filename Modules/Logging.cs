@@ -518,7 +518,7 @@ namespace Botwinder.modules
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")),
-						LogString = server.Config.AlertRoleMention == 0 ? "" : $"{server.Config.AlertRoleMention}"
+						LogString = server.Config.AlertRoleMention == 0 ? "" : $"<@&{server.Config.AlertRoleMention}>"
 					};
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
