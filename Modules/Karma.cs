@@ -45,11 +45,13 @@ namespace Botwinder.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 
-				await e.SendReplySafe(string.Format("Hai **{0}**, you have {1} {2}!\nYou can {4} one with the `{3}{4}` command, or you can give a {5} to your friend using `{3}give @friend`",
+				int articleIndex = e.Server.Config.KarmaCurrencySingular[0] == ':' ? 1 : 0;
+				string article = e.Server.Config.KarmaCurrencySingular[articleIndex] == 'a' ? "an" : "a";
+				await e.SendReplySafe(string.Format("Hai **{0}**, you have {1} {2}!\nYou can {4} one with the `{3}{4}` command, or you can give {5} {6} to your friend using `{3}give @friend`",
 					e.Message.Author.GetNickname(), userData.KarmaCount,
 					(userData.KarmaCount == 1 ? e.Server.Config.KarmaCurrencySingular : e.Server.Config.KarmaCurrency),
 					e.Server.Config.CommandPrefix, e.Server.Config.KarmaConsumeCommand,
-					e.Server.Config.KarmaCurrencySingular));
+					article, e.Server.Config.KarmaCurrencySingular));
 
 				dbContext.Dispose();
 			};
