@@ -109,8 +109,7 @@ namespace Botwinder.modules
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 				if( userData.KarmaCount == 0 )
 				{
-					await e.SendReplySafe(string.Format("Umm... I'm sorry **{0}**, you don't have any {1} left =(",
-						e.Message.Author.GetNickname(), e.Server.Config.KarmaCurrency));
+					await e.SendReplySafe($"Umm... I'm sorry **{e.Message.Author.GetNickname()}**, you don't have any {e.Server.Config.KarmaCurrency} left =(");
 
 					dbContext.Dispose();
 					return;
@@ -118,8 +117,7 @@ namespace Botwinder.modules
 
 				if( e.Message.MentionedUsers == null || !e.Message.MentionedUsers.Any() || e.Message.MentionedUsers.Count() > e.Server.Config.KarmaLimitMentions )
 				{
-					await e.SendReplySafe(string.Format("You have to @mention your friend who will receive the {0}. You can mention up to {1} people at the same time.",
-						e.Server.Config.KarmaCurrencySingular, e.Server.Config.KarmaLimitMentions));
+					await e.SendReplySafe($"You have to @mention your friend who will receive the {e.Server.Config.KarmaCurrencySingular}. You can mention up to {e.Server.Config.KarmaLimitMentions} people at the same time.");
 
 					dbContext.Dispose();
 					return;
@@ -128,6 +126,7 @@ namespace Botwinder.modules
 				int count = 0;
 				StringBuilder userNames = new StringBuilder();
 				List<UserData> users = this.Client.GetMentionedUsersData(dbContext, e);
+
 				foreach(UserData mentionedUser in users)
 				{
 					if( userData.KarmaCount == 0 )
@@ -142,8 +141,8 @@ namespace Botwinder.modules
 				if( count > 0 )
 					dbContext.SaveChanges();
 
-				string response = string.Format("**{0}** received a {1} of friendship from **{2}** =]",
-					userNames, e.Server.Config.KarmaCurrencySingular, e.Message.Author.GetNickname());
+				string article = e.Server.Config.KarmaCurrencySingular[0] == 'a' ? "an" : "a";
+				string response = $"**{userNames}** received {article} {e.Server.Config.KarmaCurrencySingular} of friendship from **{e.Message.Author.GetNickname()}** =]";
 				if( count < users.Count )
 					response += "\nBut I couldn't give out more, as you don't have any left =(";
 
