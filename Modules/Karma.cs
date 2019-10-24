@@ -141,7 +141,8 @@ namespace Botwinder.modules
 				if( count > 0 )
 					dbContext.SaveChanges();
 
-				string article = e.Server.Config.KarmaCurrencySingular[0] == 'a' ? "an" : "a";
+				int articleIndex = e.Server.Config.KarmaCurrencySingular[0] == ':' ? 1 : 0;
+				string article = e.Server.Config.KarmaCurrencySingular[articleIndex] == 'a' ? "an" : "a";
 				string response = $"**{userNames}** received {article} {e.Server.Config.KarmaCurrencySingular} of friendship from **{e.Message.Author.GetNickname()}** =]";
 				if( count < users.Count )
 					response += "\nBut I couldn't give out more, as you don't have any left =(";
