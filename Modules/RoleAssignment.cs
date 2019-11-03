@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord;
+using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
 
@@ -739,6 +740,7 @@ namespace Botwinder.modules
 							await user.RemoveRoleAsync(discordRole);
 							return;
 						}
+
 						//else...
 						Int64 groupId = server.Roles.ContainsKey(discordRole.Id) ? server.Roles[discordRole.Id].PublicRoleGroupId : 0;
 						if( groupId != 0 )
@@ -766,7 +768,7 @@ namespace Botwinder.modules
 										if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage msg )
 											await msg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
 									}
-									catch(Exception e)
+									catch( Exception e )
 									{
 										await this.HandleException(e, "Failed to remove reaction.", server.Id);
 									}
@@ -779,10 +781,13 @@ namespace Botwinder.modules
 						await user.AddRoleAsync(discordRole);
 					}
 				}
-				catch(Exception e)
+				catch( HttpException e )
+				{
+					await server.HandleHttpException(e);
+				}
+				catch( Exception e )
 				{
 					await this.HandleException(e, "Reaction Assigned Roles", server.Id);
-					await server.Guild.Owner.SendMessageAsync($"I am unable to assign an EmojiReaction role `{name}` - Please Fix The Permissions!");
 				}
 			}
 		}
