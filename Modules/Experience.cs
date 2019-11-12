@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
+using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using guid = System.UInt64;
@@ -183,7 +184,11 @@ namespace Botwinder.modules
 
 				dbContext.SaveChanges();
 			}
-			catch(Exception e)
+			catch( HttpException e )
+			{
+				await server.HandleHttpException(e);
+			}
+			catch( Exception e )
 			{
 				if( !this.ServersWithException.Contains(server.Id) )
 				{
