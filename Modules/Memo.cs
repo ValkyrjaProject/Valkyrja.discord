@@ -24,7 +24,7 @@ namespace Botwinder.modules
 
 		private BotwinderClient Client;
 
-		private readonly Regex ProfileParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled | RegexOptions.Multiline, TimeSpan.FromMilliseconds(100));
+		private readonly Regex ProfileParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled | RegexOptions.Singleline, TimeSpan.FromMilliseconds(100));
 		private readonly Regex ProfileOptionRegex = new Regex("--?\\w+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 		private readonly Regex ProfileEmptyOptionRegex = new Regex("--?\\w+(?=\\s--?\\w|$)", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 		private readonly Regex UserIdRegex = new Regex("\\d+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
