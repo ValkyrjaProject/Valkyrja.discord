@@ -332,7 +332,10 @@ namespace Botwinder.modules
 
 					ProfileOption option = options.FirstOrDefault(o => o.Option == optionString || o.OptionAlt == optionString);
 					if( option == null )
-						continue;
+					{
+						await e.SendReplySafe($"Unknown option: `{optionString}`");
+						return;
+					}
 
 					UserProfileOption userOption = dbContext.UserProfileOptions.FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
 					if( userOption == null )
