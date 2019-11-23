@@ -334,6 +334,7 @@ namespace Botwinder.modules
 					if( option == null )
 					{
 						await e.SendReplySafe($"Unknown option: `{optionString}`");
+						dbContext.Dispose();
 						return;
 					}
 
