@@ -14,11 +14,12 @@ Please take a look at our website to see what's the bot about, full list of feat
 
 ## Project structure
 
-The Valkyrja project is split into six repositories:
+The Valkyrja project is split into these repositories:
 * `Valkyrja.core` - Core client code.
 * `Valkyrja.discord` - Most of the Valkyrja's features.
 * `Valkyrja.secure` - Private repository containing sensitive code, such as antispam.
 * `Valkyrja.service` - Separate bot to manage Valkyrja.discord and other systemd services.
+* `Valkyrja.monitoring` - Separate bot for offsite monitoring of Valkyrja.discord.
 * `Valkyrja.web` - The `valkyrja.app` website.
 * `Valkyrja.status` - The `status.valkyrja.app` page - only slightly modified [eZ Server Monitor](https://github.com/shevabam/ezservermonitor-web)
 
