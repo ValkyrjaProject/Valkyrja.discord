@@ -119,7 +119,6 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("setmemo"));
 
 // !profile
 			newCommand = new Command("profile");
@@ -359,7 +358,6 @@ namespace Botwinder.modules
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("setprofile"));
 
 			return commands;
 		}

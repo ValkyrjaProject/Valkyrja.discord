@@ -228,7 +228,6 @@ namespace Botwinder.modules
 			newCommand = newCommand.CreateCopy("clearLinks");
 			newCommand.Description = "Delete only messages that contain links. Use with a peremter, a number of messages to delete.";
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("clearlinks"));
 
 // !op
 			newCommand = new Command("op");
@@ -746,12 +745,10 @@ namespace Botwinder.modules
 			newCommand = newCommand.CreateCopy("silentBan");
 			newCommand.Description = "Use with the same parameters like `ban`. The _reason_ message will not be sent to the user (hence silent.)";
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("silentban"));
 
 			newCommand = newCommand.CreateCopy("purgeBan");
 			newCommand.Description = "Use with the same parameters like `ban`. The difference is that this command will also delete all the messages of the user in last 24 hours.";
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("purgeban"));
 
 // !quickBan
 			newCommand = new Command("quickBan");
@@ -804,7 +801,6 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("quickban"));
 
 // !unBan
 			newCommand = new Command("unBan");
@@ -851,7 +847,6 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("unban"));
 
 // !addWarning
 			newCommand = new Command("addWarning");
@@ -929,12 +924,10 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("addwarning"));
 
 			newCommand = newCommand.CreateCopy("issueWarning");
 			newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database. This will also be PMed to the user.";
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("issuewarning"));
 
 // !removeWarning
 			newCommand = new Command("removeWarning");
@@ -1001,12 +994,10 @@ namespace Botwinder.modules
 				await e.SendReplySafe("Done.");
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("removewarning"));
 
 			newCommand = newCommand.CreateCopy("removeAllWarnings");
 			newCommand.Description = "Use with parameter `@user` = user mention or id, you can remove all the warnings from multiple people, just mention them all.";
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("removeallwarnings"));
 
 // !whois
 			newCommand = new Command("whois");

@@ -95,7 +95,7 @@ namespace Botwinder.discord
 			newCommand.OnExecute += async e => {
 				await e.SendReplySafe("**-wat-**\n<http://destroyallsoftware.com/talks/wat>");
 			};
-			this.Bot.Commands.Add(newCommand.Id, newCommand);
+			this.Bot.Commands.Add(newCommand.Id.ToLower(), newCommand);
 
 // !bunneh
 			newCommand = new Command("bunneh");
@@ -119,7 +119,7 @@ namespace Botwinder.discord
 					}
 				}
 			};
-			this.Bot.Commands.Add(newCommand.Id, newCommand);
+			this.Bot.Commands.Add(newCommand.Id.ToLower(), newCommand);
 
 			return Task.CompletedTask;
 		}

@@ -61,7 +61,6 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response.ToString());
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("getrole"));
 
 // !addEmojiRole
 			newCommand = new Command("addEmojiRole");

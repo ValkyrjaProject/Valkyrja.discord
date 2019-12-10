@@ -231,7 +231,6 @@ namespace Botwinder.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("addquote"));
 
 
 			return commands;
