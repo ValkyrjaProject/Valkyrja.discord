@@ -76,6 +76,9 @@ namespace Botwinder.modules
 					else
 						tempChannel = await e.Server.Guild.CreateVoiceChannelAsync(name.ToString(), c => c.CategoryId = e.Server.Config.TempChannelCategoryId);
 
+					if( e.Server.Config.TempChannelGiveAdmin )
+						await tempChannel.AddPermissionOverwriteAsync(e.Message.Author, new OverwritePermissions(manageChannel: PermValue.Allow, manageRoles: PermValue.Allow, moveMembers: PermValue.Allow, muteMembers: PermValue.Allow, deafenMembers: PermValue.Allow));
+
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == tempChannel.Id);
 					if( channel == null )
