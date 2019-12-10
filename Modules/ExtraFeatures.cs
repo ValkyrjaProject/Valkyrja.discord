@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Botwinder.core;
 using Botwinder.entities;
 using Discord;
+using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
 using guid = System.UInt64;
@@ -95,11 +96,16 @@ namespace Botwinder.modules
 					dbContext.SaveChanges();
 					dbContext.Dispose();
 				}
-				catch(Exception exception)
+				catch( HttpException exception )
+				{
+					await e.Server.HandleHttpException(exception);
+				}
+				catch( Exception exception )
 				{
 					await this.Client.LogException(exception, e);
 					responseString = string.Format(ErrorUnknownString, this.Client.GlobalConfig.AdminUserId);
 				}
+
 				await e.SendReplySafe(responseString);
 			};
 			commands.Add(newCommand);
