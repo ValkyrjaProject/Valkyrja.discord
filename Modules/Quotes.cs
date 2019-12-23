@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
+using Valkyrja.core;
+using Valkyrja.entities;
 using Discord;
 using Discord.WebSocket;
 using guid = System.UInt64;
 
-namespace Botwinder.modules
+namespace Valkyrja.modules
 {
 	public class Quotes: IModule
 	{
-		private BotwinderClient Client;
+		private ValkyrjaClient Client;
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = false;
 
-		public List<Command> Init(IBotwinderClient iClient)
+		public List<Command> Init(IValkyrjaClient iClient)
 		{
-			this.Client = iClient as BotwinderClient;
+			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
 // !getQuote
@@ -236,7 +236,7 @@ namespace Botwinder.modules
 			return commands;
 		}
 
-		public Task Update(IBotwinderClient iClient)
+		public Task Update(IValkyrjaClient iClient)
 		{
 			return Task.CompletedTask;
 		}

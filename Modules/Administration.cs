@@ -4,28 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
+using Valkyrja.core;
+using Valkyrja.entities;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
 using guid = System.UInt64;
 
-namespace Botwinder.modules
+namespace Valkyrja.modules
 {
 	public class Administration: IModule
 	{
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
 		private Regex EmojiNameRegex = new Regex("\\w+", RegexOptions.Compiled);
 
-		private BotwinderClient Client;
+		private ValkyrjaClient Client;
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = false;
 
-		public List<Command> Init(IBotwinderClient iClient)
+		public List<Command> Init(IValkyrjaClient iClient)
 		{
-			this.Client = iClient as BotwinderClient;
+			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
 // !getRole
@@ -370,7 +370,7 @@ namespace Botwinder.modules
 			return commands;
 		}
 
-		public Task Update(IBotwinderClient iClient)
+		public Task Update(IValkyrjaClient iClient)
 		{
 			return Task.CompletedTask;
 		}

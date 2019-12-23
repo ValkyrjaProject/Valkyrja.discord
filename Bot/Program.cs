@@ -6,16 +6,16 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
-using Botwinder.modules;
+using Valkyrja.core;
+using Valkyrja.entities;
+using Valkyrja.modules;
 #if UsingValkyrjaSecure
-using Botwinder.secure;
+using Valkyrja.secure;
 #endif
 
 using guid = System.UInt64;
 
-namespace Botwinder.discord
+namespace Valkyrja.discord
 {
 	class Program
 	{
@@ -34,7 +34,7 @@ namespace Botwinder.discord
 
 	class Client
 	{
-		private BotwinderClient Bot;
+		private ValkyrjaClient Bot;
 
 		private const string BunnehDataFolder = "bunneh";
 
@@ -46,7 +46,7 @@ namespace Botwinder.discord
 		{
 			while( true )
 			{
-				this.Bot = new BotwinderClient(shardIdOverride);
+				this.Bot = new ValkyrjaClient(shardIdOverride);
 				InitModules();
 
 				try
@@ -57,7 +57,7 @@ namespace Botwinder.discord
 				}
 				catch(Exception e)
 				{
-					await this.Bot.LogException(e, "--BotwinderClient crashed.");
+					await this.Bot.LogException(e, "--ValkyrjaClient crashed.");
 					this.Bot.Dispose();
 				}
 			}

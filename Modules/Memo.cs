@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
+using Valkyrja.core;
+using Valkyrja.entities;
 using Discord;
 using Discord.WebSocket;
 using guid = System.UInt64;
 
-namespace Botwinder.modules
+namespace Valkyrja.modules
 {
 	public class Memo: IModule
 	{
@@ -22,7 +22,7 @@ namespace Botwinder.modules
 		private const string ClearedString = "I've cleared your memo ~ rip. _\\*The bot presses F to pay respects.*_\n**F**";
 		private const string NotFoundString = "User not found by that expression.";
 
-		private BotwinderClient Client;
+		private ValkyrjaClient Client;
 
 		private readonly Regex ProfileParamRegex = new Regex("--?\\w+\\s(?!--?\\w|$).*?(?=\\s--?\\w|$)", RegexOptions.Compiled | RegexOptions.Singleline, TimeSpan.FromMilliseconds(100));
 		private readonly Regex ProfileOptionRegex = new Regex("--?\\w+", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
@@ -33,9 +33,9 @@ namespace Botwinder.modules
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = false;
 
-		public List<Command> Init(IBotwinderClient iClient)
+		public List<Command> Init(IValkyrjaClient iClient)
 		{
-			this.Client = iClient as BotwinderClient;
+			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
 // !memo
@@ -157,7 +157,7 @@ namespace Botwinder.modules
 					}
 					else if( user.Id == this.Client.DiscordClient.CurrentUser.Id )
 					{
-						await e.Channel.SendMessageAsync("", embed: GetBotwinderEmbed(user as SocketGuildUser));
+						await e.Channel.SendMessageAsync("", embed: GetValkyrjaEmbed(user as SocketGuildUser));
 					}
 					else
 					{
@@ -386,7 +386,7 @@ namespace Botwinder.modules
 			return embedBuilder.Build();
 		}
 
-		private Embed GetBotwinderEmbed(SocketGuildUser user)
+		private Embed GetValkyrjaEmbed(SocketGuildUser user)
 		{
 			EmbedBuilder embedBuilder = new EmbedBuilder().WithThumbnailUrl("https://valkyrja.app/img/valkyrja-geared-517p.png")
 				.WithAuthor($"Kára", user.GetAvatarUrl())
@@ -409,7 +409,7 @@ namespace Botwinder.modules
 			return embedBuilder.Build();
 		}
 
-		public Task Update(IBotwinderClient iClient)
+		public Task Update(IValkyrjaClient iClient)
 		{
 			return Task.CompletedTask;
 		}

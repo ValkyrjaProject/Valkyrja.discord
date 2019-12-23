@@ -6,8 +6,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
+using Valkyrja.core;
+using Valkyrja.entities;
 using Discord;
 using Discord.Net;
 using Discord.Rest;
@@ -15,7 +15,7 @@ using Discord.WebSocket;
 
 using guid = System.UInt64;
 
-namespace Botwinder.modules
+namespace Valkyrja.modules
 {
 	public class Logging: IModule
 	{
@@ -52,7 +52,7 @@ namespace Botwinder.modules
 			Both
 		}
 
-		private BotwinderClient Client;
+		private ValkyrjaClient Client;
 
 		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
 		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
@@ -72,9 +72,9 @@ namespace Botwinder.modules
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = false;
 
-		public List<Command> Init(IBotwinderClient iClient)
+		public List<Command> Init(IValkyrjaClient iClient)
 		{
-			this.Client = iClient as BotwinderClient;
+			this.Client = iClient as ValkyrjaClient;
 
 			this.Client.Events.UserJoined += OnUserJoined;
 			this.Client.Events.UserLeft += OnUserLeft;
@@ -195,7 +195,7 @@ namespace Botwinder.modules
 
 				TimeSpan deltaTime = DateTime.UtcNow - frameTime;
 				if( this.Client.GlobalConfig.LogDebug )
-					Console.WriteLine($"BotwinderClient: LogQueueUpdate loop took: {deltaTime.TotalMilliseconds} ms");
+					Console.WriteLine($"ValkyrjaClient: LogQueueUpdate loop took: {deltaTime.TotalMilliseconds} ms");
 				await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(1000, (this.UpdateDelay - deltaTime).TotalMilliseconds)));
 			}
 		}
@@ -1091,7 +1091,7 @@ namespace Botwinder.modules
 		}
 
 
-		public Task Update(IBotwinderClient iClient)
+		public Task Update(IValkyrjaClient iClient)
 		{
 			return Task.CompletedTask;
 			/*if( this.LastUpdateTime + this.UpdateDelay > DateTime.UtcNow )

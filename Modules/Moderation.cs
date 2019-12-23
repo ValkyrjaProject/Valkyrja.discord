@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
+using Valkyrja.core;
+using Valkyrja.entities;
 using Discord;
 using Discord.Rest;
 using Discord.WebSocket;
 using guid = System.UInt64;
 
-namespace Botwinder.modules
+namespace Valkyrja.modules
 {
 	public class Moderation: IModule
 	{
@@ -41,15 +41,15 @@ namespace Botwinder.modules
 		private const string BanReasonTooLongString = "Ban reason has 512 characters limit.\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <https://valkyrja.app/config>";
 
-		private BotwinderClient Client;
+		private ValkyrjaClient Client;
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = true;
 
-		public List<Command> Init(IBotwinderClient iClient)
+		public List<Command> Init(IValkyrjaClient iClient)
 		{
-			this.Client = iClient as BotwinderClient;
+			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.AddBan += AddBan;
@@ -1180,9 +1180,9 @@ namespace Botwinder.modules
 
 
 //Update
-		public async Task Update(IBotwinderClient iClient)
+		public async Task Update(IValkyrjaClient iClient)
 		{
-			BotwinderClient client = iClient as BotwinderClient;
+			ValkyrjaClient client = iClient as ValkyrjaClient;
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 			bool save = false;
 			DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);

@@ -1,16 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
     <RestoreSources>../packages;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Botwinder.core.csproj" />
-    <ProjectReference Include="..\Modules\Botwinder.modules.csproj" />
-    <ProjectReference Include="..\Secure\Botwinder.secure.csproj" />
-    <ProjectReference Include="..\ServerSpecific\Botwinder.specific.csproj" />
+    <ProjectReference Include="..\Core\Valkyrja.core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Discord.Net.Core" Version="2.2.0-dev-dev" />

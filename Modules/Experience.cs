@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
+using Valkyrja.core;
+using Valkyrja.entities;
 using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using guid = System.UInt64;
 
-namespace Botwinder.modules
+namespace Valkyrja.modules
 {
 	public class Experience: IModule
 	{
@@ -22,16 +22,16 @@ namespace Botwinder.modules
 		private const string ImagesToLevel = "\nYou're {0} images away from the next!";
 		private const string ThingsToLevel = "\nYou're {0} messages or {1} images away from the next!";
 
-		private BotwinderClient Client;
+		private ValkyrjaClient Client;
 		private List<guid> ServersWithException = new List<guid>();
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = false;
 
-		public List<Command> Init(IBotwinderClient iClient)
+		public List<Command> Init(IValkyrjaClient iClient)
 		{
-			this.Client = iClient as BotwinderClient;
+			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.MessageReceived += OnMessageReceived;
@@ -204,7 +204,7 @@ namespace Botwinder.modules
 			}
 		}
 
-		public Task Update(IBotwinderClient iClient)
+		public Task Update(IValkyrjaClient iClient)
 		{
 			return Task.CompletedTask;
 		}

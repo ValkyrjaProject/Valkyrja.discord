@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Botwinder.core;
-using Botwinder.entities;
+using Valkyrja.core;
+using Valkyrja.entities;
 using Discord;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
 
-namespace Botwinder.modules
+namespace Valkyrja.modules
 {
 	public class Verification: IModule
 	{
@@ -46,7 +46,7 @@ namespace Botwinder.modules
 		private const string InvalidParametersString = "Invalid parameters. Use without any parameters to verify yourself, or mention someone to send them the instructions.";
 
 
-		private BotwinderClient Client;
+		private ValkyrjaClient Client;
 		private readonly ConcurrentDictionary<string, HashedValue> HashedValues = new ConcurrentDictionary<string, HashedValue>();
 		private readonly Dictionary<guid, guid> RecentlyProcessedPms = new Dictionary<guid, guid>();
 
@@ -54,9 +54,9 @@ namespace Botwinder.modules
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = true;
 
-		public List<Command> Init(IBotwinderClient iClient)
+		public List<Command> Init(IValkyrjaClient iClient)
 		{
-			this.Client = iClient as BotwinderClient;
+			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.UserJoined += OnUserJoined;
@@ -292,7 +292,7 @@ namespace Botwinder.modules
 			}
 		}
 
-		public async Task Update(IBotwinderClient iClient)
+		public async Task Update(IValkyrjaClient iClient)
 		{
 			if( !this.Client.GlobalConfig.VerificationUpdateEnabled )
 				return;
