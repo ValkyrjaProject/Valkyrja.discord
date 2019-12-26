@@ -491,7 +491,7 @@ namespace Valkyrja.modules
 
 // !promoteEveryone
 			newCommand = new Command("promoteEveryone");
-			newCommand.Type = CommandType.LargeOperation;
+			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Assign everyone a role identified by it's ID. Use the `getRole` command to get the ID.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
@@ -546,7 +546,7 @@ namespace Valkyrja.modules
 
 // !demoteEveryone
 			newCommand = new Command("demoteEveryone");
-			newCommand.Type = CommandType.LargeOperation;
+			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Remove a role from everyone, identified by roleID. Use the `getRole` command to get the ID.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
@@ -614,7 +614,7 @@ namespace Valkyrja.modules
 
 // !kickWithoutRoles
 			newCommand = new Command("kickWithoutRoles");
-			newCommand.Type = CommandType.LargeOperation;
+			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Kick all the users who do not have any role.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			newCommand.OnExecute += async e => {
