@@ -591,6 +591,13 @@ namespace Valkyrja.modules
 					warning.Append(" ");
 				}
 
+				if( warning.Length >= BanReasonLimit )
+				{
+					await e.Message.Channel.SendMessageSafe(BanReasonTooLongString);
+					dbContext.Dispose();
+					return;
+				}
+
 				string response = "";
 				List<string> usernames = new List<string>();
 				try
