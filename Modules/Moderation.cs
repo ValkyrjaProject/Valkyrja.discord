@@ -1115,7 +1115,10 @@ namespace Valkyrja.modules
 						if( userData != null )
 						{
 							SocketGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
-							whoisStrings.AppendLine(userData.GetWhoisString(dbContext, user));
+							if( e.Command.Id == "names" )
+								whoisStrings.AppendLine(userData.GetNamesString(dbContext, user));
+							else
+								whoisStrings.AppendLine(userData.GetWhoisString(dbContext, user));
 						}
 					}
 
@@ -1130,6 +1133,9 @@ namespace Valkyrja.modules
 				dbContext.Dispose();
 				await e.SendReplySafe(response);
 			};
+			commands.Add(newCommand);
+			newCommand = newCommand.CreateCopy("names");
+			newCommand.Description = "Find a User and display all their usernames and nicknames.";
 			commands.Add(newCommand);
 
 // !slow
