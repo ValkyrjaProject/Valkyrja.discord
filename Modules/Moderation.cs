@@ -1087,7 +1087,7 @@ namespace Valkyrja.modules
 
 				for( int i = 0; i < e.MessageArgs.Length; i++ )
 				{
-					if( guid.TryParse(e.MessageArgs[i], out guid id) )
+					if( guid.TryParse(e.MessageArgs[i].Trim('<', '@', '!', '>'), out guid id) )
 						foundUserIds.Add(id);
 				}
 
