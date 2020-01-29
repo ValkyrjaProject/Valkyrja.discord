@@ -1475,11 +1475,13 @@ namespace Valkyrja.modules
 
 			string mentions = muted.ToMentions();
 			if( muted.Any() )
+			{
 				response = string.Format(MuteConfirmString, mentions);
 
-			SocketTextChannel logChannel;
-			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, mentions));
+				SocketTextChannel logChannel;
+				if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
+					await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, mentions));
+			}
 
 			return response;
 		}
