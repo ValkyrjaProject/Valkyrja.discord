@@ -182,7 +182,7 @@ namespace Valkyrja.modules
 					catch( HttpException exception )
 					{
 						if( this.Client.Servers.ContainsKey(serverId) )
-							this.Client.Servers[serverId]?.HandleHttpException(exception);
+							this.Client.Servers[serverId]?.HandleHttpException(exception, $"This happened in <#{channel.Id}> when trying to log stuff.");
 					}
 					catch( Exception exception )
 					{

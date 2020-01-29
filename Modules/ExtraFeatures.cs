@@ -98,7 +98,7 @@ namespace Valkyrja.modules
 				}
 				catch( HttpException exception )
 				{
-					await e.Server.HandleHttpException(exception);
+					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when trying to create a temporary channel.");
 				}
 				catch( Exception exception )
 				{

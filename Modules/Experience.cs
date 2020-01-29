@@ -186,7 +186,7 @@ namespace Valkyrja.modules
 			}
 			catch( HttpException e )
 			{
-				await server.HandleHttpException(e);
+				await server.HandleHttpException(e, $"This happened in <#{channel.Id}> when trying to assign a role.");
 			}
 			catch( Exception e )
 			{

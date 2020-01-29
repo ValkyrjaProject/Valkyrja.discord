@@ -783,7 +783,7 @@ namespace Valkyrja.modules
 				}
 				catch( HttpException e )
 				{
-					await server.HandleHttpException(e);
+					await server.HandleHttpException(e, $"This happened in <#{channel.Id}> when trying to change reactions or assign roles based on emojis.");
 				}
 				catch( Exception e )
 				{
