@@ -422,6 +422,10 @@ namespace Valkyrja.modules
 							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
 							message.Attachments.Any() ? "Files" : "", attachment.ToString())
 					};
+
+					if( byAntispam )
+						this.Client.Monitoring.AntispamDeletes.Inc();
+
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
 					this.MessageQueueLock.Release();
@@ -643,6 +647,9 @@ namespace Valkyrja.modules
 						Utils.GetTimestamp(),
 						"Reason", reason)
 				};
+
+				this.Client.Monitoring.Bans.Inc();
+
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);
 				this.MessageQueueLock.Release();
@@ -753,6 +760,9 @@ namespace Valkyrja.modules
 						user.GetUsername(), user.Id.ToString(),
 						Utils.GetTimestamp())
 				};
+
+				this.Client.Monitoring.Mutes.Inc();
+
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);
 				this.MessageQueueLock.Release();
