@@ -168,6 +168,7 @@ namespace Valkyrja.modules
 					this.Client.ClearedMessageIDs.Add(e.Server.Id, new List<guid>());
 
 				this.Client.ClearedMessageIDs[e.Server.Id].AddRange(idsToDelete);
+				this.Client.Monitoring.MsgsDeleted.Inc(idsToDelete.Count);
 
 				int i = 0;
 				guid[] chunk = new guid[100];
