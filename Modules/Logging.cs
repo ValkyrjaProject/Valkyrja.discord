@@ -423,8 +423,7 @@ namespace Valkyrja.modules
 							message.Attachments.Any() ? "Files" : "", attachment.ToString())
 					};
 
-					if( byAntispam )
-						this.Client.Monitoring.AntispamDeletes.Inc();
+					this.Client.Monitoring.MsgsDeleted.Inc();
 
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
