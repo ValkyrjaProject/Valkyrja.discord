@@ -382,7 +382,6 @@ namespace Valkyrja.modules
 			{
 				SocketTextChannel logChannel;
 				if( server.Config.LogDeletedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
-					    (this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id)) ||
 					    server.IgnoredChannels.Contains(channel.Id) ||
 					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
 				{
