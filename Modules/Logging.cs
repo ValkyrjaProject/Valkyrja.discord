@@ -399,7 +399,7 @@ namespace Valkyrja.modules
 						await Task.Delay(500);
 						try
 						{
-							auditEntry = await server.Guild.GetAuditLogsAsync(10)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted && (auditData = e.Data as MessageDeleteAuditLogData) != null && auditData.ChannelId == c.Id && (Utils.GetTimeFromId(e.Id) + TimeSpan.FromMinutes(5)) > DateTime.UtcNow);
+							auditEntry = await server.Guild.GetAuditLogsAsync(3)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted && (auditData = e.Data as MessageDeleteAuditLogData) != null && auditData.ChannelId == c.Id && (Utils.GetTimeFromId(e.Id) + TimeSpan.FromMinutes(1)) > DateTime.UtcNow);
 							//One huge line because black magic from .NET Core?
 						}
 						catch( Exception ) { }
