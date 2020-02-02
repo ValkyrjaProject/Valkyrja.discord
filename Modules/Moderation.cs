@@ -164,6 +164,10 @@ namespace Valkyrja.modules
 				if( canceled )
 					return;
 
+				if( !this.Client.ClearedMessageIDs.ContainsKey(e.Server.Id) )
+					this.Client.ClearedMessageIDs.Add(e.Server.Id, new List<guid>());
+
+				this.Client.ClearedMessageIDs[e.Server.Id].AddRange(idsToDelete);
 				this.Client.Monitoring.MsgsDeleted.Inc(idsToDelete.Count);
 
 				int i = 0;

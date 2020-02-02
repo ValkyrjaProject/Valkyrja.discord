@@ -404,8 +404,9 @@ namespace Valkyrja.modules
 						catch( Exception ) { }
 					}
 
+					bool byClear = this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id);
 					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
-					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsername()) : "");
+					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsername()) : byClear ? "by command" : "");
 					Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
 					Message msg = new Message(){
 						Channel = logChannel,
