@@ -46,7 +46,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( e.Server.Config.TempChannelCategoryId == 0 )
 				{
-					await e.SendReplySafe("This command has to be configured on the config page (social) <https://valkyrja.app/config>");
+					await e.SendReplySafe("This command has to be configured on the config page (\"other\" section) <https://valkyrja.app/config>");
 					return;
 				}
 
