@@ -511,7 +511,8 @@ namespace Valkyrja.modules
 			{
 				SocketTextChannel logChannel;
 				if( server.Config.AlertChannelId != 0 && (logChannel = server.Guild.GetTextChannel(server.Config.AlertChannelId)) != null &&
-				    server.Config.AlertChannelId != message.Channel.Id && server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content) )
+				    server.Config.AlertChannelId != message.Channel.Id && server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content) &&
+					!server.IgnoredChannels.Contains(channel.Id) )
 				{
 					Message msg = new Message(){
 						Channel = logChannel,
