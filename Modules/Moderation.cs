@@ -131,7 +131,15 @@ namespace Valkyrja.modules
 					{
 						messages = await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten().ToArray();
 					}
-					catch(Exception exception)
+					catch( Discord.Net.HttpException exception )
+					{
+						if( await e.Server.HandleHttpException(exception, $"`{e.CommandId}` in <#{e.Channel.Id}>") )
+						{
+							lastRemoved = 0;
+							return true;
+						}
+					}
+					catch( Exception exception )
 					{
 						await this.Client.LogException(exception, e);
 						lastRemoved = 0;
@@ -186,10 +194,15 @@ namespace Valkyrja.modules
 								Array.Resize(ref chunk, chunkSize);
 							await e.Channel.DeleteMessagesAsync(chunk);
 						}
+
 						i++;
 					}
-					catch(Discord.Net.HttpException) { }
-					catch(Exception exception)
+					catch( Discord.Net.HttpException exception )
+					{
+						if( await e.Server.HandleHttpException(exception, $"`{e.CommandId}` in <#{e.Channel.Id}>") )
+							return true;
+					}
+					catch( Exception exception )
 					{
 						await this.Client.LogException(exception, e);
 						return true;
