@@ -196,7 +196,7 @@ namespace Valkyrja.modules
 					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
 					return;
 				}
-				if( e.MessageArgs.Length < 2 )
+				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
 					await e.SendReplySafe(e.Command.Description);
 					return;
