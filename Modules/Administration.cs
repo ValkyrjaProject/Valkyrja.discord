@@ -28,8 +28,43 @@ namespace Valkyrja.modules
 			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
+// !restrictAlert
+			Command newCommand = new Command("restrictAlert");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Restrict alert logging to search only one channel. Use with `set #channel` or `reset` argument.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				string response = "";
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerConfig config = dbContext.ServerConfigurations.FirstOrDefault(c => c.ServerId == e.Server.Id);
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+					response = e.Command.Description;
+				else if( config == null )
+					response = "Server config was not found in the database. Please try again in a few minutes or contact support.";
+				else if( e.MessageArgs[0].ToLower() == "reset" )
+				{
+					config.AlertWhitelistId = 0;
+					response = "Done.";
+					dbContext.SaveChanges();
+				}
+				else if( e.MessageArgs.Length != 2 || e.MessageArgs[0].ToLower() != "add" )
+					response = e.Command.Description;
+				else if( e.MessageArgs.Length == 2 && guid.TryParse(e.MessageArgs[1].Trim('<', '#', '>'), out ulong channelid) && e.Server.Guild.GetChannel(channelid) != null )
+				{
+					config.AlertWhitelistId = channelid;
+					response = "Done.";
+					dbContext.SaveChanges();
+				}
+				else
+					response = "Channel not found.";
+
+				dbContext.Dispose();
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+
 // !getRole
-			Command newCommand = new Command("getRole");
+			newCommand = new Command("getRole");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Get a name, id and color of `roleID` or `roleName` parameter.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
