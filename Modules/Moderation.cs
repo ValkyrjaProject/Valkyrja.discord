@@ -153,7 +153,7 @@ namespace Valkyrja.modules
 					List<guid> ids = null;
 					if( messages == null || messages.Length == 0 ||
 						(clearLinks && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Where(m => (m.Attachments != null && m.Attachments.Any()) || (m.Embeds != null && m.Embeds.Any())).Select(m => m.Id).ToList()).Any()) ||
-						(clearRegex  && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Where(m => (!string.IsNullOrEmpty(m.Content) && regex.IsMatch(m.Content)) || (m.Embeds != null && m.Embeds.Any(em => regex.IsMatch(em.Title) || regex.IsMatch(em.Description) || em.Fields.Any(f => regex.IsMatch(f.Value))))).Select(m => m.Id).ToList()).Any()) ||
+						(clearRegex  && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Where(m => (!string.IsNullOrEmpty(m.Content) && regex.IsMatch(m.Content)) || (m.Embeds != null && m.Embeds.Any(em => regex.IsMatch(em.Title ?? "") || regex.IsMatch(em.Description ?? "") || (em.Fields != null && em.Fields.Any(f => regex.IsMatch(f.Value ?? "")))))).Select(m => m.Id).ToList()).Any()) ||
 						(!clearLinks && !clearRegex && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Select(m => m.Id).ToList()).Any()) )
 					{
 						lastRemoved = e.Message.Id;
