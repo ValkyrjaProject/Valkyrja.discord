@@ -47,7 +47,7 @@ namespace Valkyrja.modules
 					response = "Done.";
 					dbContext.SaveChanges();
 				}
-				else if( e.MessageArgs.Length != 2 || e.MessageArgs[0].ToLower() != "add" )
+				else if( e.MessageArgs.Length != 2 || e.MessageArgs[0].ToLower() != "set" )
 					response = e.Command.Description;
 				else if( e.MessageArgs.Length == 2 && guid.TryParse(e.MessageArgs[1].Trim('<', '#', '>'), out ulong channelid) && e.Server.Guild.GetChannel(channelid) != null )
 				{
