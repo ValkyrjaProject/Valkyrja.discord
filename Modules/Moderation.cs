@@ -93,7 +93,7 @@ namespace Valkyrja.modules
 					return;
 				}
 				if( clearRegex )
-					regex = new Regex($".*({e.MessageArgs[1]}).*", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+					regex = new Regex($"({e.MessageArgs[1]})", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
 				bool clearLinks = e.Command.Id.ToLower() == "clearlinks";
 
 				if( e.Command.Id == "nuke" )
@@ -106,10 +106,10 @@ namespace Valkyrja.modules
 				}
 				else if( userIDs.Count > 0 )
 				{
-					msg = await e.Message.Channel.SendMessageAsync("Deleting " + n.ToString() + " messages by specified users.");
+					msg = await e.Message.Channel.SendMessageAsync($"Deleting {n.ToString()} messages by specified users.");
 				}
 				else
-					msg = await e.Message.Channel.SendMessageAsync("Deleting " + (clearLinks ? "attachments and embeds in " : clearRegex ? "regular expression matches " : "") + n.ToString() + " messages.");
+					msg = await e.Message.Channel.SendMessageAsync($"Deleting {(clearLinks ? "attachments and embeds in the last " : clearRegex ? "regular expression matches in the last " : "")} {n.ToString()} messages.");
 
 				int userCount = userIDs.Count();
 				guid lastRemoved = e.Message.Id;
@@ -247,7 +247,7 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearRegex");
-			newCommand.Description = "Delete only messages that match a regular expression within the last `n` messages. Use with paremeters: `<n> <regex> [@users]` where you should not use any whitespace in the regular expression, use `\\s` instead.";
+			newCommand.Description = "Delete only messages that match a regular expression within the last `n` messages. Use with paremeters: `<n> <regex> [@users]` where you should not use any whitespace in the regular expression, use `\\s` instead. (Note - ignores case.)";
 			commands.Add(newCommand);
 
 // !op
