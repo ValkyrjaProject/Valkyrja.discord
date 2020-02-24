@@ -66,7 +66,7 @@ namespace Valkyrja.modules
 // !clear
 			Command newCommand = new Command("clear");
 			newCommand.Type = CommandType.Operation;
-			newCommand.Description = "Deletes specified amount of messages (within two weeks.) If you mention someone as well, it will remove only their messages. Use with paremeters: _[@users] n_ - optional _@user_ mentions or ID's (this parameter has to be first, if specified.) And mandatory _n_ parameter, the count of how many messages to remove.";
+			newCommand.Description = "Deletes specified amount of messages (within two weeks.) If you mention someone as well, it will remove only their messages. Use with paremeters: `<n> [@users]` - optional `@user` mentions or ID's (this parameter has to be last, if specified.) And mandatory `<n>` parameter, the count of how many messages to remove.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageMessages )
@@ -79,23 +79,22 @@ namespace Valkyrja.modules
 				RestUserMessage msg = null;
 				List<guid> userIDs = this.Client.GetMentionedUserIds(e);
 
-				if( userIDs.Count == 0 && e.MessageArgs != null && (e.MessageArgs.Length > 1 || (e.MessageArgs.Length == 1 && e.Command.Id == "nuke")) )
+				if( e.Command.Id != "nuke" && (e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[0], out n)) )
 				{
-					await e.Message.Channel.SendMessageSafe("I can see that you're trying to use more parameters, but I did not find any IDs or mentions.");
+					await e.Message.Channel.SendMessageSafe("Please tell me how many messages should I delete!");
 					return;
 				}
 
 				Regex regex = null;
 				bool clearRegex = e.Command.Id.ToLower() == "clearregex";
-				if( clearRegex )
-					regex = new Regex(e.TrimmedMessage, RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
-				bool clearLinks = e.Command.Id.ToLower() == "clearlinks";
-				if( (clearLinks || clearRegex) && userIDs.Any() )
+				if( clearRegex && e.MessageArgs.Length < 2 )
 				{
-					//todo - why not?
-					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}{e.Command.Id}` does not take `@user` mentions as parameter.");
+					await e.Message.Channel.SendMessageSafe("Too few parameters.");
 					return;
 				}
+				if( clearRegex )
+					regex = new Regex($".*({e.MessageArgs[1]}).*", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+				bool clearLinks = e.Command.Id.ToLower() == "clearlinks";
 
 				if( e.Command.Id == "nuke" )
 				{
@@ -105,17 +104,12 @@ namespace Valkyrja.modules
 					else
 						msg = await e.Message.Channel.SendMessageAsync("Nuking the channel, I'll tell you when I'm done (large channels may take up to half an hour...)");
 				}
-				else if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[e.MessageArgs.Length - 1], out n) )
-				{
-					await e.Message.Channel.SendMessageSafe("Please tell me how many messages should I delete!");
-					return;
-				}
 				else if( userIDs.Count > 0 )
 				{
 					msg = await e.Message.Channel.SendMessageAsync("Deleting " + n.ToString() + " messages by specified users.");
 				}
 				else
-					msg = await e.Message.Channel.SendMessageAsync("Deleting " + (clearLinks ? "attachments and embeds in " : "") + n.ToString() + " messages.");
+					msg = await e.Message.Channel.SendMessageAsync("Deleting " + (clearLinks ? "attachments and embeds in " : clearRegex ? "regular expression matches " : "") + n.ToString() + " messages.");
 
 				int userCount = userIDs.Count();
 				guid lastRemoved = e.Message.Id;
@@ -124,6 +118,11 @@ namespace Valkyrja.modules
 					if( DateTime.UtcNow - Utils.GetTimeFromId(m.Id) < TimeSpan.FromDays(13.9f) )
 						return true;
 					return false;
+				}
+
+				bool IsAuthorSpecific(IMessage m)
+				{
+					return userCount == 0 || (m?.Author != null && userIDs.Contains(m.Author.Id));
 				}
 
 				List<guid> idsToDelete = new List<guid>();
@@ -152,10 +151,9 @@ namespace Valkyrja.modules
 
 					List<guid> ids = null;
 					if( messages == null || messages.Length == 0 ||
-						(clearLinks && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => (m.Attachments != null && m.Attachments.Any()) || (m.Embeds != null && m.Embeds.Any())).Select(m => m.Id).ToList()).Any()) ||
-						(clearRegex  && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => regex.IsMatch(m.Content) || (m.Embeds != null && m.Embeds.Any(em => regex.IsMatch(em.Title) || regex.IsMatch(em.Description) || em.Fields.Any(f => regex.IsMatch(f.Value))))).Select(m => m.Id).ToList()).Any()) ||
-						(!clearLinks && !clearRegex && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Select(m => m.Id).ToList()).Any()) ||
-						(userCount > 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => (m?.Author != null && userIDs.Contains(m.Author.Id))).Select(m => m.Id).ToList()).Any()) )
+						(clearLinks && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Where(m => (m.Attachments != null && m.Attachments.Any()) || (m.Embeds != null && m.Embeds.Any())).Select(m => m.Id).ToList()).Any()) ||
+						(clearRegex  && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Where(m => regex.IsMatch(m.Content) || (m.Embeds != null && m.Embeds.Any(em => regex.IsMatch(em.Title) || regex.IsMatch(em.Description) || em.Fields.Any(f => regex.IsMatch(f.Value))))).Select(m => m.Id).ToList()).Any()) ||
+						(!clearLinks && !clearRegex && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Select(m => m.Id).ToList()).Any()) )
 					{
 						lastRemoved = e.Message.Id;
 						return true;
@@ -245,11 +243,11 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearLinks");
-			newCommand.Description = "Delete only messages that contain links. Use with a peremeter, a number of messages to delete.";
+			newCommand.Description = "Delete only messages that contain attachments (images, video, files, ...) or embeds including automated link embeds. Use with a peremeter, a number of messages to delete.";
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearRegex");
-			newCommand.Description = "Delete only messages that match a regular expression. Use with a peremeter - regular expression.";
+			newCommand.Description = "Delete only messages that match a regular expression within the last `n` messages. Use with paremeters: `<n> <regex> [@users]` where you should not use any whitespace in the regular expression, use `\\s` instead.";
 			commands.Add(newCommand);
 
 // !op
