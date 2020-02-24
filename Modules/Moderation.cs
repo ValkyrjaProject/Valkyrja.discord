@@ -85,11 +85,15 @@ namespace Valkyrja.modules
 					return;
 				}
 
+				Regex regex = null;
+				bool clearRegex = e.Command.Id.ToLower() == "clearregex";
+				if( clearRegex )
+					regex = new Regex(e.TrimmedMessage, RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 				bool clearLinks = e.Command.Id.ToLower() == "clearlinks";
-				if( clearLinks && userIDs.Any() )
+				if( (clearLinks || clearRegex) && userIDs.Any() )
 				{
 					//todo - why not?
-					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}clearLinks` does not take `@user` mentions as parameter.");
+					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}{e.Command.Id}` does not take `@user` mentions as parameter.");
 					return;
 				}
 
@@ -149,7 +153,8 @@ namespace Valkyrja.modules
 					List<guid> ids = null;
 					if( messages == null || messages.Length == 0 ||
 						(clearLinks && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => (m.Attachments != null && m.Attachments.Any()) || (m.Embeds != null && m.Embeds.Any())).Select(m => m.Id).ToList()).Any()) ||
-						(!clearLinks && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Select(m => m.Id).ToList()).Any()) ||
+						(clearRegex  && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => regex.IsMatch(m.Content) || (m.Embeds != null && m.Embeds.Any(em => regex.IsMatch(em.Title) || regex.IsMatch(em.Description) || em.Fields.Any(f => regex.IsMatch(f.Value))))).Select(m => m.Id).ToList()).Any()) ||
+						(!clearLinks && !clearRegex && userCount == 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Select(m => m.Id).ToList()).Any()) ||
 						(userCount > 0 && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(m => (m?.Author != null && userIDs.Contains(m.Author.Id))).Select(m => m.Id).ToList()).Any()) )
 					{
 						lastRemoved = e.Message.Id;
@@ -240,7 +245,11 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearLinks");
-			newCommand.Description = "Delete only messages that contain links. Use with a peremter, a number of messages to delete.";
+			newCommand.Description = "Delete only messages that contain links. Use with a peremeter, a number of messages to delete.";
+			commands.Add(newCommand);
+
+			newCommand = newCommand.CreateCopy("clearRegex");
+			newCommand.Description = "Delete only messages that match a regular expression. Use with a peremeter - regular expression.";
 			commands.Add(newCommand);
 
 // !op
