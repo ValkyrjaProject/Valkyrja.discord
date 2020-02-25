@@ -243,17 +243,17 @@ namespace Valkyrja.modules
 			};
 			commands.Add(newCommand);
 
-			newCommand = newCommand.CreateCopy("nuke");
-			newCommand.Description = "Nuke the whole channel. You can also mention a user to delete all of their messages. (Within the last two weeks.)";
-			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
-			commands.Add(newCommand);
-
 			newCommand = newCommand.CreateCopy("clearLinks");
-			newCommand.Description = "Delete only messages that contain attachments (images, video, files, ...) or embeds including automated link embeds. Use with a peremeter, a number of messages to delete.";
+			newCommand.Description = "Delete only messages that contain attachments (images, video, files, ...) or embeds including automated link embeds. Use with a parameter, a number of messages to delete.";
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearRegex");
-			newCommand.Description = "Delete only messages that match a regular expression within the last `n` messages. Use with paremeters: `<n> <regex> [@users]` where you should not use any whitespace in the regular expression, use `\\s` instead. (Note - ignores case.)";
+			newCommand.Description = "Delete only messages that match a regular expression within the last `n` messages. Use with parameters: `<n> <regex> [@users]` where you should not use any whitespace in the regular expression, use `\\s` instead. (Note - ignores case.)";
+			commands.Add(newCommand);
+
+			newCommand = newCommand.CreateCopy("nuke");
+			newCommand.Description = "Nuke the whole channel. You can also mention a user to delete all of their messages. (Within the last two weeks.)";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			commands.Add(newCommand);
 
 // !op
