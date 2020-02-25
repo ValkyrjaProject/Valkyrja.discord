@@ -707,7 +707,8 @@ namespace Valkyrja.modules
 			try
 			{
 				SocketTextChannel logChannel;
-				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
+				guid channelId = issuedBy.Id == server.Guild.CurrentUser.Id ? server.Config.LogChannelId : server.Config.ModChannelId;
+				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(channelId)) == null )
 					return;
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
