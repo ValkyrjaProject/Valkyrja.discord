@@ -707,7 +707,7 @@ namespace Valkyrja.modules
 			try
 			{
 				SocketTextChannel logChannel;
-				guid channelId = issuedBy.Id == server.Guild.CurrentUser.Id ? server.Config.LogChannelId : server.Config.ModChannelId;
+				guid channelId = issuedBy.Id == server.Guild.CurrentUser.Id ? server.Config.ActivityChannelId : server.Config.ModChannelId; // kick-no-role
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(channelId)) == null )
 					return;
 
