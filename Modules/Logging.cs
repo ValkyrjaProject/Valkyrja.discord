@@ -223,10 +223,10 @@ namespace Valkyrja.modules
 					Message msg = new Message(){
 						Channel = logChannel,
 						DesiredType = (server.Config.ActivityChannelEmbeds && joinMessage.Length < 255) ? MessageType.Embed : MessageType.String,
-						LogEmbed = GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
+						LogEmbed = GetLogEmbed(new Color(server.Config.ActivityChannelColor),
 							joinMessage,
-							user.GetAvatarUrl(), $"UserId: {user.Id}",
-							"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated),
+							user.GetAvatarUrl(), "", server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"{user.GetUsername()}", $"`{user.Id}`", accountCreated,
+							footer: "Account created: " + Utils.GetTimestamp(accountCreated)),
 						LogString = string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
 								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
 							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
@@ -1054,14 +1054,14 @@ namespace Valkyrja.modules
 		}
 
 
-		private static Embed GetLogEmbed(Color color, string iconUrl, string title, string description, string name, string id,
+		private static Embed GetLogEmbed(Color color, string iconUrl, string authorTitle, string description, string name, string id,
 			guid timestampId, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
-			=> GetLogEmbed(color, iconUrl, title, description, name, id,
+			=> GetLogEmbed(color, iconUrl, authorTitle, description, name, id,
 				Utils.GetTimeFromId(timestampId),
 				tag1, msg1, tag2, msg2);
 
-		private static Embed GetLogEmbed(Color color, string iconUrl,string title, string description, string name, string id,
-			DateTime timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "")
+		private static Embed GetLogEmbed(Color color, string iconUrl, string authorTitle, string description, string name, string id,
+			DateTime timestamp, string tag1 = "", string msg1 = "", string tag2 = "", string msg2 = "", string footer = "")
 		{
 			if( msg1.Length > 1000 )
 				msg1 = msg1.Substring(0, 1000) + "**...**";
@@ -1073,29 +1073,32 @@ namespace Valkyrja.modules
 
 			EmbedBuilder embedBuilder = new EmbedBuilder{
 					Color = color,
-					Description = description,
 					Timestamp = timestamp
-				}.WithAuthor(title, iconUrl)
+				}.WithAuthor(authorTitle, iconUrl)
 				 .WithFooter(Utils.GetTimestamp(timestamp));
 
 			embedBuilder.AddField("Name", name, true);
 			embedBuilder.AddField("Id", id, true);
 
+			if( !string.IsNullOrEmpty(description) )
+				embedBuilder.WithDescription(description);
 			if( !string.IsNullOrEmpty(tag1) && !string.IsNullOrEmpty(msg1) )
 				embedBuilder.AddField(tag1, msg1, false);
 			if( !string.IsNullOrEmpty(tag2) && !string.IsNullOrEmpty(msg2) )
 				embedBuilder.AddField(tag2, msg2, false);
+			if( !string.IsNullOrEmpty(footer) )
+				embedBuilder.WithFooter(tag2);
 
 			return embedBuilder.Build();
 		}
 
-		private static Embed GetLogSmolEmbed(Color color, string title, string titleIconUrl, string description, string footer, DateTime timestamp)
+		private static Embed GetLogSmolEmbed(Color color, string authorTitle, string titleIconUrl, string description, string footer, DateTime timestamp)
 		{
 			EmbedBuilder embedBuilder = new EmbedBuilder{
 					Color = color,
 					Description = description,
 					Timestamp = timestamp
-				}.WithAuthor(title, titleIconUrl)
+				}.WithAuthor(authorTitle, titleIconUrl)
 				 .WithFooter(footer);
 
 			return embedBuilder.Build();
