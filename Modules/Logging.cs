@@ -1087,7 +1087,7 @@ namespace Valkyrja.modules
 			if( !string.IsNullOrEmpty(tag2) && !string.IsNullOrEmpty(msg2) )
 				embedBuilder.AddField(tag2, msg2, false);
 			if( !string.IsNullOrEmpty(footer) )
-				embedBuilder.WithFooter(tag2);
+				embedBuilder.WithFooter(footer);
 
 			return embedBuilder.Build();
 		}
