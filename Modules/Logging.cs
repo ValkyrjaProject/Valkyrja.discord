@@ -224,8 +224,8 @@ namespace Valkyrja.modules
 						Channel = logChannel,
 						DesiredType = (server.Config.ActivityChannelEmbeds && joinMessage.Length < 255) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogEmbed(new Color(server.Config.ActivityChannelColor),
-							joinMessage,
-							user.GetAvatarUrl(), "", server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"{user.GetUsername()}", $"`{user.Id}`", accountCreated,
+							user.GetAvatarUrl(),
+							joinMessage, "", server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"{user.GetUsername()}", $"`{user.Id}`", accountCreated,
 							footer: "Account created: " + Utils.GetTimestamp(accountCreated)),
 						LogString = string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
 								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
