@@ -27,9 +27,9 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private const string PmString = "Hi {0},\nthe `{1}` server is using code verification.\n\n{2}\n\n";
+		private const string PmString = "Hi {0},\nthe `{1}` server is using verification.\n\n{2}\n\n";
 		private const string PmKarmaString = "You will also get {0} `{1}{2}` for verifying!\n\n";
-		private const string PmInfoString = "In order to get verified, you must **reply to me in PM** with a hidden code within the below rules. " +
+		private const string PmCodeInfoString = "In order to get verified, you must **reply to me in PM** with a hidden code within the below rules. " +
 		                                "Just the code by itself, do not add anything extra. Read the rules and you will find the code.\n" +
 		                                "_(Beware that this will expire in a few hours, " +
 		                                "if it does simply run the `{0}verify` command in the server chat, " +
@@ -45,9 +45,28 @@ namespace Valkyrja.modules
 		private const string UserNotFoundString = "I couldn't find them :(";
 		private const string InvalidParametersString = "Invalid parameters. Use without any parameters to verify yourself, or mention someone to send them the instructions.";
 
+		private string[] CaptchaPms = new[]{
+			"To prove that you're a human, tell me what animal is this?\n```\n" +
+			"(\\_/)\n" +
+			"(^_^)\n" +
+			"@(\")(\")\n```\n",
+			"To prove that you're a human, tell me what animal is this?\n```\n" +
+			"(\\_/)\n" +
+			"(=.=)\n" +
+			"@(\")(\")\n```\n",
+		};
+		private string[] CaptchaValidAnswers = new[]{
+			"rabbit",
+			"hare",
+			"bunny",
+			"bunno",
+			"bunneh"
+		};
+
 
 		private ValkyrjaClient Client;
 		private readonly ConcurrentDictionary<string, HashedValue> HashedValues = new ConcurrentDictionary<string, HashedValue>();
+		private readonly ConcurrentDictionary<guid, guid> CaptchaValues = new ConcurrentDictionary<guid, guid>();
 		private readonly Dictionary<guid, guid> RecentlyProcessedPms = new Dictionary<guid, guid>();
 
 
@@ -66,7 +85,7 @@ namespace Valkyrja.modules
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
 			newCommand.OnExecute += async e => {
-				if( !e.Server.Config.CodeVerificationEnabled )
+				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
 				{
 					await e.SendReplyUnsafe("Verification is disabled on this server.");
 					return;
@@ -130,63 +149,76 @@ namespace Valkyrja.modules
 					continue;
 				}
 
-				string verifyPm = string.Format(PmInfoString, server.Config.CommandPrefix);
-				int source = Math.Abs((userData.UserId.ToString() + server.Id).GetHashCode());
-				int chunkNum = (int) Math.Ceiling(Math.Ceiling(Math.Log(source)) / 2);
-				StringBuilder hashBuilder = new StringBuilder(chunkNum);
-				for( int i = 0; i < chunkNum; i++ )
+				string verifyPm = "";
+				if( server.Config.CaptchaVerificationEnabled )
 				{
-					char c = (char) ((source % 100) / 4 + 97);
-					hashBuilder.Append(c);
-					source = source / 100;
+					verifyPm = this.CaptchaPms[Utils.Random.Next(0,this.CaptchaPms.Length)];
+					if( !this.CaptchaValues.ContainsKey(userData.UserId) )
+						this.CaptchaValues.Add(userData.UserId, server.Id);
 				}
-				string hash = hashBuilder.ToString();
-				hash = hash.Length > 5 ? hash.Substring(0, 5) : hash;
-				if( !this.HashedValues.ContainsKey(hash) )
-					this.HashedValues.Add(hash, new HashedValue(userData.UserId, server.Id));
-
-				string[] lines = server.Config.CodeVerifyMessage.Split('\n');
-				string[] words = null;
-				bool found = false;
-				int d = 0;
-				try
+				else
 				{
-					for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); ++d > 50 || i >= lines.Length / 2; i-- )
+					verifyPm = string.Format(PmCodeInfoString, server.Config.CommandPrefix);
+					int source = Math.Abs((userData.UserId.ToString() + server.Id).GetHashCode());
+					int chunkNum = (int)Math.Ceiling(Math.Ceiling(Math.Log(source)) / 2);
+					StringBuilder hashBuilder = new StringBuilder(chunkNum);
+					for( int i = 0; i < chunkNum; i++ )
 					{
-						if( i <= lines.Length / 2 )
-						{
-							i = lines.Length - 1;
-							continue;
-						}
-						if( (words = lines[i].Split(' ')).Length > 10 )
-						{
-							int space = Math.Max(1, Utils.Random.Next(words.Length / 4, words.Length - 1));
-							lines[i] = lines[i].Insert(lines[i].IndexOf(words[space], StringComparison.Ordinal) - 1, $" the secret is: {hash} ");
+						char c = (char)((source % 100) / 4 + 97);
+						hashBuilder.Append(c);
+						source = source / 100;
+					}
 
-							hashBuilder = new StringBuilder();
-							hashBuilder.AppendLine(verifyPm).AppendLine("");
-							for( int j = 0; j < lines.Length; j++ )
-								hashBuilder.AppendLine(lines[j]);
-							verifyPm = hashBuilder.ToString();
-							found = true;
-							break;
+					string hash = hashBuilder.ToString();
+					hash = hash.Length > 5 ? hash.Substring(0, 5) : hash;
+					if( !this.HashedValues.ContainsKey(hash) )
+						this.HashedValues.Add(hash, new HashedValue(userData.UserId, server.Id));
+
+					string[] lines = server.Config.CodeVerifyMessage.Split('\n');
+					string[] words = null;
+					bool found = false;
+					int d = 0;
+					try
+					{
+						for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); ++d > 50 || i >= lines.Length / 2; i-- )
+						{
+							if( i <= lines.Length / 2 )
+							{
+								i = lines.Length - 1;
+								continue;
+							}
+
+							if( (words = lines[i].Split(' ')).Length > 10 )
+							{
+								int space = Math.Max(1, Utils.Random.Next(words.Length / 4, words.Length - 1));
+								lines[i] = lines[i].Insert(lines[i].IndexOf(words[space], StringComparison.Ordinal) - 1, $" the secret is: {hash} ");
+
+								hashBuilder = new StringBuilder();
+								hashBuilder.AppendLine(verifyPm).AppendLine("");
+								for( int j = 0; j < lines.Length; j++ )
+									hashBuilder.AppendLine(lines[j]);
+								verifyPm = hashBuilder.ToString();
+								found = true;
+								break;
+							}
 						}
 					}
-				}
-				catch(Exception e)
-				{
-					// This is ignored because user. Send them a message to fix it.
-					found = false;
+					catch( Exception e )
+					{
+						// This is ignored because user. Send them a message to fix it.
+						found = false;
 
-					await this.HandleException(e, "VerifyUserPm.hash", server.Id);
-				}
+						await this.HandleException(e, "VerifyUserPm.hash", server.Id);
+					}
 
-				if( !found )
-				{
-					verifyPm = PmHashErrorString;
+					if( !found )
+					{
+						verifyPm = PmHashErrorString;
+					}
 				}
 
 				string message = string.Format(PmString, user.Username, server.Guild.Name, verifyPm);
+
 				if( server.Config.VerifyKarma > 0 )
 					message += string.Format(PmKarmaString, server.Config.VerifyKarma,
 						server.Config.CommandPrefix, server.Config.KarmaCurrency);
@@ -246,24 +278,37 @@ namespace Valkyrja.modules
 		}
 
 		/// <summary> Verifies a user based on a hashCode string and returns true if successful. </summary>
-		private async Task VerifyUserHash(guid userId, string hashCode)
+		private async Task VerifyUserHash(guid userId, string msg)
 		{
-			if( !this.HashedValues.ContainsKey(hashCode) || this.HashedValues[hashCode].UserId != userId || !this.Client.Servers.ContainsKey(this.HashedValues[hashCode].ServerId) )
+			if( (!this.CaptchaValues.ContainsKey(userId) || !this.Client.Servers.ContainsKey(this.CaptchaValues[userId]) || !this.CaptchaValidAnswers.Contains(msg)) && (!this.HashedValues.ContainsKey(msg) || this.HashedValues[msg].UserId != userId || !this.Client.Servers.ContainsKey(this.HashedValues[msg].ServerId)) )
 			{
 				if( this.Client.GlobalConfig.LogDebug )
 				{
-					if( !this.HashedValues.ContainsKey(hashCode) )
-						Console.WriteLine($"Verification: Received PM `{hashCode}` - not in the dictionary.");
-					else if( this.HashedValues[hashCode].UserId != userId )
-						Console.WriteLine("Verification: Found a hashCode, but the userid does not fit.");
-					else if( !this.Client.Servers.ContainsKey(this.HashedValues[hashCode].ServerId) )
-						Console.WriteLine("Verification: Server for the hashCode does not exist.");
+					if( !this.CaptchaValues.ContainsKey(userId) && !this.HashedValues.ContainsKey(msg) )
+						Console.WriteLine($"Verification: Received PM `{msg}` from `{userId}` - not in the dictionary.");
+
+					if( this.CaptchaValues.ContainsKey(userId) )
+					{
+						if( !this.CaptchaValidAnswers.Contains(msg) )
+							Console.WriteLine("Verification: Userid registered for captcha, but the answer was incorrect.");
+						else if( !this.Client.Servers.ContainsKey(this.CaptchaValues[userId]) )
+							Console.WriteLine("Verification: Server for the captcha does not exist.");
+					}
+
+					if( this.HashedValues.ContainsKey(msg) )
+					{
+						if( this.HashedValues[msg].UserId != userId )
+							Console.WriteLine("Verification: Found a hashCode, but the userid does not fit.");
+						else if( !this.Client.Servers.ContainsKey(this.HashedValues[msg].ServerId) )
+							Console.WriteLine("Verification: Server for the hashCode does not exist.");
+					}
 				}
 
 				return;
 			}
 
-			Server server = this.Client.Servers[this.HashedValues[hashCode].ServerId];
+			guid serverId = this.CaptchaValues.ContainsKey(userId) ? this.CaptchaValues[userId] : this.HashedValues[msg].ServerId;
+			Server server = this.Client.Servers[serverId];
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 			UserData userData = dbContext.GetOrAddUser(server.Id, userId);
