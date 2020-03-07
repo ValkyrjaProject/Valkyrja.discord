@@ -66,7 +66,7 @@ namespace Valkyrja.modules
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
 			newCommand.OnExecute += async e => {
-				if( !e.Server.Config.VerificationEnabled )
+				if( !e.Server.Config.CodeVerificationEnabled )
 				{
 					await e.SendReplyUnsafe("Verification is disabled on this server.");
 					return;
@@ -145,7 +145,7 @@ namespace Valkyrja.modules
 				if( !this.HashedValues.ContainsKey(hash) )
 					this.HashedValues.Add(hash, new HashedValue(userData.UserId, server.Id));
 
-				string[] lines = server.Config.VerifyMessage.Split('\n');
+				string[] lines = server.Config.CodeVerifyMessage.Split('\n');
 				string[] words = null;
 				bool found = false;
 				int d = 0;
@@ -280,7 +280,7 @@ namespace Valkyrja.modules
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
-			if( server.Config.VerificationEnabled && server.Config.VerifyOnWelcome )
+			if( server.Config.CodeVerificationEnabled && server.Config.VerifyOnWelcome )
 			{
 				await Task.Delay(3000);
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);

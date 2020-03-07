@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,8 +13,9 @@ using Discord;
 using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
-
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using guid = System.UInt64;
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace Valkyrja.modules
 {
@@ -68,6 +70,7 @@ namespace Valkyrja.modules
 		private readonly Color AntispamColor = new Color(255, 0, 255);
 		private readonly Color AntispamLightColor = new Color(255, 0, 206);
 
+		private Object StatsLock{ get; set; } = new Object();
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = false;
@@ -79,6 +82,7 @@ namespace Valkyrja.modules
 			this.Client.Events.UserJoined += OnUserJoined;
 			this.Client.Events.UserLeft += OnUserLeft;
 			this.Client.Events.UserVoiceStateUpdated += OnUserVoice;
+			this.Client.Events.GuildMemberUpdated += OnGuildMemberUpdated;
 			this.Client.Events.MessageDeleted += OnMessageDeleted;
 			this.Client.Events.MessageUpdated += OnMessageUpdated;
 			this.Client.Events.MessageReceived += OnMessageReceived;
@@ -104,7 +108,62 @@ namespace Valkyrja.modules
 				this.UpdateTask = Task.Run(QueueUpdate, this.UpdateCancel.Token);
 			}
 
-			return new List<Command>();
+			List<Command> commands = new List<Command>();
+
+// !stats
+			Command newCommand = new Command("stats");
+			newCommand.Type = CommandType.Operation;
+			newCommand.Description = "Display user-join statistics. Use with `<fromDate> [toDate]` arguments. You can omit the toDate to use the current time. Use ISO date format `yyyy-mm-dd`";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Config.StatsEnabled )
+				{
+					await e.SendReplyUnsafe("Stats are disabled on this server.");
+					return;
+				}
+
+				DateTime from = DateTime.MinValue;
+				DateTime to = DateTime.UtcNow;
+				if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) || (e.MessageArgs.Length > 1 && !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to)) )
+				{
+					await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
+				}
+
+				from = from.ToUniversalTime();
+				to = to.ToUniversalTime();
+
+				RestUserMessage msg = await e.Channel.SendMessageAsync("Counting...");
+
+				StatsTotal total = new StatsTotal();
+				lock(this.StatsLock)
+				{
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					foreach( StatsTotal daily in dbContext.StatsTotal.Where(d => d.ServerId == e.Server.Id && d.DateTime > from && d.DateTime < to) )
+					{
+						total.Add(daily);
+					}
+
+					if( to + TimeSpan.FromMinutes(5) > DateTime.UtcNow )
+					{
+						StatsDaily today = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == e.Server.Id);
+						if( today != null )
+							total.Add(today);
+					}
+
+					dbContext.Dispose();
+				}
+
+				if( e.Operation.CurrentState == Operation.State.Canceled )
+				{
+					await msg.ModifyAsync(m => m.Content = $"~~{m.Content}~~\n__Operation canceled.__");
+				}
+
+				await msg.ModifyAsync(m => m.Content = $"~~{m.Content}~~\n{total.ToString()}");
+			};
+			commands.Add(newCommand);
+
+
+			return commands;
 		}
 
 		private async Task QueueUpdate()
@@ -207,6 +266,8 @@ namespace Valkyrja.modules
 				(server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
+			StatsIncrement(server, StatsType.Joined);
+
 			try
 			{
 				SocketTextChannel logChannel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
@@ -253,6 +314,11 @@ namespace Valkyrja.modules
 			    (server = this.Client.Servers[user.Guild.Id]) == null||
 			    this.RecentlyBannedUserIDs.Contains(user.Id) )
 				return;
+
+			if( user.JoinedAt.HasValue && DateTime.UtcNow - user.JoinedAt.Value.ToUniversalTime() < TimeSpan.FromSeconds(3) )
+				StatsIncrement(server, StatsType.KickedByDiscord);
+			else
+				StatsIncrement(server, StatsType.Left);
 
 			try
 			{
@@ -361,6 +427,21 @@ namespace Valkyrja.modules
 				await this.HandleException(exception, "OnUserVoice", server.Id);
 			}
 
+		}
+
+		private Task OnGuildMemberUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(oldUser.Guild.Id) ||
+			    (server = this.Client.Servers[oldUser.Guild.Id]) == null ||
+			    server.Config.IgnoreBots && oldUser.IsBot )
+				return Task.CompletedTask;
+
+			if( server.Config.StatsEnabled && server.Config.VerifyRoleId != 0 &&
+				newUser.Roles.Any(r => r.Id == server.Config.VerifyRoleId) && oldUser.Roles.All(r => r.Id != server.Config.VerifyRoleId) )
+				StatsIncrement(server, StatsType.Verified);
+
+			return Task.CompletedTask;
 		}
 
 		private async Task OnMessageDeleted(SocketMessage message, ISocketMessageChannel c)
@@ -633,6 +714,9 @@ namespace Valkyrja.modules
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
+				if( issuedBy?.Id == this.Client.GlobalConfig.UserId )
+					StatsIncrement(server, StatsType.BannedByValk);
+
 				Color color = issuedBy?.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
 					Channel = logChannel,
@@ -712,6 +796,9 @@ namespace Valkyrja.modules
 					return;
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
+
+				if( issuedBy?.Id == this.Client.GlobalConfig.UserId )
+					StatsIncrement(server, StatsType.KickedByValk);
 
 				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
@@ -1107,16 +1194,86 @@ namespace Valkyrja.modules
 
 		public Task Update(IValkyrjaClient iClient)
 		{
-			return Task.CompletedTask;
-			/*if( this.LastUpdateTime + this.UpdateDelay > DateTime.UtcNow )
+			if( DateTime.UtcNow.Hour > 1 )
 				return Task.CompletedTask;
 
-			this.LastUpdateTime = DateTime.UtcNow;
+			try
+			{
+				lock( this.StatsLock )
+				{
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					bool save = false;
 
-			this.RecentlyBannedUserIDs.Clear();
-			this.RecentlyUnbannedUserIDs.Clear();
+					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => this.Client.Servers.ContainsKey(d.ServerId) && this.Client.Servers[d.ServerId].Config.StatsEnabled && d.DateTime + TimeSpan.FromHours(20) < DateTime.UtcNow) )
+					{
+						StatsTotal statsTotal = statsDaily.CreateTotal();
+						dbContext.StatsTotal.Add(statsTotal);
+						statsDaily.Reset();
+						save = true;
+					}
 
-			return Task.CompletedTask;*/
+					if( save )
+						dbContext.SaveChanges();
+					dbContext.Dispose();
+				}
+			}
+			catch( Exception e )
+			{
+				HandleException(e, "Logging.Update failed to create total stats", 0);
+			}
+
+			return Task.CompletedTask;
+		}
+
+		private enum StatsType
+		{
+			Joined,
+			Left,
+			Verified,
+			BannedByValk,
+			KickedByValk,
+			KickedByDiscord,
+		}
+
+		private void StatsIncrement(Server server, StatsType type)
+		{
+			if( !server.Config.StatsEnabled )
+				return;
+
+			lock( this.StatsLock )
+			{
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				StatsDaily statsDaily = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == server.Id);
+				if( statsDaily == null )
+					dbContext.StatsDaily.Add(statsDaily = new StatsDaily(server.Id));
+
+				switch( type )
+				{
+					case StatsType.Joined:
+						statsDaily.UserJoined++;
+						break;
+					case StatsType.Left:
+						statsDaily.UserLeft++;
+						break;
+					case StatsType.Verified:
+						statsDaily.UserVerified++;
+						break;
+					case StatsType.BannedByValk:
+						statsDaily.UserBannedByValk++;
+						break;
+					case StatsType.KickedByValk:
+						statsDaily.UserKickedByValk++;
+						break;
+					case StatsType.KickedByDiscord:
+						statsDaily.UserKickedByDiscord++;
+						break;
+				}
+
+				dbContext.SaveChanges();
+				dbContext.Dispose();
+			}
+
+
 		}
 	}
 }
