@@ -127,12 +127,14 @@ namespace Valkyrja.modules
 				if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) || (e.MessageArgs.Length > 1 && !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to)) )
 				{
 					await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
+					return;
 				}
 
 				from = from.ToUniversalTime();
 				to = to.ToUniversalTime();
 
 				RestUserMessage msg = await e.Channel.SendMessageAsync("Counting...");
+				string response = "";
 
 				StatsTotal total = new StatsTotal();
 				lock(this.StatsLock)
@@ -145,20 +147,20 @@ namespace Valkyrja.modules
 
 					if( to + TimeSpan.FromMinutes(5) > DateTime.UtcNow )
 					{
+						response += $"~~{msg.Content}~~\nSince {Utils.GetTimestamp(from)}:\n";
 						StatsDaily today = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == e.Server.Id);
 						if( today != null )
 							total.Add(today);
+					}
+					else
+					{
+						response += $"~~{msg.Content}~~\nBetween {Utils.GetTimestamp(from)} and {Utils.GetTimestamp(to)}:\n";
 					}
 
 					dbContext.Dispose();
 				}
 
-				if( e.Operation.CurrentState == Operation.State.Canceled )
-				{
-					await msg.ModifyAsync(m => m.Content = $"~~{m.Content}~~\n__Operation canceled.__");
-				}
-
-				await msg.ModifyAsync(m => m.Content = $"~~{m.Content}~~\n{total.ToString()}");
+				await msg.ModifyAsync(m => m.Content = response + total.ToString());
 			};
 			commands.Add(newCommand);
 
