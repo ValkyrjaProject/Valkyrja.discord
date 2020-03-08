@@ -29,8 +29,8 @@ namespace Valkyrja.modules
 
 		private const string PmString = "Hi {0},\nthe `{1}` server is using verification.\n\n{2}\n\n";
 		private const string PmKarmaString = "You will also get {0} `{1}{2}` for verifying!\n\n";
-		private const string PmCodeInfoString = "In order to get verified, you must **reply to me in PM** with a hidden code within the below rules. " +
-		                                "Just the code by itself, do not add anything extra. Read the rules and you will find the code.\n" +
+		private const string PmCodeInfoString = "In order to get verified, you must **reply to me in PM** with a hidden code within the below text. " +
+		                                "Just the code by itself, do not add anything extra. Read the text and you will find the code.\n" +
 		                                "_(Beware that this will expire in a few hours, " +
 		                                "if it does simply run the `{0}verify` command in the server chat, " +
 		                                "and re-send the code that you already found - it won't change.)_";
@@ -94,8 +94,41 @@ namespace Valkyrja.modules
 
 			this.Client.Events.UserJoined += OnUserJoined;
 
+// !unverify
+			Command newCommand = new Command("unverify");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Remove verified status from someone.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
+				{
+					await e.SendReplyUnsafe("Verification is disabled on this server.");
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
+				IRole role = e.Server.Guild.GetRole(e.Server.Config.VerifyRoleId);
+				if( !mentionedUsers.Any() || role == null )
+				{
+					await e.SendReplyUnsafe(UserNotFoundString);
+					dbContext.Dispose();
+					return;
+				}
+
+				foreach( UserData user in mentionedUsers )
+				{
+					user.Verified = false;
+					e.Server.Guild.GetUser(user.UserId)?.RemoveRoleAsync(role);
+				}
+
+				dbContext.SaveChanges();
+				dbContext.Dispose();
+				await e.SendReplyUnsafe("Done.");
+			};
+
 // !verify
-			Command newCommand = new Command("verify");
+			newCommand = new Command("verify");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
 			newCommand.OnExecute += async e => {
