@@ -60,7 +60,21 @@ namespace Valkyrja.modules
 			"hare",
 			"bunny",
 			"bunno",
-			"bunneh"
+			"bunneh",
+			"hase", //de
+			"kanin", //swe
+			"zajac", //sk
+			"zajic", //cz
+			"kralik", //sk&cz
+			"koniglia", //italian
+			"koniglio", //italian
+			"coniglietto", //italian
+			"conejita", //spanish
+			"conejito", //spanish
+			"coneja", //spanish
+			"conejo", //spanish
+			"lapine", //french
+			"lapin" //french
 		};
 
 
