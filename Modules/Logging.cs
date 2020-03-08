@@ -73,7 +73,7 @@ namespace Valkyrja.modules
 		private Object StatsLock{ get; set; } = new Object();
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
-		public bool DoUpdate{ get; set; } = false;
+		public bool DoUpdate{ get; set; } = true;
 
 		public List<Command> Init(IValkyrjaClient iClient)
 		{
@@ -1200,7 +1200,7 @@ namespace Valkyrja.modules
 
 		public Task Update(IValkyrjaClient iClient)
 		{
-			if( DateTime.UtcNow.Hour > 1 )
+			if( DateTime.UtcNow.Hour > 1 || this.Client.DiscordClient.ShardId != 0)
 				return Task.CompletedTask;
 
 			try
@@ -1210,7 +1210,7 @@ namespace Valkyrja.modules
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 					bool save = false;
 
-					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => this.Client.Servers.ContainsKey(d.ServerId) && this.Client.Servers[d.ServerId].Config.StatsEnabled && d.DateTime + TimeSpan.FromHours(20) < DateTime.UtcNow) )
+					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => this.Client.Servers.ContainsKey(d.ServerId) && this.Client.Servers[d.ServerId].Config.StatsEnabled && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
 					{
 						StatsTotal statsTotal = statsDaily.CreateTotal();
 						dbContext.StatsTotal.Add(statsTotal);
