@@ -151,7 +151,10 @@ namespace Valkyrja.modules
 
 					if( to + TimeSpan.FromMinutes(5) > DateTime.UtcNow )
 					{
-						response = $"~~{msg.Content}~~\nSince {Utils.GetTimestamp(from)}:\n";
+						if( from > DateTime.UtcNow )
+							response = $"~~{msg.Content}~~\nToday:\n";
+						else
+							response = $"~~{msg.Content}~~\nSince {Utils.GetTimestamp(from)}:\n";
 						StatsDaily today = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == e.Server.Id);
 						if( today != null )
 							total.Add(today);
