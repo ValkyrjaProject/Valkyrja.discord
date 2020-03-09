@@ -77,7 +77,7 @@ namespace Valkyrja.modules
 
 				int n = 0;
 				RestUserMessage msg = null;
-				List<guid> userIDs = this.Client.GetMentionedUserIds(e);
+				List<guid> userIDs = this.Client.GetMentionedUserIds(e, false);
 
 				if( e.Command.Id != "nuke" && (e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[0], out n)) )
 				{
@@ -110,7 +110,7 @@ namespace Valkyrja.modules
 					msg = await e.Message.Channel.SendMessageAsync($"Deleting {n.ToString()} messages by specified users.");
 				}
 				else
-					msg = await e.Message.Channel.SendMessageAsync($"Deleting {(clearLinks ? "attachments and embeds in the last " : clearRegex ? "regular expression matches in the last " : "")} {n.ToString()} messages.");
+					msg = await e.Message.Channel.SendMessageAsync($"Deleting {(clearLinks ? "attachments and embeds in the last " : clearRegex ? "regular expression matches in the last " : "")} {n.ToString()} message{(n == 1 ? "" : "s")}.");
 
 				int userCount = userIDs.Count();
 				guid lastRemoved = e.Message.Id;
