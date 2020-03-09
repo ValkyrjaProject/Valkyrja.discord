@@ -137,6 +137,7 @@ namespace Valkyrja.modules
 				dbContext.Dispose();
 				await e.SendReplyUnsafe(response);
 			};
+			commands.Add(newCommand);
 
 // !verify
 			newCommand = new Command("verify");
