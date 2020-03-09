@@ -1213,13 +1213,16 @@ namespace Valkyrja.modules
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 					bool save = false;
 
+					List<StatsDaily> toRemove = new List<StatsDaily>();
 					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => this.Client.Servers.ContainsKey(d.ServerId) && this.Client.Servers[d.ServerId].Config.StatsEnabled && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
 					{
-						StatsTotal statsTotal = statsDaily.CreateTotal();
-						dbContext.StatsTotal.Add(statsTotal);
-						statsDaily.Reset();
+						dbContext.StatsTotal.Add(statsDaily.CreateTotal());
+						dbContext.StatsDaily.Add(new StatsDaily(statsDaily.ServerId));
+						toRemove.Add(statsDaily);
 						save = true;
 					}
+
+					dbContext.StatsDaily.RemoveRange(toRemove);
 
 					if( save )
 						dbContext.SaveChanges();
