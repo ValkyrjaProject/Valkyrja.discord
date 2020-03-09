@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Valkyrja.core;
 using Valkyrja.entities;
 using Discord;
+using Discord.Net;
 using Discord.WebSocket;
 
 using guid = System.UInt64;
@@ -384,7 +385,26 @@ namespace Valkyrja.modules
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
-			if( server.Config.CodeVerificationEnabled && server.Config.VerifyOnWelcome )
+			bool verifiedByAge = false;
+			IRole role = null;
+			if( server.Config.VerifyRoleId > 0 && server.Config.VerifyAccountAgeDays > 0 && server.Config.VerifyAccountAge && Utils.GetTimeFromId(user.Id) + TimeSpan.FromDays(server.Config.VerifyAccountAgeDays) < DateTime.UtcNow && (role = server.Guild.GetRole(server.Config.VerifyRoleId)) != null )
+			{
+				verifiedByAge = true;
+				try
+				{
+					await user.AddRoleAsync(role);
+				}
+				catch( HttpException e )
+				{
+					await server.HandleHttpException(e, "Failed to assign the verification role.");
+				}
+				catch( Exception e )
+				{
+					await HandleException(e, "Verification by account age", server.Id);
+				}
+			}
+
+			if( (server.Config.CodeVerificationEnabled || server.Config.CaptchaVerificationEnabled) && server.Config.VerifyOnWelcome && !verifiedByAge )
 			{
 				await Task.Delay(3000);
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
