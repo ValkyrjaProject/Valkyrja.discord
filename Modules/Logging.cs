@@ -1214,7 +1214,7 @@ namespace Valkyrja.modules
 					bool save = false;
 
 					List<StatsDaily> toRemove = new List<StatsDaily>();
-					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => this.Client.Servers.ContainsKey(d.ServerId) && this.Client.Servers[d.ServerId].Config.StatsEnabled && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
+					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => dbContext.ServerConfigurations.Any(s => s.ServerId == d.ServerId && s.StatsEnabled) && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
 					{
 						dbContext.StatsTotal.Add(statsDaily.CreateTotal());
 						dbContext.StatsDaily.Add(new StatsDaily(statsDaily.ServerId));
