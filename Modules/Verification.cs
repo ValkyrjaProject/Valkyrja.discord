@@ -106,6 +106,7 @@ namespace Valkyrja.modules
 					return;
 				}
 
+				string response = "Done.";
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.VerifyRoleId);
@@ -116,15 +117,25 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				foreach( UserData user in mentionedUsers )
+				try
 				{
-					user.Verified = false;
-					e.Server.Guild.GetUser(user.UserId)?.RemoveRoleAsync(role);
+					foreach( UserData userData in mentionedUsers )
+					{
+						userData.Verified = false;
+						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+						if( user != null )
+							await user.RemoveRoleAsync(role);
+					}
+
+					dbContext.SaveChanges();
+				}
+				catch( Exception )
+				{
+					response = "Invalid configuration or permissions.";
 				}
 
-				dbContext.SaveChanges();
 				dbContext.Dispose();
-				await e.SendReplyUnsafe("Done.");
+				await e.SendReplyUnsafe(response);
 			};
 
 // !verify
