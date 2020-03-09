@@ -643,12 +643,12 @@ namespace Valkyrja.modules
 						catch(Exception) { }
 						await Task.Delay(300);
 
+						if( this.Client.Events.LogKick != null ) // This is in "wrong" order to prevent false positive "user left" logging.
+							await this.Client.Events.LogKick(e.Server, user?.GetUsername(), userData.UserId, warning.ToString(), e.Message.Author as SocketGuildUser);
+
 						await user.KickAsync(warning.ToString());
 						userData.AddWarning(warning.ToString());
 						usernames.Add(user.GetUsername());
-
-						if( this.Client.Events.LogKick != null )
-							await this.Client.Events.LogKick(e.Server, user?.GetUsername(), userData.UserId, warning.ToString(), e.Message.Author as SocketGuildUser);
 					}
 				}
 				catch(Discord.Net.HttpException exception)
@@ -1345,7 +1345,7 @@ namespace Valkyrja.modules
 				try
 				{
 					Task logBan = null;
-					if( this.Client.Events.LogBan != null )
+					if( this.Client.Events.LogBan != null ) // This is in "wrong" order to prevent false positive "user left" logging.
 						logBan = this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
 
 					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
