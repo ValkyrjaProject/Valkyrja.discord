@@ -1217,7 +1217,6 @@ namespace Valkyrja.modules
 					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => dbContext.ServerConfigurations.Any(s => s.ServerId == d.ServerId && s.StatsEnabled) && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
 					{
 						dbContext.StatsTotal.Add(statsDaily.CreateTotal());
-						dbContext.StatsDaily.Add(new StatsDaily(statsDaily.ServerId));
 						toRemove.Add(statsDaily);
 						save = true;
 					}
