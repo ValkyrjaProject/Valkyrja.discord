@@ -113,7 +113,7 @@ namespace Valkyrja.modules
 // !stats
 			Command newCommand = new Command("stats");
 			newCommand.Type = CommandType.Operation;
-			newCommand.Description = "Display user-join statistics. Use with `[fromDate] [toDate]` arguments. You can omit the toDate to query since-to-now, or omit both to query only today since midnight. Use ISO date format `yyyy-mm-dd`";
+			newCommand.Description = "Display user-join statistics. Use with either a number of days, or `[fromDate] [toDate]` arguments. You can omit the toDate to query since-to-now, or omit both to query only today since midnight. Use ISO date format `yyyy-mm-dd`";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.StatsEnabled )
@@ -128,7 +128,17 @@ namespace Valkyrja.modules
 				{
 					from = DateTime.UtcNow + TimeSpan.FromDays(1);
 				}
-				else if( !DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) || (e.MessageArgs.Length > 1 && !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to)) )
+				else if( e.MessageArgs.Length == 1 && !DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) )
+				{
+					if( !int.TryParse(e.MessageArgs[0], out int n) )
+					{
+						await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
+						return;
+					}
+
+					from = DateTime.UtcNow + TimeSpan.FromDays(n);
+				}
+				else if( e.MessageArgs.Length > 1 && !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to) )
 				{
 					await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
 					return;
