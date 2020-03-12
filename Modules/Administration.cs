@@ -97,54 +97,6 @@ namespace Valkyrja.modules
 			};
 			commands.Add(newCommand);
 
-// !addEmojiRole
-			newCommand = new Command("addEmojiRole");
-			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Add an emoji reaction assigned role to a message.";
-			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
-			newCommand.OnExecute += async e => {
-				if( e.MessageArgs == null || e.MessageArgs.Length < 3 || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" || !guid.TryParse(e.MessageArgs[0], out guid messageId) )
-				{
-					await e.SendReplySafe($"Usage: `{e.Server.Config.CommandPrefix}{e.CommandId} <messageId> <emoji> <roleId or name expression>`");
-					return;
-				}
-
-				Match emoji = this.EmojiNameRegex.Match(e.MessageArgs[1]);
-				if( !emoji.Success )
-				{
-					await e.SendReplySafe("What emoji again?");
-					return;
-				}
-
-				SocketRole role = e.Server.GetRole(e.MessageArgs[2], out string response);
-				if( role == null )
-				{
-					await e.SendReplySafe(response);
-					return;
-				}
-
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				ReactionAssignedRole reactionRole = dbContext.ReactionAssignedRoles.FirstOrDefault(r => r.ServerId == e.Server.Id && r.MessageId == messageId && r.Emoji == emoji.Value);
-				if( reactionRole == null )
-					dbContext.ReactionAssignedRoles.Add(reactionRole = new ReactionAssignedRole(){
-						ServerId = e.Server.Id,
-						MessageId = messageId,
-						Emoji = emoji.Value
-					});
-				else if( reactionRole.RoleId == role.Id )
-				{
-					await e.SendReplySafe("Already exists.");
-					dbContext.Dispose();
-					return;
-				}
-
-				reactionRole.RoleId = role.Id;
-				dbContext.SaveChanges();
-				dbContext.Dispose();
-				await e.SendReplySafe(response);
-			};
-			commands.Add(newCommand);
-
 // !membersOf
 			newCommand = new Command("membersOf");
 			newCommand.Type = CommandType.Standard;
