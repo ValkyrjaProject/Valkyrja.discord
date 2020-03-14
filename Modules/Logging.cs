@@ -136,9 +136,9 @@ namespace Valkyrja.modules
 						return;
 					}
 
-					from = DateTime.UtcNow + TimeSpan.FromDays(n);
+					from = DateTime.UtcNow - TimeSpan.FromDays(n);
 				}
-				else if( e.MessageArgs.Length > 1 && !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to) )
+				else if( e.MessageArgs.Length > 1 && !DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) && !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to) )
 				{
 					await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
 					return;
@@ -733,6 +733,7 @@ namespace Valkyrja.modules
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
+				this.Client.Monitoring.Bans.Inc();
 				if( issuedBy?.Id == this.Client.GlobalConfig.UserId )
 					StatsIncrement(server, StatsType.BannedByValk);
 
@@ -750,8 +751,6 @@ namespace Valkyrja.modules
 						Utils.GetTimestamp(),
 						"Reason", reason)
 				};
-
-				this.Client.Monitoring.Bans.Inc();
 
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);
