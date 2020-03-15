@@ -162,16 +162,16 @@ namespace Valkyrja.modules
 					if( to + TimeSpan.FromMinutes(5) > DateTime.UtcNow )
 					{
 						if( from > DateTime.UtcNow )
-							response = $"~~{msg.Content}~~\nToday:\n";
+							response = $"~~{msg.Content}~~\nToday (`{DateTime.UtcNow.Hour}` hour{(DateTime.UtcNow.Hour == 1 ? "" : "s")} since UTC midnight):\n";
 						else
-							response = $"~~{msg.Content}~~\nSince {Utils.GetTimestamp(from)}:\n";
+							response = $"~~{msg.Content}~~\nSince `{Utils.GetTimestamp(from)}`:\n";
 						StatsDaily today = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == e.Server.Id);
 						if( today != null )
 							total.Add(today);
 					}
 					else
 					{
-						response = $"~~{msg.Content}~~\nBetween {Utils.GetTimestamp(from)} and {Utils.GetTimestamp(to)}:\n";
+						response = $"~~{msg.Content}~~\nBetween `{Utils.GetTimestamp(from)}` and `{Utils.GetTimestamp(to)}`:\n";
 					}
 
 					dbContext.Dispose();
