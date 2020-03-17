@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Valkyrja.core;
 using Valkyrja.entities;
 using Discord;
+using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
 using guid = System.UInt64;
@@ -19,7 +20,6 @@ namespace Valkyrja.modules
 
 		private const string ErrorUnknownString = "Unknown error, please poke <@{0}> to take a look x_x";
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
-		private const string ErrorPermissionHierarchyString = "Something went wrong, I may not have server permissions to do that.\n(Hint: Valkyrja has to be above other roles to be able to manage them: <http://i.imgur.com/T8MPvME.png>)";
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanNotFoundString = "I couldn't find them :(";
 		private const string BanConfirmString = "_\\*fires them railguns at {0}*_  Ò_Ó";
@@ -288,15 +288,13 @@ namespace Valkyrja.modules
 						await user.AddRoleAsync(role);
 						response = "Go get em tiger!";
 					}
-				}
-				catch(Discord.Net.HttpException exception)
+				} catch(HttpException exception)
 				{
-					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
-					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
-						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
-						response = NotFoundString;
-					else throw;
+					response = Utils.HandleHttpException(exception);
+				} catch(Exception exception)
+				{
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 				await e.SendReplySafe(response);
 			};
@@ -650,15 +648,13 @@ namespace Valkyrja.modules
 						userData.AddWarning(warning.ToString());
 						usernames.Add(user.GetUsername());
 					}
-				}
-				catch(Discord.Net.HttpException exception)
+				} catch(HttpException exception)
 				{
-					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
-					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
-						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
-						response = NotFoundString;
-					else throw;
+					response = Utils.HandleHttpException(exception);
+				} catch(Exception exception)
+				{
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				if( !usernames.Any() )
@@ -1355,15 +1351,9 @@ namespace Valkyrja.modules
 					banned.Add(userData.UserId);
 					if( logBan != null )
 						await logBan;
-				}
-				catch(Discord.Net.HttpException ex)
+				} catch(HttpException exception)
 				{
-					if( ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || ex.Message.Contains("Missing Access") || ex.Message.Contains("Missing Permissions") )
-						response = ErrorPermissionHierarchyString;
-					else if( ex.HttpCode == System.Net.HttpStatusCode.NotFound || ex.Message.Contains("NotFound") )
-						response = NotFoundString;
-					else
-						throw;
+					response = Utils.HandleHttpException(exception);
 				}
 			}
 
@@ -1420,18 +1410,9 @@ namespace Valkyrja.modules
 
 					if( this.Client.Events.LogUnban != null )
 						await this.Client.Events.LogUnban(server, userData.LastUsername, userData.UserId, unbannedBy);
-				}
-				catch(Discord.Net.HttpException exception)
+				} catch(HttpException exception)
 				{
-					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
-					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
-						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
-					{
-						userData.BannedUntil = DateTime.MinValue;
-						response = NotFoundString;
-					}
-					else throw;
+					response = Utils.HandleHttpException(exception);
 				}
 			}
 
@@ -1488,15 +1469,9 @@ namespace Valkyrja.modules
 
 					if( this.Client.Events.LogMute != null )
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
-				}
-				catch(Discord.Net.HttpException exception)
+				} catch(HttpException exception)
 				{
-					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
-					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
-						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
-						response = NotFoundString;
-					else throw;
+					response = Utils.HandleHttpException(exception);
 				}
 			}
 
@@ -1531,18 +1506,9 @@ namespace Valkyrja.modules
 
 					if( this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
-				}
-				catch(Discord.Net.HttpException exception)
+				} catch(HttpException exception)
 				{
-					if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
-					    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
-						response = ErrorPermissionHierarchyString;
-					else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
-					{
-						userData.MutedUntil = DateTime.MinValue;
-						response = NotFoundString;
-					}
-					else throw;
+					response = Utils.HandleHttpException(exception);
 				}
 			}
 
@@ -1571,15 +1537,9 @@ namespace Valkyrja.modules
 
 				if( this.Client.Events.LogMutedChannel != null )
 					await this.Client.Events.LogMutedChannel(server, channel, GetDurationString(duration), mutedBy);
-			}
-			catch(Discord.Net.HttpException exception)
+			} catch(HttpException exception)
 			{
-				if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
-				    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
-					response = ErrorPermissionHierarchyString;
-				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
-					response = NotFoundString;
-				else throw;
+				response = Utils.HandleHttpException(exception);
 			}
 			return response;
 		}
@@ -1606,15 +1566,9 @@ namespace Valkyrja.modules
 
 				if( this.Client.Events.LogUnmutedChannel != null )
 					await this.Client.Events.LogUnmutedChannel(server, channel, unmutedBy);
-			}
-			catch(Discord.Net.HttpException exception)
+			} catch(HttpException exception)
 			{
-				if( exception.HttpCode == System.Net.HttpStatusCode.Forbidden || (exception.DiscordCode.HasValue && exception.DiscordCode.Value == 50013) ||
-				    exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions") )
-					response = ErrorPermissionHierarchyString;
-				else if( exception.HttpCode == System.Net.HttpStatusCode.NotFound || exception.Message.Contains("NotFound") )
-					response = NotFoundChannelString;
-				else throw;
+				response = Utils.HandleHttpException(exception);
 			}
 			return response;
 		}

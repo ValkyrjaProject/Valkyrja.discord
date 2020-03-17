@@ -243,15 +243,13 @@ namespace Valkyrja.modules
 					}
 
 					await user.AddRoleAsync(roleToAssign);
+				} catch(HttpException exception)
+				{
+					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions")) )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
-					else
-					{
-						await this.Client.LogException(exception, e);
-						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
-					}
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				if( removed )
@@ -308,16 +306,14 @@ namespace Valkyrja.modules
 				string response = "Done!";
 				try
 				{
-					await (e.Message.Author as SocketGuildUser).RemoveRoleAsync(foundRoles.First());
+					await (e.Message.Author as SocketGuildUser)?.RemoveRoleAsync(foundRoles.First());
+				} catch(HttpException exception)
+				{
+					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions")) )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
-					else
-					{
-						await this.Client.LogException(exception, e);
-						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
-					}
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				await e.SendReplyUnsafe(response);
@@ -404,15 +400,13 @@ namespace Valkyrja.modules
 						if( this.Client.Events.LogPromote != null )
 							await this.Client.Events.LogPromote(e.Server, user, role.Name, e.Message.Author as SocketGuildUser);
 					}
+				} catch(HttpException exception)
+				{
+					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions")) )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
-					else
-					{
-						await this.Client.LogException(exception, e);
-						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
-					}
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				await e.SendReplySafe(response);
@@ -474,15 +468,13 @@ namespace Valkyrja.modules
 						if( this.Client.Events.LogDemote != null )
 							await this.Client.Events.LogDemote(e.Server, user, role.Name, e.Message.Author as SocketGuildUser);
 					}
+				} catch(HttpException exception)
+				{
+					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
-					if( exception is Discord.Net.HttpException ex && (ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || exception.Message.Contains("Missing Access") || exception.Message.Contains("Missing Permissions")) )
-						response = "Something went wrong, I may not have server permissions to do that.\n(Hint: <http://i.imgur.com/T8MPvME.png>)";
-					else
-					{
-						await this.Client.LogException(exception, e);
-						response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
-					}
+					await this.Client.LogException(exception, e);
+					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
 				await e.SendReplySafe(response);
