@@ -324,10 +324,13 @@ namespace Valkyrja.modules
 					userData.Verified = true;
 					verified = true;
 				}
-				catch(Exception e)
+				catch( HttpException e )
 				{
-					if( this.Client.GlobalConfig.LogDebug && !verified )
-						Console.WriteLine("Verification: Exception: " + e.Message);
+					await server.HandleHttpException(e, $"Failed to verify user <@{user.Id}>");
+				}
+				catch( Exception e )
+				{
+					await HandleException(e, $"Failed to verify {user.Id}", server.Id);
 				}
 			}
 
