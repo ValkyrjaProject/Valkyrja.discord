@@ -350,28 +350,10 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				int muteDurationMinutes = 0;
-				try
-				{
-					Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
-					Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
-					Match minuteMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+m", RegexOptions.IgnoreCase);
-
-					if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out muteDurationMinutes) )
-					{
-						await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
-						dbContext.Dispose();
-						return;
-					}
-
-					if( minuteMatch.Success )
-						muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
-					if( hourMatch.Success )
-						muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
-					if( dayMatch.Success )
-						muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
-				}
-				catch(Exception)
+				TimeSpan? duration = Utils.GetTimespanFromString(e.MessageArgs[mentionedUsers.Count]);
+				if( int.TryParse(e.MessageArgs[mentionedUsers.Count], out int muteDurationMinutes) )
+					duration = TimeSpan.FromMinutes(muteDurationMinutes);
+				if( duration == null || duration.Value.TotalMinutes <= 0 )
 				{
 					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
@@ -382,7 +364,7 @@ namespace Valkyrja.modules
 
 				try
 				{
-					response = await Mute(e.Server, mentionedUsers, TimeSpan.FromMinutes(muteDurationMinutes), role, e.Message.Author as SocketGuildUser);
+					response = await Mute(e.Server, mentionedUsers, duration.Value, role, e.Message.Author as SocketGuildUser);
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
@@ -469,36 +451,10 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				Match dayMatch;
-				Match hourMatch;
-				Match minuteMatch;
-				int muteDurationMinutes = 0;
-				try
-				{
-					dayMatch = Regex.Match(e.MessageArgs[0], "\\d+d", RegexOptions.IgnoreCase);
-					hourMatch = Regex.Match(e.MessageArgs[0], "\\d+h", RegexOptions.IgnoreCase);
-					minuteMatch = Regex.Match(e.MessageArgs[0], "\\d+m", RegexOptions.IgnoreCase);
-
-					if( !minuteMatch.Success && !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[0], out muteDurationMinutes) )
-					{
-						await e.SendReplySafe(responseString);
-						return;
-					}
-
-					if( minuteMatch.Success )
-						muteDurationMinutes = int.Parse(minuteMatch.Value.Trim('m').Trim('M'));
-					if( hourMatch.Success )
-						muteDurationMinutes += 60 * int.Parse(hourMatch.Value.Trim('h').Trim('H'));
-					if( dayMatch.Success )
-						muteDurationMinutes += 24 * 60 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
-				}
-				catch(Exception)
-				{
-					await e.SendReplySafe(responseString);
-					return;
-				}
-
-				if( muteDurationMinutes <= 0 )
+				TimeSpan? duration = Utils.GetTimespanFromString(e.MessageArgs[0]);
+				if( int.TryParse(e.MessageArgs[0], out int muteDurationMinutes) )
+					duration = TimeSpan.FromMinutes(muteDurationMinutes);
+				if( duration == null || duration.Value.TotalMinutes <= 0 )
 				{
 					await e.SendReplySafe(responseString);
 					return;
@@ -518,7 +474,7 @@ namespace Valkyrja.modules
 
 				try
 				{
-					responseString = await MuteChannel(channel, TimeSpan.FromMinutes(muteDurationMinutes), e.Message.Author as SocketGuildUser);
+					responseString = await MuteChannel(channel, duration.Value, e.Message.Author as SocketGuildUser);
 					dbContext.SaveChanges();
 				}
 				catch(Exception exception)
@@ -722,25 +678,10 @@ namespace Valkyrja.modules
 					warning.Append(" ");
 				}
 
-				int banDurationHours = 0;
-				try
-				{
-					Match dayMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+d", RegexOptions.IgnoreCase);
-					Match hourMatch = Regex.Match(e.MessageArgs[mentionedUsers.Count], "\\d+h", RegexOptions.IgnoreCase);
-
-					if( !hourMatch.Success && !dayMatch.Success && !int.TryParse(e.MessageArgs[mentionedUsers.Count], out banDurationHours) )
-					{
-						await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
-						dbContext.Dispose();
-						return;
-					}
-
-					if( hourMatch.Success )
-						banDurationHours = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
-					if( dayMatch.Success )
-						banDurationHours += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
-				}
-				catch(Exception)
+				TimeSpan? duration = Utils.GetTimespanFromString(e.MessageArgs[mentionedUsers.Count]);
+				if( int.TryParse(e.MessageArgs[mentionedUsers.Count], out int banDurationHours) )
+					duration = TimeSpan.FromHours(banDurationHours);
+				if( duration == null )
 				{
 					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
@@ -758,7 +699,7 @@ namespace Valkyrja.modules
 
 				try
 				{
-					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(banDurationHours), warning.ToString(), e.Message.Author as SocketGuildUser,
+					response = await Ban(e.Server, mentionedUsers, duration.Value, warning.ToString(), e.Message.Author as SocketGuildUser,
 						e.Command.Id.ToLower() == "silentban", e.Command.Id.ToLower() == "purgeban");
 					dbContext.SaveChanges();
 				} catch(Exception exception)

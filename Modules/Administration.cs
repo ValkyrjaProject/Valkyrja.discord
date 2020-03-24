@@ -381,25 +381,8 @@ namespace Valkyrja.modules
 				return null;
 			}
 
-			int durationHours = 0;
-			try
-			{
-				Match dayMatch = Regex.Match(e.MessageArgs[1], "\\d+d", RegexOptions.IgnoreCase);
-				Match hourMatch = Regex.Match(e.MessageArgs[1], "\\d+h", RegexOptions.IgnoreCase);
-
-				if( !hourMatch.Success && !dayMatch.Success )
-				{
-					await e.SendReplySafe(e.Command.Description);
-					dbContext.Dispose();
-					return null;
-				}
-
-				if( hourMatch.Success )
-					durationHours = int.Parse(hourMatch.Value.Trim('h').Trim('H'));
-				if( dayMatch.Success )
-					durationHours += 24 * int.Parse(dayMatch.Value.Trim('d').Trim('D'));
-			}
-			catch(Exception)
+			TimeSpan? duration = Utils.GetTimespanFromString(e.MessageArgs[1]);
+			if( duration == null )
 			{
 				await e.SendReplySafe(e.Command.Description);
 				dbContext.Dispose();
@@ -412,7 +395,7 @@ namespace Valkyrja.modules
 			{
 				RestRole role = await e.Server.Guild.CreateRoleAsync(e.MessageArgs[0], GuildPermissions.None);
 				roleConfig = dbContext.GetOrAddRole(e.Server.Id, role.Id);
-				roleConfig.DeleteAtTime = DateTime.UtcNow + TimeSpan.FromHours(durationHours);
+				roleConfig.DeleteAtTime = DateTime.UtcNow + duration.Value;
 				response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`\n  Delete at `{Utils.GetTimestamp(roleConfig.DeleteAtTime)}`";
 			}
 			catch(Exception exception)
