@@ -1117,7 +1117,7 @@ namespace Valkyrja.modules
 					if( interval.HasValue )
 					{
 						seconds = (int)interval.Value.TotalSeconds;
-						response = "Y'all can now send one message every" + interval.Value.ToString();
+						response = "Y'all can now send one message every" + interval.Value.ToFancyString();
 					}
 					else if( seconds == 0 )
 					{
