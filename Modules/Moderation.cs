@@ -1164,18 +1164,34 @@ namespace Valkyrja.modules
 // !slow
 			newCommand = new Command("slow");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Enable or disable slowmode in the current channel. Use with a number parameter to specify message interval in seconds.";
+			newCommand.Description = "Enable or disable slowmode in the current channel. Use with a number parameter to specify message interval in seconds (or use time quantifiers `s`, `m`, `h` or `d` - e.g. `1m30s`)";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				string response = "Slowmode disabled.";
-				int interval = 0;
+				string response = "";
+				int seconds = 0;
+				TimeSpan? interval = null;
 
-				if( !string.IsNullOrWhiteSpace(e.TrimmedMessage) && int.TryParse(e.TrimmedMessage, out interval) && interval > 0 )
-					response = $"Y'all can now send one message every `{interval}` seconds.";
+				if( e.MessageArgs == null || e.MessageArgs.Length < 1 || int.TryParse(e.MessageArgs[0], out seconds) || (interval = Utils.GetTimespanFromString(e.MessageArgs[0])) != null )
+				{
+					if( interval.HasValue )
+					{
+						seconds = (int)interval.Value.TotalSeconds;
+						response = "Y'all can now send one message every" + interval.Value.ToString();
+					}
+					else if( seconds == 0 )
+					{
+						response = "Slowmode disabled.";
+					}
+					else
+					{
+						response = $"Y'all can now send one message every{(seconds == 1 ? " second." : $" `{seconds}` seconds.")}";
+					}
+
+					await e.Channel.ModifyAsync(c => c.SlowModeInterval = seconds);
+				}
 				else
-					interval = 0;
+					response = InvalidArgumentsString + e.Command.Description;
 
-				await e.Channel.ModifyAsync(c => c.SlowModeInterval = interval);
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
