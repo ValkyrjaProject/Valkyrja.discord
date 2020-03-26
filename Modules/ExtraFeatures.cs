@@ -318,13 +318,31 @@ namespace Valkyrja.modules
 
 							break;
 						case "--image":
-							embedBuilder.WithImageUrl(value);
+							try
+							{
+								embedBuilder.WithImageUrl(value);
+							}
+							catch( ArgumentException )
+							{
+								await e.SendReplySafe($"`--image` is invalid url");
+								return;
+							}
+
 							if( debug )
 								await e.SendReplySafe($"Image URL set: `{value}`");
 
 							break;
 						case "--thumbnail":
-							embedBuilder.WithThumbnailUrl(value);
+							try
+							{
+								embedBuilder.WithThumbnailUrl(value);
+							}
+							catch( ArgumentException )
+							{
+								await e.SendReplySafe($"`--thumbnail` is invalid url");
+								return;
+							}
+
 							if( debug )
 								await e.SendReplySafe($"Thumbnail URL set: `{value}`");
 
