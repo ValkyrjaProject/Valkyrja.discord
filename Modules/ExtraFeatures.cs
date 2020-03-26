@@ -322,7 +322,7 @@ namespace Valkyrja.modules
 							{
 								embedBuilder.WithImageUrl(value.Trim('<', '>'));
 							}
-							catch( ArgumentException )
+							catch( Exception )
 							{
 								await e.SendReplySafe($"`--image` is invalid url");
 								return;
@@ -337,7 +337,7 @@ namespace Valkyrja.modules
 							{
 								embedBuilder.WithThumbnailUrl(value.Trim('<', '>'));
 							}
-							catch( ArgumentException )
+							catch( Exception )
 							{
 								await e.SendReplySafe($"`--thumbnail` is invalid url");
 								return;
