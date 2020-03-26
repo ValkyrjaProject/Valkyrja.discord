@@ -320,7 +320,7 @@ namespace Valkyrja.modules
 						case "--image":
 							try
 							{
-								embedBuilder.WithImageUrl(value);
+								embedBuilder.WithImageUrl(value.Trim('<', '>'));
 							}
 							catch( ArgumentException )
 							{
@@ -335,7 +335,7 @@ namespace Valkyrja.modules
 						case "--thumbnail":
 							try
 							{
-								embedBuilder.WithThumbnailUrl(value);
+								embedBuilder.WithThumbnailUrl(value.Trim('<', '>'));
 							}
 							catch( ArgumentException )
 							{
