@@ -237,15 +237,17 @@ namespace Valkyrja.modules
 					string[] lines = server.Config.CodeVerifyMessage.Split('\n');
 					string[] words = null;
 					bool found = false;
-					int d = 0;
+					bool theOtherHalf = false;
 					try
 					{
-						for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); ++d > 50 || i >= lines.Length / 2; i-- )
+						for( int i = Utils.Random.Next(lines.Length / 2, lines.Length); !theOtherHalf || i >= lines.Length / 2; i-- )
 						{
 							if( i <= lines.Length / 2 )
 							{
+								if( theOtherHalf )
+									break;
+								theOtherHalf = true;
 								i = lines.Length - 1;
-								continue;
 							}
 
 							if( (words = lines[i].Split(' ')).Length > 10 )
