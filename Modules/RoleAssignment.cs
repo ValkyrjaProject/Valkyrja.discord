@@ -245,6 +245,7 @@ namespace Valkyrja.modules
 					await user.AddRoleAsync(roleToAssign);
 				} catch(HttpException exception)
 				{
+					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
 					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
@@ -309,6 +310,7 @@ namespace Valkyrja.modules
 					await (e.Message.Author as SocketGuildUser)?.RemoveRoleAsync(foundRoles.First());
 				} catch(HttpException exception)
 				{
+					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
 					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
@@ -402,6 +404,7 @@ namespace Valkyrja.modules
 					}
 				} catch(HttpException exception)
 				{
+					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
 					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
@@ -470,6 +473,7 @@ namespace Valkyrja.modules
 					}
 				} catch(HttpException exception)
 				{
+					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
 					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{

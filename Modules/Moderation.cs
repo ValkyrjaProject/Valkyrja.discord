@@ -290,6 +290,7 @@ namespace Valkyrja.modules
 					}
 				} catch(HttpException exception)
 				{
+					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
 					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
@@ -606,6 +607,7 @@ namespace Valkyrja.modules
 					}
 				} catch(HttpException exception)
 				{
+					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
 					response = Utils.HandleHttpException(exception);
 				} catch(Exception exception)
 				{
@@ -1314,6 +1316,7 @@ namespace Valkyrja.modules
 						await logBan;
 				} catch(HttpException exception)
 				{
+					await server.HandleHttpException(exception, $"This happened in when trying to ban <@{user.Id}>");
 					response = Utils.HandleHttpException(exception);
 				}
 			}
@@ -1373,6 +1376,7 @@ namespace Valkyrja.modules
 						await this.Client.Events.LogUnban(server, userData.LastUsername, userData.UserId, unbannedBy);
 				} catch(HttpException exception)
 				{
+					await server.HandleHttpException(exception, $"This happened in when trying to unban <@{userData.UserId}>");
 					response = Utils.HandleHttpException(exception);
 				}
 			}
@@ -1432,6 +1436,7 @@ namespace Valkyrja.modules
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
 				} catch(HttpException exception)
 				{
+					await server.HandleHttpException(exception, $"This happened in when trying to mute <@{userData.UserId}>");
 					response = Utils.HandleHttpException(exception);
 				}
 			}
@@ -1469,6 +1474,7 @@ namespace Valkyrja.modules
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
 				} catch(HttpException exception)
 				{
+					await server.HandleHttpException(exception, $"This happened in when trying to unmute <@{userData.UserId}>");
 					response = Utils.HandleHttpException(exception);
 				}
 			}
@@ -1500,6 +1506,7 @@ namespace Valkyrja.modules
 					await this.Client.Events.LogMutedChannel(server, channel, GetDurationString(duration), mutedBy);
 			} catch(HttpException exception)
 			{
+				await server.HandleHttpException(exception, $"This happened in <#{channelConfig.ChannelId}> when muting the channel (modifying its permissions)");
 				response = Utils.HandleHttpException(exception);
 			}
 			return response;
@@ -1529,6 +1536,7 @@ namespace Valkyrja.modules
 					await this.Client.Events.LogUnmutedChannel(server, channel, unmutedBy);
 			} catch(HttpException exception)
 			{
+				await server.HandleHttpException(exception, $"This happened in <#{channelConfig.ChannelId}> when unmuting the channel (modifying its permissions)");
 				response = Utils.HandleHttpException(exception);
 			}
 			return response;
