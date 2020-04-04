@@ -590,12 +590,7 @@ namespace Valkyrja.modules
 						if( user == null )
 							continue;
 
-						try
-						{
-							await user.SendMessageSafe(string.Format(KickPmString,
-								e.Server.Guild.Name, warning.ToString()));
-						}
-						catch(Exception) { }
+						await this.Client.SendPmSafe(user, string.Format(KickPmString, e.Server.Guild.Name, warning.ToString()));
 						await Task.Delay(300);
 
 						if( this.Client.Events.LogKick != null ) // This is in "wrong" order to prevent false positive "user left" logging.
@@ -870,17 +865,8 @@ namespace Valkyrja.modules
 
 					if( sendMessage )
 					{
-						try
-						{
-							if( user != null )
-								await user.SendMessageSafe(string.Format(WarningPmString, e.Server.Guild.Name, warning.ToString()));
-							else
-								failedToPmUsers.Add(userData);
-						}
-						catch(Exception)
-						{
+						if( user == null || !await this.Client.SendPmSafe(user, string.Format(WarningPmString, e.Server.Guild.Name, warning.ToString())) )
 							failedToPmUsers.Add(userData);
-						}
 					}
 				}
 
@@ -1292,13 +1278,8 @@ namespace Valkyrja.modules
 				SocketGuildUser user = null;
 				if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
 				{
-					try
-					{
-						await user.SendMessageSafe(string.Format(BanPmString,
-							durationString.ToString(), server.Guild.Name, reason));
-						await Task.Delay(500);
-					}
-					catch(Exception) { }
+					await this.Client.SendPmSafe(user, string.Format(BanPmString, durationString.ToString(), server.Guild.Name, reason));
+					await Task.Delay(500);
 				}
 
 				try
@@ -1340,13 +1321,8 @@ namespace Valkyrja.modules
 			SocketGuildUser user = null;
 			if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
 			{
-				try
-				{
-					await user.SendMessageSafe(string.Format(BanPmString,
-						durationString, server.Guild.Name, reason));
-					await Task.Delay(500);
-				}
-				catch(Exception) { }
+				await this.Client.SendPmSafe(user, string.Format(BanPmString, durationString.ToString(), server.Guild.Name, reason));
+				await Task.Delay(500);
 			}
 
 			Task logBan = null;

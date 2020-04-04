@@ -666,13 +666,10 @@ namespace Valkyrja.modules
 
 			if( server.Config.WelcomeMessageEnabled && !string.IsNullOrWhiteSpace(server.Config.WelcomeMessage) )
 			{
-				try
-				{
-					string welcomePm = server.Config.WelcomeMessage;
-					if( server.Config.WelcomeMessage.Contains("{0}") )
-						welcomePm = string.Format(server.Config.WelcomeMessage, user.Username);
-					await user.SendMessageSafe(welcomePm);
-				} catch(Exception) { }
+				string welcomePm = server.Config.WelcomeMessage;
+				if( server.Config.WelcomeMessage.Contains("{0}") )
+					welcomePm = string.Format(server.Config.WelcomeMessage, user.Username);
+				await this.Client.SendPmSafe(user, welcomePm);
 			}
 
 			SocketRole role;

@@ -285,7 +285,7 @@ namespace Valkyrja.modules
 					message += string.Format(PmKarmaString, server.Config.VerifyKarma,
 						server.Config.CommandPrefix, server.Config.KarmaCurrency);
 
-				await user.SendMessageSafe(message);
+				await this.Client.SendPmSafe(user, message);
 			}
 
 			if( alreadyVerified.Any() )
@@ -314,7 +314,7 @@ namespace Valkyrja.modules
 				try
 				{
 					if( !userData.Verified )
-						await user.SendMessageSafe(string.Format(PmVerifiedString, server.Guild.Name));
+						await this.Client.SendPmSafe(user, string.Format(PmVerifiedString, server.Guild.Name));
 
 					await user.AddRoleAsync(role);
 					if( this.Client.GlobalConfig.LogDebug )
