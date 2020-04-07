@@ -38,7 +38,7 @@ namespace Valkyrja.modules
 		private const string UnmuteChannelConfirmString = "You may speak now.";
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
-		private const string BanReasonTooLongString = "Ban reason has 512 characters limit.\n";
+		private const string BanReasonTooLongString = "Mute, Kick & Ban reason has 512 characters limit.\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <https://valkyrja.app/config>";
 
 		private ValkyrjaClient Client;
@@ -344,9 +344,16 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				if( mentionedUsers.Count + 1 < e.MessageArgs.Length )
+				StringBuilder warning = new StringBuilder();
+				for(int i = mentionedUsers.Count + 1; i < e.MessageArgs.Length; i++)
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					warning.Append(e.MessageArgs[i]);
+					warning.Append(" ");
+				}
+
+				if( warning.Length >= BanReasonLimit )
+				{
+					await e.Message.Channel.SendMessageSafe(BanReasonTooLongString);
 					dbContext.Dispose();
 					return;
 				}
@@ -365,7 +372,7 @@ namespace Valkyrja.modules
 
 				try
 				{
-					response = await Mute(e.Server, mentionedUsers, duration.Value, role, e.Message.Author as SocketGuildUser);
+					response = await Mute(e.Server, mentionedUsers, duration.Value, role, e.Message.Author as SocketGuildUser, warning.ToString());
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
@@ -1367,14 +1374,22 @@ namespace Valkyrja.modules
 // Mute
 		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
 		{
+			await Mute(server, userData, duration, role, mutedBy, null);
+		}
+
+		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null, string reason = null)
+		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 			string durationString = GetDurationString(duration);
 
 			SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 			await user.AddRoleAsync(role);
 
+			string warning = $"Muted {durationString}";
+			if( !string.IsNullOrEmpty(reason) )
+				warning += $" with reason: {reason}";
+			userData.AddWarning(warning);
 			userData.MutedUntil = mutedUntil;
-			userData.AddWarning($"Muted {durationString}");
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
@@ -1385,6 +1400,11 @@ namespace Valkyrja.modules
 		}
 
 		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
+		{
+			return await Mute(server, users, duration, role, mutedBy, null);
+		}
+
+		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null, string reason = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 			string durationString = GetDurationString(duration);
@@ -1404,8 +1424,11 @@ namespace Valkyrja.modules
 
 					await user.AddRoleAsync(role);
 
+					string warning = $"Muted {durationString}";
+					if( !string.IsNullOrEmpty(reason) )
+						warning += $" with reason: {reason}";
+					userData.AddWarning(warning);
 					userData.MutedUntil = mutedUntil;
-					userData.AddWarning($"Muted {durationString}");
 					muted.Add(userData.UserId);
 
 					if( this.Client.Events.LogMute != null )
