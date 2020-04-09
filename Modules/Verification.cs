@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +8,6 @@ using Valkyrja.entities;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
-
 using guid = System.UInt64;
 
 namespace Valkyrja.modules
@@ -78,12 +76,9 @@ namespace Valkyrja.modules
 			"lapin" //french
 		};
 
+		private Object DbLock{ get; set; } = new Object();
 
 		private ValkyrjaClient Client;
-		private readonly ConcurrentDictionary<string, HashedValue> HashedValues = new ConcurrentDictionary<string, HashedValue>();
-		private readonly ConcurrentDictionary<guid, guid> CaptchaValues = new ConcurrentDictionary<guid, guid>();
-		private readonly Dictionary<guid, guid> RecentlyProcessedPms = new Dictionary<guid, guid>();
-
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = true;
@@ -94,6 +89,7 @@ namespace Valkyrja.modules
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.UserJoined += OnUserJoined;
+			this.Client.Events.MessageReceived += OnMessageReceived;
 
 // !unverify
 			Command newCommand = new Command("unverify");
@@ -210,11 +206,11 @@ namespace Valkyrja.modules
 				}
 
 				string verifyPm = "";
+				string value = "";
 				if( server.Config.CaptchaVerificationEnabled )
 				{
 					verifyPm = this.CaptchaPms[Utils.Random.Next(0,this.CaptchaPms.Length)];
-					if( !this.CaptchaValues.ContainsKey(userData.UserId) )
-						this.CaptchaValues.Add(userData.UserId, server.Id);
+					value = "captcha";
 				}
 				else
 				{
@@ -231,8 +227,6 @@ namespace Valkyrja.modules
 
 					string hash = hashBuilder.ToString();
 					hash = hash.Length > 5 ? hash.Substring(0, 5) : hash;
-					if( !this.HashedValues.ContainsKey(hash) )
-						this.HashedValues.Add(hash, new HashedValue(userData.UserId, server.Id));
 
 					string[] lines = server.Config.CodeVerifyMessage.Split('\n');
 					string[] words = null;
@@ -260,6 +254,7 @@ namespace Valkyrja.modules
 								for( int j = 0; j < lines.Length; j++ )
 									hashBuilder.AppendLine(lines[j]);
 								verifyPm = hashBuilder.ToString();
+								value = hash;
 								found = true;
 								break;
 							}
@@ -277,6 +272,24 @@ namespace Valkyrja.modules
 					{
 						verifyPm = PmHashErrorString;
 					}
+				}
+
+				if( !string.IsNullOrEmpty(value) )
+				{
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					VerificationData data = dbContext.Verification.FirstOrDefault(u => u.ServerId == server.Id && u.UserId == userData.UserId);
+					if( data == null )
+					{
+						data = new VerificationData(){
+							ServerId = userData.ServerId,
+							UserId = userData.UserId,
+							Value = value
+						};
+						dbContext.Verification.Add(data);
+					}
+
+					data.Value = value;
+					dbContext.SaveChanges();
 				}
 
 				string message = string.Format(PmString, user.Username, server.Guild.Name, verifyPm);
@@ -343,45 +356,54 @@ namespace Valkyrja.modules
 		}
 
 		/// <summary> Verifies a user based on a hashCode string and returns true if successful. </summary>
-		private async Task VerifyUserHash(guid userId, string msg)
+		private Task VerifyUserHash(SocketUser author, string msg)
 		{
-			if( (!this.CaptchaValues.ContainsKey(userId) || !this.Client.Servers.ContainsKey(this.CaptchaValues[userId]) || !this.CaptchaValidAnswers.Contains(msg)) && (!this.HashedValues.ContainsKey(msg) || this.HashedValues[msg].UserId != userId || !this.Client.Servers.ContainsKey(this.HashedValues[msg].ServerId)) )
+			if( this.CaptchaValidAnswers.Contains(msg) )
+				msg = "captcha";
+
+			lock( this.DbLock )
 			{
-				if( this.Client.GlobalConfig.LogDebug )
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				IEnumerable<VerificationData> data = dbContext.Verification.Where(v => v.UserId == author.Id && v.Value == msg);
+
+				if( !data.Any() )
 				{
-					if( !this.CaptchaValues.ContainsKey(userId) && !this.HashedValues.ContainsKey(msg) )
-						Console.WriteLine($"Verification: Received PM `{msg}` from `{userId}` - not in the dictionary.");
-
-					if( this.CaptchaValues.ContainsKey(userId) )
-					{
-						if( !this.CaptchaValidAnswers.Contains(msg) )
-							Console.WriteLine("Verification: Userid registered for captcha, but the answer was incorrect.");
-						else if( !this.Client.Servers.ContainsKey(this.CaptchaValues[userId]) )
-							Console.WriteLine("Verification: Server for the captcha does not exist.");
-					}
-
-					if( this.HashedValues.ContainsKey(msg) )
-					{
-						if( this.HashedValues[msg].UserId != userId )
-							Console.WriteLine("Verification: Found a hashCode, but the userid does not fit.");
-						else if( !this.Client.Servers.ContainsKey(this.HashedValues[msg].ServerId) )
-							Console.WriteLine("Verification: Server for the hashCode does not exist.");
-					}
+					dbContext.Dispose();
+					return Task.CompletedTask;
 				}
 
-				return;
+				bool save = false;
+				foreach( VerificationData d in data )
+				{
+					d.Value = "done";
+					save = true;
+
+					try
+					{
+						this.Client.SendPmSafe(author, "Thank you, you will be verified soon\u2122").GetAwaiter().GetResult();
+					}
+					catch( Exception e )
+					{
+						this.HandleException(e, "Verification PM received", 0).GetAwaiter().GetResult();
+					}
+
+					if( !this.Client.Servers.ContainsKey(d.ServerId) )
+						continue;
+
+					Server server = this.Client.Servers[d.ServerId];
+					UserData userData = dbContext.GetOrAddUser(server.Id, d.UserId);
+					if( VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
+						dbContext.Verification.Remove(d);
+				}
+
+				if( save )
+				{
+					dbContext.SaveChanges();
+				}
+
+				dbContext.Dispose();
 			}
-
-			guid serverId = this.CaptchaValues.ContainsKey(userId) ? this.CaptchaValues[userId] : this.HashedValues[msg].ServerId;
-			Server server = this.Client.Servers[serverId];
-
-			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-			UserData userData = dbContext.GetOrAddUser(server.Id, userId);
-
-			if( await VerifyUsers(server, new List<UserData>{userData}) )
-				dbContext.SaveChanges();
-
-			dbContext.Dispose();
+			return Task.CompletedTask;
 		}
 
 		private async Task OnUserJoined(SocketGuildUser user)
@@ -412,33 +434,59 @@ namespace Valkyrja.modules
 			if( (server.Config.CodeVerificationEnabled || server.Config.CaptchaVerificationEnabled) && server.Config.VerifyOnWelcome && !verifiedByAge )
 			{
 				await Task.Delay(3000);
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				lock( this.DbLock )
+				{
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
-				UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-				await VerifyUsersPm(server, new List<UserData>{userData});
+					UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
+					VerifyUsersPm(server, new List<UserData>{userData}).GetAwaiter().GetResult();
 
-				dbContext.Dispose();
+					dbContext.Dispose();
+				}
 			}
 		}
 
-		public async Task Update(IValkyrjaClient iClient)
+		public Task Update(IValkyrjaClient iClient)
 		{
 			if( !this.Client.GlobalConfig.VerificationUpdateEnabled )
-				return;
+				return Task.CompletedTask;
 
-			GlobalContext dbContext = GlobalContext.Create(this.Client.DbConnectionString);
-
-			DateTime anHourAgo = DateTime.UtcNow - TimeSpan.FromHours(1);
-			foreach( LogEntry entry in dbContext.Log.Where(e => e.Type == LogType.Pm && e.DateTime > anHourAgo) )
+			lock( this.DbLock )
 			{
-				if( !this.RecentlyProcessedPms.ContainsKey(entry.MessageId) )
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				foreach( VerificationData data in dbContext.Verification.Where(v => v.Value == "done") )
 				{
-					await VerifyUserHash(entry.UserId, entry.Message);
-					this.RecentlyProcessedPms.Add(entry.MessageId, entry.UserId);
+					if( !this.Client.Servers.ContainsKey(data.ServerId) )
+						continue;
+					try
+					{
+						UserData userData = dbContext.UserDatabase.FirstOrDefault(u => u.UserId == data.UserId && u.ServerId == data.ServerId);
+						if( userData == null )
+							continue;
+						Server server = this.Client.Servers[data.ServerId];
+						if( VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
+						{
+							dbContext.Verification.Remove(data);
+							dbContext.SaveChanges();
+						}
+					}
+					catch( HttpException e )
+					{
+						Console.WriteLine(e);
+						throw;
+					}
 				}
 			}
 
-			dbContext.Dispose();
+			return Task.CompletedTask;
+		}
+
+		public async Task OnMessageReceived(SocketMessage message)
+		{
+			if( !(message.Channel is SocketDMChannel) ) //Not a PM
+				return;
+
+			await VerifyUserHash(message.Author, message.Content);
 		}
 	}
 }
