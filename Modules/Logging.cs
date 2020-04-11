@@ -507,7 +507,10 @@ namespace Valkyrja.modules
 					bool byClear = this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id);
 					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
 					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsername()) : byClear ? " by a command" : "");
-					Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
+					uint red = (uint)((int)(server.Config.LogMessagesColor / 65535) * 0.8 * 65535);
+					uint green = (uint)((int)((server.Config.LogMessagesColor - red) / 255) * 0.8 * 255);
+					uint blue = (uint)((server.Config.LogMessagesColor - red - green) * 0.8);
+					Color color = byAntispam ? this.AntispamLightColor : new Color(red + green + blue);
 					Message msg = new Message(){
 						Channel = logChannel,
 						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
