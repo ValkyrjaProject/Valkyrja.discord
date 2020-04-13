@@ -1116,7 +1116,13 @@ namespace Valkyrja.modules
 					}
 					else if( seconds == 0 )
 					{
-						response = "Slowmode disabled.";
+						if( e.Channel.SlowModeInterval > 0 )
+							response = "Slowmode disabled.";
+						else
+						{
+							seconds = e.Server.Config.SlowmodeDefaultSeconds;
+							response = $"Y'all can now send one message every{(seconds == 1 ? " second." : $" `{seconds}` seconds.")}";
+						}
 					}
 					else if( seconds < 21600 )
 					{
