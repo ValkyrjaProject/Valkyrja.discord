@@ -23,7 +23,6 @@ namespace Valkyrja.modules
 		private const string ThingsToLevel = "\nYou're {0} messages or {1} images away from the next!";
 
 		private ValkyrjaClient Client;
-		private List<guid> ServersWithException = new List<guid>();
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
@@ -190,12 +189,6 @@ namespace Valkyrja.modules
 			}
 			catch( Exception e )
 			{
-				if( !this.ServersWithException.Contains(server.Id) )
-				{
-					this.ServersWithException.Add(server.Id);
-					await channel.SendMessageAsync("My configuration (experience / level roles / permissions and hierarchy) on this server is bork, please advise the Admins to fix it :<");
-				}
-
 				await this.HandleException(e, "Levelup error", server.Id);
 			}
 			finally
