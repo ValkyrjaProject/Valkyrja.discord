@@ -127,15 +127,18 @@ namespace Valkyrja.modules
 				}
 
 				List<guid> idsToDelete = new List<guid>();
+				IAsyncEnumerator<IReadOnlyCollection<IMessage>> enumerator = e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, int.MaxValue, CacheMode.AllowDownload).GetAsyncEnumerator();
 
 				bool canceled = await e.Operation.While(() => n > 0, async () => {
 					IMessage[] messages = null;
 
 					try
 					{
-						messages = await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten().ToArray();
+						await enumerator.MoveNextAsync();
+						messages = enumerator.Current.ToArray();
+						//messages = await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten().ToArray();
 					}
-					catch( Discord.Net.HttpException exception )
+					catch( HttpException exception )
 					{
 						if( await e.Server.HandleHttpException(exception, $"`{e.CommandId}` in <#{e.Channel.Id}>") )
 						{
@@ -172,6 +175,8 @@ namespace Valkyrja.modules
 
 					return false;
 				});
+
+				await enumerator.DisposeAsync();
 
 				if( canceled )
 					return;

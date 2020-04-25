@@ -498,10 +498,21 @@ namespace Valkyrja.modules
 						await Task.Delay(500);
 						try
 						{
-							auditEntry = await server.Guild.GetAuditLogsAsync(3)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted && (auditData = e.Data as MessageDeleteAuditLogData) != null && auditData.ChannelId == c.Id && (Utils.GetTimeFromId(e.Id) + TimeSpan.FromMinutes(1)) > DateTime.UtcNow);
-							//One huge line because black magic from .NET Core?
+							await foreach( IReadOnlyCollection<RestAuditLogEntry> list in server.Guild.GetAuditLogsAsync(3) )
+							{
+								auditEntry = list.FirstOrDefault(e => e != null && e.Action == ActionType.MessageDeleted && (auditData = e.Data as MessageDeleteAuditLogData) != null && auditData.ChannelId == c.Id && (Utils.GetTimeFromId(e.Id) + TimeSpan.FromMinutes(1)) > DateTime.UtcNow);
+								if( auditEntry != null )
+									break;
+							}
 						}
-						catch( Exception ) { }
+						catch( HttpException e )
+						{
+							await server.HandleHttpException(e, "Can't read audit log to be able to log who deleted messages.");
+						}
+						catch( Exception e )
+						{
+							await HandleException(e, "Failed to get audit logs.", server.Id);
+						}
 					}
 
 					bool byClear = this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id);
@@ -658,10 +669,21 @@ namespace Valkyrja.modules
 				await Task.Delay(300);
 				try
 				{
-					auditEntry = await guild.GetAuditLogsAsync(10)?.Flatten()?.FirstOrDefault(e => e != null && e.Action == ActionType.Ban && (auditData = e.Data as BanAuditLogData) != null && auditData.Target.Id == user.Id);
-					//One huge line because black magic from .NET Core?
+					await foreach( IReadOnlyCollection<RestAuditLogEntry> list in server.Guild.GetAuditLogsAsync(10) )
+					{
+						auditEntry = list.FirstOrDefault(e => e != null && e.Action == ActionType.Ban && (auditData = e.Data as BanAuditLogData) != null && auditData.Target.Id == user.Id);
+						if( auditEntry != null )
+							break;
+					}
 				}
-				catch(Exception) { }
+				catch( HttpException e )
+				{
+					await server.HandleHttpException(e, "Can't read audit log to be able to log who deleted messages.");
+				}
+				catch( Exception e )
+				{
+					await HandleException(e, "Failed to get audit logs.", server.Id);
+				}
 			}
 
 			if( this.RecentlyBannedUserIDs.Contains(user.Id) )

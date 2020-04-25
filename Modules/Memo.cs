@@ -193,20 +193,12 @@ namespace Valkyrja.modules
 				}
 
 				List<IMessage> messages = new List<IMessage>();
-				guid lastMessage = 0;
-				int downloadedCount = 0;
-				do
+				await foreach( IReadOnlyCollection<IMessage> list in channel.GetMessagesAsync(0, Direction.After, 1000, CacheMode.AllowDownload) )
 				{
-					IMessage[] downloaded = await channel.GetMessagesAsync(lastMessage, Direction.After, 100, CacheMode.AllowDownload).Flatten().ToArray();
-					lastMessage = messages.FirstOrDefault()?.Id ?? 0;
-					downloadedCount = downloaded.Length;
-					if( downloaded.Any() )
-						messages.AddRange(downloaded);
-				} while( downloadedCount >= 100 && lastMessage > 0 );
-
-				IMessage message = messages.FirstOrDefault(m => guid.TryParse(this.UserIdRegex.Match(m.Content).Value, out guid id) && id == e.Message.Author.Id);
-				if( message != null )
-					await message.DeleteAsync();
+					IMessage message = list.FirstOrDefault(m => guid.TryParse(this.UserIdRegex.Match(m.Content).Value, out guid id) && id == e.Message.Author.Id);
+					if( message != null )
+						await message.DeleteAsync();
+				}
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 

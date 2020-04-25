@@ -51,6 +51,8 @@ git push
 dotnet restore
 popd
 
+rm packages/Newtonsoft*
+rm packages/idn*
 git add packages/*
 git add Bot/Valkyrja.discord.csproj
 git add Modules/Valkyrja.modules.csproj
