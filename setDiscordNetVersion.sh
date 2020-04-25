@@ -5,37 +5,57 @@
 #  exit 1
 #fi
 
+oldVersion="2.2.0-dev-dev"
+newVersion="2.3.0-dev-dev"
+#discordNetDirectory="~/dev/Discord.Net"
+discordNetDirectory="/c/_stuff/dev/Discord.Net"
+
 git rm packages/*
-mkdir packages
-#mv ~/Downloads/Discord.Net.* packages/
+mkdir packages || true
 #rm -rf ~/.nuget/packages/discord.net*
-find ~/dev/Discord.Net -name *.nupkg -exec cp {} packages/ \;
+find "$discordNetDirectory" -name *.nupkg -exec cp {} packages/ \;
 rm packages/0*
-git add packages/
 
-sed -i "s/2.0.0-beta2-[0-9]*/2.2.0-dev-dev/g" Core/Valkyrja.core.csproj
-sed -i "s/2.0.0-beta2-[0-9]*/2.2.0-dev-dev/g" Bot/Valkyrja.discord.csproj
-sed -i "s/2.0.0-beta2-[0-9]*/2.2.0-dev-dev/g" Modules/Valkyrja.modules.csproj
-sed -i "s/2.0.0-beta2-[0-9]*/2.2.0-dev-dev/g" Secure/Valkyrja.secure.csproj
+sed -i "s/$oldVersion/$newVersion/g" Core/Valkyrja.core.csproj
+sed -i "s/$oldVersion/$newVersion/g" Bot/Valkyrja.discord.csproj
+sed -i "s/$oldVersion/$newVersion/g" Modules/Valkyrja.modules.csproj
+sed -i "s/$oldVersion/$newVersion/g" Secure/Valkyrja.secure.csproj
+sed -i "s/$oldVersion/$newVersion/g" ServerSpecific/Valkyrja.specific.csproj
 
-git add Bot/Valkyraj.discord.cspro/
-git add Modules/Valkyraj.modules.csproj
-git commit -m "D.NET Update"
-git push
-cd Bot
+pushd Bot
 dotnet restore
-cd ../Modules
-dotnet restore
+popd
 
-cd ../Core
-git add Valkyraj.core.csproj
-git commit -m "D.NET Update"
-git push
+pushd Modules
 dotnet restore
+popd
 
-cd ../Secure
-git add Valkyraj.secure.csproj
+pushd Core
+git add Valkyrja.core.csproj
 git commit -m "D.NET Update"
 git push
 dotnet restore
+popd
+
+pushd Secure
+git add Valkyrja.secure.csproj
+git commit -m "D.NET Update"
+git push
+dotnet restore
+popd
+
+pushd ServerSpecific
+git add Valkyrja.specific.csproj
+git commit -m "D.NET Update"
+git push
+dotnet restore
+popd
+
+git add packages/*
+git add Bot/Valkyrja.discord.csproj
+git add Modules/Valkyrja.modules.csproj
+git commit -m "D.NET Update"
+git push
+
+echo "All done."
 
