@@ -63,7 +63,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				StringBuilder responseBuilder = new StringBuilder(string.Format("You can use `{0}join` and `{0}leave` commands with these Public Roles: ", e.Server.Config.CommandPrefix));
 				Dictionary<Int64, List<RoleConfig>> groupRoles = new Dictionary<Int64, List<RoleConfig>>();
-				Dictionary<Int64, RoleGroupConfig> groupConfigs = dbContext.PublicRoleGroups.Where(g => g.ServerId == e.Server.Id).ToDictionary(g => g.GroupId);
+				Dictionary<Int64, RoleGroupConfig> groupConfigs = dbContext.PublicRoleGroups.AsQueryable().Where(g => g.ServerId == e.Server.Id).ToDictionary(g => g.GroupId);
 				dbContext.Dispose();
 
 				foreach( RoleConfig roleConfig in publicRoles )
@@ -116,7 +116,7 @@ namespace Valkyrja.modules
 				string expression = e.TrimmedMessage;
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<RoleGroupConfig> roleGroups = dbContext.PublicRoleGroups.Where(g => g.ServerId == e.Server.Id);
+				IEnumerable<RoleGroupConfig> roleGroups = dbContext.PublicRoleGroups.AsQueryable().Where(g => g.ServerId == e.Server.Id);
 				IEnumerable<RoleGroupConfig> foundGroups = null;
 
 				if( string.IsNullOrEmpty(expression) || (
@@ -794,7 +794,7 @@ namespace Valkyrja.modules
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 
 			List<RoleConfig> rolesToRemove = new List<RoleConfig>();
-			foreach( RoleConfig roleConfig in dbContext.Roles.Where(r => r.DeleteAtTime > DateTime.MinValue + TimeSpan.FromMinutes(1) && r.DeleteAtTime < DateTime.UtcNow) )
+			foreach( RoleConfig roleConfig in dbContext.Roles.AsQueryable().Where(r => r.DeleteAtTime > DateTime.MinValue + TimeSpan.FromMinutes(1) && r.DeleteAtTime < DateTime.UtcNow) )
 			{
 				Server server;
 				if( !client.Servers.ContainsKey(roleConfig.ServerId) ||

@@ -430,7 +430,7 @@ namespace Valkyrja.modules
 
 			//Channels
 			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
-			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.Temporary ) )
+			foreach( ChannelConfig channelConfig in dbContext.Channels.AsQueryable().Where(c => c.Temporary ) )
 			{
 				Server server;
 				if( !client.Servers.ContainsKey(channelConfig.ServerId) ||

@@ -70,7 +70,7 @@ namespace Valkyrja.modules
 		private readonly Color AntispamColor = new Color(255, 0, 255);
 		private readonly Color AntispamLightColor = new Color(255, 0, 206);
 
-		private Object StatsLock{ get; set; } = new Object();
+		private SemaphoreSlim StatsSemaphore{ get; set; } = new SemaphoreSlim(1, 1);
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = true;
@@ -151,10 +151,11 @@ namespace Valkyrja.modules
 				string response;
 
 				StatsTotal total = new StatsTotal();
-				lock(this.StatsLock)
+				this.StatsSemaphore.Wait();
+				try
 				{
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					foreach( StatsTotal daily in dbContext.StatsTotal.Where(d => d.ServerId == e.Server.Id && d.DateTime > from && d.DateTime < to) )
+					foreach( StatsTotal daily in dbContext.StatsTotal.AsQueryable().Where(d => d.ServerId == e.Server.Id && d.DateTime > from && d.DateTime < to) )
 					{
 						total.Add(daily);
 					}
@@ -175,9 +176,14 @@ namespace Valkyrja.modules
 					}
 
 					dbContext.Dispose();
+					await msg.ModifyAsync(m => m.Content = response + total.ToString());
+				}
+				catch( Exception exception )
+				{
+					await this.HandleException(exception, "stats command", e.Server.Id);
 				}
 
-				await msg.ModifyAsync(m => m.Content = response + total.ToString());
+				this.StatsSemaphore.Release();
 			};
 			commands.Add(newCommand);
 
@@ -285,7 +291,7 @@ namespace Valkyrja.modules
 				(server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
-			StatsIncrement(server, StatsType.Joined);
+			await StatsIncrement(server, StatsType.Joined);
 
 			try
 			{
@@ -335,9 +341,9 @@ namespace Valkyrja.modules
 				return;
 
 			if( user.JoinedAt.HasValue && DateTime.UtcNow - user.JoinedAt.Value.ToUniversalTime() < TimeSpan.FromSeconds(3) )
-				StatsIncrement(server, StatsType.KickedByDiscord);
+				await StatsIncrement(server, StatsType.KickedByDiscord);
 			else
-				StatsIncrement(server, StatsType.Left);
+				await StatsIncrement(server, StatsType.Left);
 
 			try
 			{
@@ -448,19 +454,17 @@ namespace Valkyrja.modules
 
 		}
 
-		private Task OnGuildMemberUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
+		private async Task OnGuildMemberUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
 		{
 			Server server;
 			if( !this.Client.Servers.ContainsKey(oldUser.Guild.Id) ||
 			    (server = this.Client.Servers[oldUser.Guild.Id]) == null ||
 			    server.Config.IgnoreBots && oldUser.IsBot )
-				return Task.CompletedTask;
+				return;
 
 			if( server.Config.StatsEnabled && server.Config.VerifyRoleId != 0 &&
 				newUser.Roles.Any(r => r.Id == server.Config.VerifyRoleId) && oldUser.Roles.All(r => r.Id != server.Config.VerifyRoleId) )
-				StatsIncrement(server, StatsType.Verified);
-
-			return Task.CompletedTask;
+				await StatsIncrement(server, StatsType.Verified);
 		}
 
 		private async Task OnMessageDeleted(SocketMessage message, ISocketMessageChannel c)
@@ -760,7 +764,7 @@ namespace Valkyrja.modules
 
 				this.Client.Monitoring.Bans.Inc();
 				if( issuedBy?.Id == this.Client.GlobalConfig.UserId )
-					StatsIncrement(server, StatsType.BannedByValk);
+					await StatsIncrement(server, StatsType.BannedByValk);
 
 				Color color = issuedBy?.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
@@ -841,7 +845,7 @@ namespace Valkyrja.modules
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
 				if( issuedBy?.Id == this.Client.GlobalConfig.UserId )
-					StatsIncrement(server, StatsType.KickedByValk);
+					await StatsIncrement(server, StatsType.KickedByValk);
 
 				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
@@ -1235,39 +1239,36 @@ namespace Valkyrja.modules
 		}
 
 
-		public Task Update(IValkyrjaClient iClient)
+		public async Task Update(IValkyrjaClient iClient)
 		{
 			if( DateTime.UtcNow.Hour > 1 || this.Client.DiscordClient.ShardId != 0)
-				return Task.CompletedTask;
+				return;
 
+			this.StatsSemaphore.Wait();
 			try
 			{
-				lock( this.StatsLock )
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				bool save = false;
+
+				List<StatsDaily> toRemove = new List<StatsDaily>();
+				await foreach( StatsDaily statsDaily in dbContext.StatsDaily.AsAsyncEnumerable().Where(d => dbContext.ServerConfigurations.AsQueryable().Any(s => s.ServerId == d.ServerId && s.StatsEnabled) && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
 				{
-					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					bool save = false;
-
-					List<StatsDaily> toRemove = new List<StatsDaily>();
-					foreach( StatsDaily statsDaily in dbContext.StatsDaily.Where(d => dbContext.ServerConfigurations.Any(s => s.ServerId == d.ServerId && s.StatsEnabled) && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
-					{
-						dbContext.StatsTotal.Add(statsDaily.CreateTotal());
-						toRemove.Add(statsDaily);
-						save = true;
-					}
-
-					dbContext.StatsDaily.RemoveRange(toRemove);
-
-					if( save )
-						dbContext.SaveChanges();
-					dbContext.Dispose();
+					dbContext.StatsTotal.Add(statsDaily.CreateTotal());
+					toRemove.Add(statsDaily);
+					save = true;
 				}
+
+				dbContext.StatsDaily.RemoveRange(toRemove);
+
+				if( save )
+					dbContext.SaveChanges();
+				dbContext.Dispose();
 			}
 			catch( Exception e )
 			{
-				HandleException(e, "Logging.Update failed to create total stats", 0);
+				await HandleException(e, "Logging.Update failed to create total stats", 0);
 			}
-
-			return Task.CompletedTask;
+			this.StatsSemaphore.Release();
 		}
 
 		private enum StatsType
@@ -1280,12 +1281,13 @@ namespace Valkyrja.modules
 			KickedByDiscord,
 		}
 
-		private void StatsIncrement(Server server, StatsType type)
+		private async Task StatsIncrement(Server server, StatsType type)
 		{
 			if( !server.Config.StatsEnabled )
 				return;
 
-			lock( this.StatsLock )
+			this.StatsSemaphore.Wait();
+			try
 			{
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				StatsDaily statsDaily = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == server.Id);
@@ -1317,8 +1319,12 @@ namespace Valkyrja.modules
 				dbContext.SaveChanges();
 				dbContext.Dispose();
 			}
+			catch( Exception exception )
+			{
+				await this.HandleException(exception, $"stats increment: {type}", server.Id);
+			}
 
-
+			this.StatsSemaphore.Release();
 		}
 	}
 }

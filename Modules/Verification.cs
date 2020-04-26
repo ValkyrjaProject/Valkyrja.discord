@@ -364,7 +364,7 @@ namespace Valkyrja.modules
 			lock( this.DbLock )
 			{
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<VerificationData> data = dbContext.Verification.Where(v => v.UserId == author.Id && v.Value == msg);
+				IEnumerable<VerificationData> data = dbContext.Verification.AsQueryable().Where(v => v.UserId == author.Id && v.Value == msg);
 
 				if( !data.Any() )
 				{
@@ -454,7 +454,7 @@ namespace Valkyrja.modules
 			lock( this.DbLock )
 			{
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				foreach( VerificationData data in dbContext.Verification.Where(v => v.Value == "done") )
+				foreach( VerificationData data in dbContext.Verification.AsQueryable().Where(v => v.Value == "done") )
 				{
 					if( !this.Client.Servers.ContainsKey(data.ServerId) )
 						continue;

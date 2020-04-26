@@ -33,7 +33,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				string response = "";
 
-				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
+				IEnumerable<Quote> quotes = dbContext.Quotes.AsQueryable().Where(q => q.ServerId == e.Server.Id);
 
 				if( !quotes.Any() )
 				{
@@ -94,7 +94,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				StringBuilder response = new StringBuilder();
 
-				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
+				IEnumerable<Quote> quotes = dbContext.Quotes.AsQueryable().Where(q => q.ServerId == e.Server.Id);
 
 				if( !quotes.Any() )
 				{
@@ -136,7 +136,7 @@ namespace Valkyrja.modules
 			newCommand.RequiredPermissions = PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<Quote> quotes = dbContext.Quotes.Where(q => q.ServerId == e.Server.Id);
+				IEnumerable<Quote> quotes = dbContext.Quotes.AsQueryable().Where(q => q.ServerId == e.Server.Id);
 				if( !quotes.Any() )
 				{
 					await e.SendReplySafe("There ain't no quotes here! Add some first :]");

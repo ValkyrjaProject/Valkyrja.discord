@@ -193,7 +193,7 @@ namespace Valkyrja.modules
 
 				Int64 groupId = 1;
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<RoleGroupConfig> roleGroups = dbContext.PublicRoleGroups.Where(g => g.ServerId == e.Server.Id);
+				IEnumerable<RoleGroupConfig> roleGroups = dbContext.PublicRoleGroups.AsQueryable().Where(g => g.ServerId == e.Server.Id);
 				foreach( RoleGroupConfig group in roleGroups )
 				{
 					if( groupId < group.GroupId )

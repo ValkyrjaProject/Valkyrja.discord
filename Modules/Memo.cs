@@ -229,7 +229,7 @@ namespace Valkyrja.modules
 
 				StringBuilder response = new StringBuilder();
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);
+				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.AsQueryable().Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);
 				foreach( ProfileOption option in options )
 				{
 					UserProfileOption userOption = dbContext.UserProfileOptions.FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
@@ -270,7 +270,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				StringBuilder response = new StringBuilder();
 
-				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);
+				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.AsQueryable().Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);
 				int maxOptionLength = 0;
 				foreach( ProfileOption option in options )
 				{
@@ -356,7 +356,7 @@ namespace Valkyrja.modules
 
 		private Embed GetProfileEmbed(ServerContext dbContext, Server server, SocketGuildUser user)
 		{
-			IEnumerable<ProfileOption> options = dbContext.ProfileOptions.Where(o => o.ServerId == server.Id).OrderBy(o => o.Order);
+			IEnumerable<ProfileOption> options = dbContext.ProfileOptions.AsQueryable().Where(o => o.ServerId == server.Id).OrderBy(o => o.Order);
 
 			EmbedBuilder embedBuilder = new EmbedBuilder().WithThumbnailUrl(user.GetAvatarUrl())
 				.WithAuthor($"{user.GetNickname()}'s profile on {server.Guild.Name}", server.Guild.IconUrl)

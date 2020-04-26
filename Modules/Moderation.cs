@@ -1045,8 +1045,8 @@ namespace Valkyrja.modules
 				string response = "I found too many, please be more specific.";
 				string expression = e.TrimmedMessage.ToLower();
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				List<Username> foundUsernames = dbContext.Usernames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
-				List<Nickname> foundNicknames = dbContext.Nicknames.Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
+				List<Username> foundUsernames = dbContext.Usernames.AsQueryable().Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
+				List<Nickname> foundNicknames = dbContext.Nicknames.AsQueryable().Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
 				List<guid> foundUserIds = new List<guid>();
 
 				for( int i = 0; i < e.MessageArgs.Length; i++ )
@@ -1192,7 +1192,7 @@ namespace Valkyrja.modules
 
 			//Channels
 			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
-			foreach( ChannelConfig channelConfig in dbContext.Channels.Where(c => c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow) )
+			foreach( ChannelConfig channelConfig in dbContext.Channels.AsQueryable().Where(c => c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow) )
 			{
 				Server server;
 				if( !client.Servers.ContainsKey(channelConfig.ServerId) ||
@@ -1212,7 +1212,7 @@ namespace Valkyrja.modules
 
 
 			//Users
-			foreach( UserData userData in dbContext.UserDatabase.Where(ud => ud.BannedUntil > minTime || ud.MutedUntil > minTime) )
+			foreach( UserData userData in dbContext.UserDatabase.AsQueryable().Where(ud => ud.BannedUntil > minTime || ud.MutedUntil > minTime) )
 			{
 				try
 				{
