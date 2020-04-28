@@ -1315,7 +1315,7 @@ namespace Valkyrja.modules
 						await logBan;
 				} catch(HttpException exception)
 				{
-					await server.HandleHttpException(exception, $"This happened in when trying to ban <@{user.Id}>");
+					await server.HandleHttpException(exception, $"This happened in when trying to ban <@{userData.UserId}>");
 					response = Utils.HandleHttpException(exception);
 				}
 			}
