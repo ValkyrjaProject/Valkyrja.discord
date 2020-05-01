@@ -155,7 +155,7 @@ namespace Valkyrja.modules
 				try
 				{
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					foreach( StatsTotal daily in dbContext.StatsTotal.AsQueryable().Where(d => d.ServerId == e.Server.Id && d.DateTime > from && d.DateTime < to) )
+					foreach( StatsTotal daily in dbContext.StatsTotal.AsQueryable().Where(d => d.ServerId == e.Server.Id).AsEnumerable().Where(d => d.DateTime > from && d.DateTime < to) )
 					{
 						total.Add(daily);
 					}

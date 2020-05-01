@@ -242,7 +242,7 @@ namespace Valkyrja.modules
 				await e.SendReplySafe(response.ToString());
 			};
 			commands.Add(newCommand);
-
+/*
 // !createTempRole
 			newCommand = new Command("createTempRole");
 			newCommand.Type = CommandType.Standard;
@@ -272,7 +272,7 @@ namespace Valkyrja.modules
 				}
 				dbContext.Dispose();
 			};
-			commands.Add(newCommand);
+			commands.Add(newCommand);*/
 
 // !createColourRoles
 			newCommand = new Command("createColourRoles");
@@ -362,6 +362,45 @@ namespace Valkyrja.modules
 			return Task.CompletedTask;
 		}
 
+		/*public async Task Update(IValkyrjaClient iClient)
+		{
+			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
+				return;
+
+			ValkyrjaClient client = iClient as ValkyrjaClient;
+			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
+
+			List<RoleConfig> rolesToRemove = new List<RoleConfig>();
+			foreach( RoleConfig roleConfig in dbContext.Roles.AsQueryable().Where(r => r.Temporary).AsEnumerable().Where( r.DeleteAtTime > DateTime.MinValue + TimeSpan.FromMinutes(1) && r.DeleteAtTime < DateTime.UtcNow) )
+			{
+				Server server;
+				if( !client.Servers.ContainsKey(roleConfig.ServerId) ||
+				    (server = client.Servers[roleConfig.ServerId]) == null )
+					continue;
+
+				try
+				{
+					SocketRole role = server.Guild.GetRole(roleConfig.RoleId);
+					if(role != null && !role.Deleted)
+						await role.DeleteAsync();
+
+					rolesToRemove.Add(roleConfig);
+				}
+				catch(Exception e)
+				{
+					await this.HandleException(e, "Delete Temporary Role failed.", roleConfig.ServerId);
+				}
+			}
+
+			if( rolesToRemove.Any() )
+			{
+				dbContext.Roles.RemoveRange(rolesToRemove);
+				dbContext.SaveChanges();
+			}
+
+			dbContext.Dispose();
+		}
+
 		private async Task<RoleConfig> CreateTempRole(CommandArguments e, ServerContext dbContext)
 		{
 			if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -396,6 +435,7 @@ namespace Valkyrja.modules
 				RestRole role = await e.Server.Guild.CreateRoleAsync(e.MessageArgs[0], GuildPermissions.None);
 				roleConfig = dbContext.GetOrAddRole(e.Server.Id, role.Id);
 				roleConfig.DeleteAtTime = DateTime.UtcNow + duration.Value;
+				roleConfig.Temporary = true;
 				response = $"Role created: `{role.Name}`\n  Id: `{role.Id}`\n  Delete at `{Utils.GetTimestamp(roleConfig.DeleteAtTime)}`";
 			}
 			catch(Exception exception)
@@ -405,6 +445,6 @@ namespace Valkyrja.modules
 
 			await e.SendReplySafe(response);
 			return roleConfig;
-		}
+		}*/
 	}
 }

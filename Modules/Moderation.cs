@@ -1045,8 +1045,8 @@ namespace Valkyrja.modules
 				string response = "I found too many, please be more specific.";
 				string expression = e.TrimmedMessage.ToLower();
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				List<Username> foundUsernames = dbContext.Usernames.AsQueryable().Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
-				List<Nickname> foundNicknames = dbContext.Nicknames.AsQueryable().Where(u => u.ServerId == e.Server.Id && u.Name.ToLower().Contains(expression)).ToList();
+				List<Username> foundUsernames = dbContext.Usernames.AsQueryable().Where(u => u.ServerId == e.Server.Id).AsEnumerable().Where(u => u.Name.ToLower().Contains(expression)).ToList();
+				List<Nickname> foundNicknames = dbContext.Nicknames.AsQueryable().Where(u => u.ServerId == e.Server.Id).AsEnumerable().Where(u => u.Name.ToLower().Contains(expression)).ToList();
 				List<guid> foundUserIds = new List<guid>();
 
 				for( int i = 0; i < e.MessageArgs.Length; i++ )
@@ -1163,7 +1163,7 @@ namespace Valkyrja.modules
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 			UserData userData = dbContext.GetOrAddUser(user.Guild.Id, user.Id);
 
-			if( userData.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) )
+			if( userData.Muted && userData.MutedUntil > DateTime.MinValue + TimeSpan.FromMinutes(1) )
 			{
 				try
 				{
@@ -1191,8 +1191,8 @@ namespace Valkyrja.modules
 			DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);
 
 			//Channels
-			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
-			foreach( ChannelConfig channelConfig in dbContext.Channels.AsQueryable().Where(c => c.MutedUntil > minTime && c.MutedUntil < DateTime.UtcNow) )
+			//List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
+			foreach( ChannelConfig channelConfig in dbContext.Channels.AsQueryable().Where(c => c.Muted) )
 			{
 				Server server;
 				if( !client.Servers.ContainsKey(channelConfig.ServerId) ||
@@ -1200,26 +1200,25 @@ namespace Valkyrja.modules
 					continue;
 
 				//Muted channels
-				if( channelConfig.MutedUntil > minTime && channelConfig.MutedUntil < DateTime.UtcNow )
+				if( channelConfig.Muted && channelConfig.MutedUntil > minTime && channelConfig.MutedUntil < DateTime.UtcNow )
 				{
 					await UnmuteChannel(channelConfig, client.DiscordClient.CurrentUser);
 					save = true;
 				}
 			}
 
-			if( channelsToRemove.Any() )
-				dbContext.Channels.RemoveRange(channelsToRemove);
+			//if( channelsToRemove.Any() )
+			//	dbContext.Channels.RemoveRange(channelsToRemove);
 
 
 			//Users
-			foreach( UserData userData in dbContext.UserDatabase.AsQueryable().Where(ud => ud.BannedUntil > minTime || ud.MutedUntil > minTime) )
+			foreach( UserData userData in dbContext.UserDatabase.AsQueryable().Where(ud => ud.Banned || ud.Muted) )
 			{
+				Server server = null;
 				try
 				{
-					Server server;
-
 					//Unban
-					if( userData.BannedUntil > minTime && userData.BannedUntil < DateTime.UtcNow &&
+					if( userData.Banned && userData.BannedUntil > minTime && userData.BannedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null )
 					{
 						await UnBan(server, new List<UserData>{userData}, server.Guild.CurrentUser);
@@ -1230,7 +1229,7 @@ namespace Valkyrja.modules
 
 					//Unmute
 					IRole role;
-					if( userData.MutedUntil > minTime && userData.MutedUntil < DateTime.UtcNow &&
+					if( userData.Muted && userData.MutedUntil > minTime && userData.MutedUntil < DateTime.UtcNow &&
 					    client.Servers.ContainsKey(userData.ServerId) && (server = client.Servers[userData.ServerId]) != null &&
 					    (role = server.Guild.GetRole(server.Config.MuteRoleId)) != null )
 					{
@@ -1238,10 +1237,14 @@ namespace Valkyrja.modules
 						save = true;
 					}
 				}
-				catch(Discord.Net.HttpException ex)
+				catch(HttpException ex)
 				{
-					if( !(ex.HttpCode == System.Net.HttpStatusCode.NotFound || ex.HttpCode == System.Net.HttpStatusCode.Forbidden || (ex.DiscordCode.HasValue && ex.DiscordCode.Value == 50013) || ex.Message.Contains("Missing Access") || ex.Message.Contains("Missing Permissions")) )
-						await this.HandleException(ex, "Update Moderation", userData.ServerId);
+					if( server != null )
+						await server.HandleHttpException(ex, "While trying to unban or unmute someone");
+				}
+				catch(Exception ex)
+				{
+					await this.HandleException(ex, "Update Moderation", userData.ServerId);
 				}
 			}
 
@@ -1269,6 +1272,7 @@ namespace Valkyrja.modules
 
 			UserData userData = dbContext.GetOrAddUser(serverid, userid);
 			userData.BannedUntil = bannedUntil;
+			userData.Banned = true;
 			userData.AddWarning(logMessage);
 
 			dbContext.SaveChanges();
@@ -1309,6 +1313,7 @@ namespace Valkyrja.modules
 					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
 					userData.BannedUntil = bannedUntil;
+					userData.Banned = true;
 					userData.AddWarning(logMessage);
 					banned.Add(userData.UserId);
 					if( logBan != null )
@@ -1349,6 +1354,7 @@ namespace Valkyrja.modules
 
 			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
 			userData.BannedUntil = bannedUntil;
+			userData.Banned = true;
 			userData.AddWarning($"Banned {durationString} with reason: {reason}");
 			if( logBan != null )
 				await logBan;
@@ -1365,6 +1371,7 @@ namespace Valkyrja.modules
 					await server.Guild.RemoveBanAsync(userData.UserId);
 					unbanned.Add(userData.UserId);
 					userData.BannedUntil = DateTime.MinValue;
+					userData.Banned = false;
 
 					if( this.Client.Events.LogUnban != null )
 						await this.Client.Events.LogUnban(server, userData.LastUsername, userData.UserId, unbannedBy);
@@ -1401,6 +1408,7 @@ namespace Valkyrja.modules
 				warning += $" with reason: {reason}";
 			userData.AddWarning(warning);
 			userData.MutedUntil = mutedUntil;
+			userData.Muted = true;
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
@@ -1440,6 +1448,7 @@ namespace Valkyrja.modules
 						warning += $" with reason: {reason}";
 					userData.AddWarning(warning);
 					userData.MutedUntil = mutedUntil;
+					userData.Muted = true;
 					muted.Add(userData.UserId);
 
 					if( this.Client.Events.LogMute != null )
@@ -1481,6 +1490,7 @@ namespace Valkyrja.modules
 					await user.RemoveRoleAsync(role);
 					unmuted.Add(userData.UserId);
 					userData.MutedUntil = DateTime.MinValue;
+					userData.Muted = false;
 
 					if( this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
@@ -1513,6 +1523,7 @@ namespace Valkyrja.modules
 				await channel.AddPermissionOverwriteAsync(role, permissions);
 
 				channelConfig.MutedUntil = DateTime.UtcNow + duration;
+				channelConfig.Muted = true;
 
 				if( this.Client.Events.LogMutedChannel != null )
 					await this.Client.Events.LogMutedChannel(server, channel, GetDurationString(duration), mutedBy);
@@ -1534,6 +1545,7 @@ namespace Valkyrja.modules
 			try
 			{
 				channelConfig.MutedUntil = DateTime.MinValue;
+				channelConfig.Muted = false;
 
 				IRole role = server.Guild.EveryoneRole;
 				SocketGuildChannel channel = server.Guild.GetChannel(channelConfig.ChannelId);

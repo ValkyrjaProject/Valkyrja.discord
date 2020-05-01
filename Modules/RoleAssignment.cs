@@ -785,43 +785,9 @@ namespace Valkyrja.modules
 			}
 		}
 
-		public async Task Update(IValkyrjaClient iClient)
+		public Task Update(IValkyrjaClient iClient)
 		{
-			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
-				return;
-
-			ValkyrjaClient client = iClient as ValkyrjaClient;
-			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
-
-			List<RoleConfig> rolesToRemove = new List<RoleConfig>();
-			foreach( RoleConfig roleConfig in dbContext.Roles.AsQueryable().Where(r => r.DeleteAtTime > DateTime.MinValue + TimeSpan.FromMinutes(1) && r.DeleteAtTime < DateTime.UtcNow) )
-			{
-				Server server;
-				if( !client.Servers.ContainsKey(roleConfig.ServerId) ||
-				    (server = client.Servers[roleConfig.ServerId]) == null )
-					continue;
-
-				try
-				{
-					SocketRole role = server.Guild.GetRole(roleConfig.RoleId);
-					if(role != null && !role.Deleted)
-						await role.DeleteAsync();
-
-					rolesToRemove.Add(roleConfig);
-				}
-				catch(Exception e)
-				{
-					await this.HandleException(e, "Delete Temporary Role failed.", roleConfig.ServerId);
-				}
-			}
-
-			if( rolesToRemove.Any() )
-			{
-				dbContext.Roles.RemoveRange(rolesToRemove);
-				dbContext.SaveChanges();
-			}
-
-			dbContext.Dispose();
+			return Task.CompletedTask;
 		}
 	}
 }

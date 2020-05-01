@@ -426,7 +426,7 @@ namespace Valkyrja.modules
 			ValkyrjaClient client = iClient as ValkyrjaClient;
 			ServerContext dbContext = ServerContext.Create(client.DbConnectionString);
 			bool save = false;
-			DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);
+			//DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);
 
 			//Channels
 			List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
