@@ -138,7 +138,7 @@ namespace Valkyrja.modules
 
 					from = DateTime.UtcNow - TimeSpan.FromDays(n);
 				}
-				else if( e.MessageArgs.Length > 1 && !DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) && !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to) )
+				else if( e.MessageArgs.Length > 1 && (!DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) || !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to)) )
 				{
 					await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
 					return;
