@@ -454,7 +454,7 @@ namespace Valkyrja.modules
 			lock( this.DbLock )
 			{
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				foreach( VerificationData data in dbContext.Verification.AsEnumerable().Where(v => v.Value == "done") )
+				foreach( VerificationData data in dbContext.Verification.AsQueryable().Where(v => v.Value == "done").ToList() )
 				{
 					if( !this.Client.Servers.ContainsKey(data.ServerId) )
 						continue;
