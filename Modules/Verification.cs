@@ -454,28 +454,38 @@ namespace Valkyrja.modules
 			lock( this.DbLock )
 			{
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				ServerContext dbContextUsers = ServerContext.Create(this.Client.DbConnectionString);
 				foreach( VerificationData data in dbContext.Verification.AsQueryable().Where(v => v.Value == "done") )
 				{
 					if( !this.Client.Servers.ContainsKey(data.ServerId) )
 						continue;
+					Server server = null;
 					try
 					{
-						UserData userData = dbContext.UserDatabase.AsQueryable().FirstOrDefault(u => u.UserId == data.UserId && u.ServerId == data.ServerId);
+						UserData userData = dbContextUsers.UserDatabase.AsQueryable().FirstOrDefault(u => u.UserId == data.UserId && u.ServerId == data.ServerId);
 						if( userData == null )
 							continue;
-						Server server = this.Client.Servers[data.ServerId];
+						server = this.Client.Servers[data.ServerId];
 						if( VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
 						{
 							dbContext.Verification.Remove(data);
 							dbContext.SaveChanges();
+							dbContextUsers.SaveChanges();
 						}
 					}
 					catch( HttpException e )
 					{
-						Console.WriteLine(e);
-						throw;
+						if( server != null )
+							server.HandleHttpException(e, "While verifying someone.");
+					}
+					catch( Exception e )
+					{
+						HandleException(e, "verification update", data.ServerId).GetAwaiter().GetResult();
 					}
 				}
+
+				dbContext.Dispose();
+				dbContextUsers.Dispose();
 			}
 
 			return Task.CompletedTask;
