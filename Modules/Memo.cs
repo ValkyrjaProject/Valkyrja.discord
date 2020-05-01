@@ -232,7 +232,7 @@ namespace Valkyrja.modules
 				IEnumerable<ProfileOption> options = dbContext.ProfileOptions.AsQueryable().Where(o => o.ServerId == e.Server.Id).OrderBy(o => o.Order);
 				foreach( ProfileOption option in options )
 				{
-					UserProfileOption userOption = dbContext.UserProfileOptions.FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
+					UserProfileOption userOption = dbContext.UserProfileOptions.AsQueryable().FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
 					if( userOption == null || string.IsNullOrWhiteSpace(userOption.Value) )
 						continue;
 
@@ -302,7 +302,7 @@ namespace Valkyrja.modules
 					ProfileOption option = options.FirstOrDefault(o => o.Option == match.Value || o.OptionAlt == match.Value);
 					if( option == null )
 						continue;
-					UserProfileOption userOption = dbContext.UserProfileOptions.FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
+					UserProfileOption userOption = dbContext.UserProfileOptions.AsQueryable().FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
 					if( userOption == null )
 						continue;
 
@@ -329,7 +329,7 @@ namespace Valkyrja.modules
 						return;
 					}
 
-					UserProfileOption userOption = dbContext.UserProfileOptions.FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
+					UserProfileOption userOption = dbContext.UserProfileOptions.AsQueryable().FirstOrDefault(o => o.ServerId == e.Server.Id && o.UserId == e.Message.Author.Id && o.Option == option.Option);
 					if( userOption == null )
 					{
 						userOption = new UserProfileOption(){
@@ -368,7 +368,7 @@ namespace Valkyrja.modules
 
 			foreach( ProfileOption option in options )
 			{
-				UserProfileOption userOption = dbContext.UserProfileOptions.FirstOrDefault(o => o.ServerId == server.Id && o.UserId == user.Id && o.Option == option.Option);
+				UserProfileOption userOption = dbContext.UserProfileOptions.AsQueryable().FirstOrDefault(o => o.ServerId == server.Id && o.UserId == user.Id && o.Option == option.Option);
 				if( userOption == null || string.IsNullOrWhiteSpace(userOption.Value) )
 					continue;
 

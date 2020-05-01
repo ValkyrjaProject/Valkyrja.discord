@@ -36,7 +36,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				string response = "";
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				ServerConfig config = dbContext.ServerConfigurations.FirstOrDefault(c => c.ServerId == e.Server.Id);
+				ServerConfig config = dbContext.ServerConfigurations.AsQueryable().FirstOrDefault(c => c.ServerId == e.Server.Id);
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 					response = e.Command.Description;
 				else if( config == null )

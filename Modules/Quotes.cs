@@ -163,7 +163,7 @@ namespace Valkyrja.modules
 					dbContext.Quotes.Remove(quote);
 					if( quote.Id != count - 1 )
 					{
-						Quote replacement = dbContext.Quotes.First(q => q.ServerId == e.Server.Id && q.Id == count - 1);
+						Quote replacement = dbContext.Quotes.AsQueryable().First(q => q.ServerId == e.Server.Id && q.Id == count - 1);
 						Quote newReplacement = replacement.Clone(quote.Id);
 						dbContext.Quotes.Remove(replacement);
 						dbContext.Quotes.Add(newReplacement);
@@ -219,7 +219,7 @@ namespace Valkyrja.modules
 				{
 					response = "Unexpected database error :<";
 					quote.ServerId = e.Server.Id;
-					quote.Id = dbContext.Quotes.Count(q => q.ServerId == e.Server.Id);
+					quote.Id = dbContext.Quotes.AsQueryable().Count(q => q.ServerId == e.Server.Id);
 
 					dbContext.Quotes.Add(quote);
 					dbContext.SaveChanges();

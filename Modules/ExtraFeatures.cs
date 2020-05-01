@@ -81,7 +81,7 @@ namespace Valkyrja.modules
 						await tempChannel.AddPermissionOverwriteAsync(e.Message.Author, new OverwritePermissions(manageChannel: PermValue.Allow, manageRoles: PermValue.Allow, moveMembers: PermValue.Allow, muteMembers: PermValue.Allow, deafenMembers: PermValue.Allow));
 
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == tempChannel.Id);
+					ChannelConfig channel = dbContext.Channels.AsQueryable().FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == tempChannel.Id);
 					if( channel == null )
 					{
 						channel = new ChannelConfig{

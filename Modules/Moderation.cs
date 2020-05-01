@@ -474,7 +474,7 @@ namespace Valkyrja.modules
 				}
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
+				ChannelConfig channel = dbContext.Channels.AsQueryable().FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
 				if( channel == null )
 				{
 					channel = new ChannelConfig{
@@ -509,7 +509,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				string responseString = "";
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				ChannelConfig channel = dbContext.Channels.FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
+				ChannelConfig channel = dbContext.Channels.AsQueryable().FirstOrDefault(c => c.ServerId == e.Server.Id && c.ChannelId == e.Channel.Id);
 				if( channel == null )
 				{
 					channel = new ChannelConfig{

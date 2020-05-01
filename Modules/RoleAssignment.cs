@@ -209,7 +209,7 @@ namespace Valkyrja.modules
 					if( userHasCount > 0 )
 					{
 						ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-						groupConfig = dbContext.PublicRoleGroups.FirstOrDefault(g => g.ServerId == e.Server.Id && g.GroupId == groupId);
+						groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == e.Server.Id && g.GroupId == groupId);
 						dbContext.Dispose();
 
 						if( groupConfig != null && groupConfig.RoleLimit > 1 && userHasCount >= groupConfig.RoleLimit )
@@ -745,7 +745,7 @@ namespace Valkyrja.modules
 							if( userHasCount > 0 )
 							{
 								ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-								groupConfig = dbContext.PublicRoleGroups.FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
+								groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
 								dbContext.Dispose();
 
 								while( userHasCount >= groupConfig.RoleLimit && groupRoleIds.Any() )

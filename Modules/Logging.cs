@@ -166,7 +166,7 @@ namespace Valkyrja.modules
 							response = $"~~{msg.Content}~~\nToday (`{DateTime.UtcNow.Hour}` hour{(DateTime.UtcNow.Hour == 1 ? "" : "s")} since UTC midnight):\n";
 						else
 							response = $"~~{msg.Content}~~\nSince `{Utils.GetTimestamp(from)}`:\n";
-						StatsDaily today = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == e.Server.Id);
+						StatsDaily today = dbContext.StatsDaily.AsQueryable().FirstOrDefault(d => d.ServerId == e.Server.Id);
 						if( today != null )
 							total.Add(today);
 					}
@@ -1290,7 +1290,7 @@ namespace Valkyrja.modules
 			try
 			{
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				StatsDaily statsDaily = dbContext.StatsDaily.FirstOrDefault(d => d.ServerId == server.Id);
+				StatsDaily statsDaily = dbContext.StatsDaily.AsQueryable().FirstOrDefault(d => d.ServerId == server.Id);
 				if( statsDaily == null )
 					dbContext.StatsDaily.Add(statsDaily = new StatsDaily(server.Id));
 

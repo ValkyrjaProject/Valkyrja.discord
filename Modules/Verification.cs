@@ -277,7 +277,7 @@ namespace Valkyrja.modules
 				if( !string.IsNullOrEmpty(value) )
 				{
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					VerificationData data = dbContext.Verification.FirstOrDefault(u => u.ServerId == server.Id && u.UserId == userData.UserId);
+					VerificationData data = dbContext.Verification.AsQueryable().FirstOrDefault(u => u.ServerId == server.Id && u.UserId == userData.UserId);
 					if( data == null )
 					{
 						data = new VerificationData(){
@@ -460,7 +460,7 @@ namespace Valkyrja.modules
 						continue;
 					try
 					{
-						UserData userData = dbContext.UserDatabase.FirstOrDefault(u => u.UserId == data.UserId && u.ServerId == data.ServerId);
+						UserData userData = dbContext.UserDatabase.AsQueryable().FirstOrDefault(u => u.UserId == data.UserId && u.ServerId == data.ServerId);
 						if( userData == null )
 							continue;
 						Server server = this.Client.Servers[data.ServerId];
