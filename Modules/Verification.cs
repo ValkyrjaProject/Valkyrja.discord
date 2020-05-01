@@ -454,15 +454,14 @@ namespace Valkyrja.modules
 			lock( this.DbLock )
 			{
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				ServerContext dbContextUsers = ServerContext.Create(this.Client.DbConnectionString);
-				foreach( VerificationData data in dbContext.Verification.AsQueryable().Where(v => v.Value == "done") )
+				foreach( VerificationData data in dbContext.Verification.AsEnumerable().Where(v => v.Value == "done") )
 				{
 					if( !this.Client.Servers.ContainsKey(data.ServerId) )
 						continue;
 					Server server = null;
 					try
 					{
-						UserData userData = dbContextUsers.UserDatabase.AsQueryable().FirstOrDefault(u => u.UserId == data.UserId && u.ServerId == data.ServerId);
+						UserData userData = dbContext.UserDatabase.AsQueryable().FirstOrDefault(u => u.UserId == data.UserId && u.ServerId == data.ServerId);
 						if( userData == null )
 							continue;
 						server = this.Client.Servers[data.ServerId];
@@ -470,7 +469,6 @@ namespace Valkyrja.modules
 						{
 							dbContext.Verification.Remove(data);
 							dbContext.SaveChanges();
-							dbContextUsers.SaveChanges();
 						}
 					}
 					catch( HttpException e )
@@ -485,7 +483,6 @@ namespace Valkyrja.modules
 				}
 
 				dbContext.Dispose();
-				dbContextUsers.Dispose();
 			}
 
 			return Task.CompletedTask;
