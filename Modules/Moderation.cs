@@ -167,8 +167,8 @@ namespace Valkyrja.modules
 						ids = ids.Take(n).ToList();
 
 					n -= ids.Count;
-					if( messages.Length < 100 ) //this was the last pull
-						n = 0;
+					/*if( messages.Length < 100 ) //this was the last pull //no longer valid with asyncenum
+						n = 0;*/
 
 					idsToDelete.AddRange(ids);
 					lastRemoved = ids.Last();
