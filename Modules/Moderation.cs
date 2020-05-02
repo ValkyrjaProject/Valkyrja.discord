@@ -135,6 +135,8 @@ namespace Valkyrja.modules
 					try
 					{
 						await enumerator.MoveNextAsync();
+						if( enumerator?.Current == null ) //Assume it's an empty channel?
+							return false;
 						messages = enumerator.Current.ToArray();
 						//messages = await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten().ToArray();
 					}
