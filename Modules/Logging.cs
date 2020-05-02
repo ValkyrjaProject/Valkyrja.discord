@@ -14,6 +14,7 @@ using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Internal;
 using guid = System.UInt64;
 // ReSharper disable InconsistentlySynchronizedField
 
@@ -1251,7 +1252,8 @@ namespace Valkyrja.modules
 				bool save = false;
 
 				List<StatsDaily> toRemove = new List<StatsDaily>();
-				await foreach( StatsDaily statsDaily in dbContext.StatsDaily.AsAsyncEnumerable().Where(d => dbContext.ServerConfigurations.AsQueryable().Any(s => s.ServerId == d.ServerId && s.StatsEnabled) && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
+				IEnumerable<guid> statsEnabledOn = dbContext.ServerConfigurations.AsQueryable().Where(s => s.StatsEnabled).AsEnumerable().Select(s => s.ServerId);
+				await foreach( StatsDaily statsDaily in dbContext.StatsDaily.AsAsyncEnumerable().Where(d => statsEnabledOn.Any(s => s == d.ServerId) && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
 				{
 					dbContext.StatsTotal.Add(statsDaily.CreateTotal());
 					toRemove.Add(statsDaily);
