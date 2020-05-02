@@ -1252,7 +1252,7 @@ namespace Valkyrja.modules
 				bool save = false;
 
 				List<StatsDaily> toRemove = new List<StatsDaily>();
-				IEnumerable<guid> statsEnabledOn = dbContext.ServerConfigurations.AsQueryable().Where(s => s.StatsEnabled).AsEnumerable().Select(s => s.ServerId);
+				List<guid> statsEnabledOn = dbContext.ServerConfigurations.AsQueryable().Where(s => s.StatsEnabled).AsEnumerable().Select(s => s.ServerId).ToList();
 				await foreach( StatsDaily statsDaily in dbContext.StatsDaily.AsAsyncEnumerable().Where(d => statsEnabledOn.Any(s => s == d.ServerId) && d.DateTime + TimeSpan.FromHours(12) < DateTime.UtcNow) )
 				{
 					dbContext.StatsTotal.Add(statsDaily.CreateTotal());
