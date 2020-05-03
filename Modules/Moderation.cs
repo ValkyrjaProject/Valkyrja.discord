@@ -115,7 +115,10 @@ namespace Valkyrja.modules
 				int userCount = userIDs.Count();
 				guid lastRemoved = e.Message.Id;
 
-				bool IsWithinTwoWeeks(IMessage m){
+				bool IsWithinTwoWeeks(IMessage m)
+				{
+					if( m == null )
+						return false;
 					if( DateTime.UtcNow - Utils.GetTimeFromId(m.Id) < TimeSpan.FromDays(13.9f) )
 						return true;
 					return false;
@@ -138,20 +141,19 @@ namespace Valkyrja.modules
 						if( enumerator?.Current == null ) //Assume it's an empty channel?
 							return false;
 						messages = enumerator.Current.ToArray();
-						//messages = await e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, 100, CacheMode.AllowDownload).Flatten().ToArray();
 					}
 					catch( HttpException exception )
 					{
 						if( await e.Server.HandleHttpException(exception, $"`{e.CommandId}` in <#{e.Channel.Id}>") )
 						{
-							lastRemoved = 0;
+							n = 0;
 							return true;
 						}
 					}
 					catch( Exception exception )
 					{
 						await this.Client.LogException(exception, e);
-						lastRemoved = 0;
+						n = 0;
 						return true;
 					}
 
@@ -161,19 +163,19 @@ namespace Valkyrja.modules
 						(clearRegex  && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Where(m => (!string.IsNullOrEmpty(m.Content) && regex.IsMatch(m.Content)) || (m.Embeds != null && m.Embeds.Any(em => regex.IsMatch(em.Title ?? "") || regex.IsMatch(em.Description ?? "") || regex.IsMatch(em.Author?.Name ?? "") || (em.Fields != null && em.Fields.Any(f => regex.IsMatch(f.Name ?? "") || regex.IsMatch(f.Value ?? "")))))).Select(m => m.Id).ToList()).Any()) ||
 						(!clearLinks && !clearRegex && !(ids = messages.TakeWhile(IsWithinTwoWeeks).Where(IsAuthorSpecific).Select(m => m.Id).ToList()).Any()) )
 					{
-						lastRemoved = e.Message.Id;
+						n = 0;
 						return true;
 					}
 
 					if( ids.Count > n )
 						ids = ids.Take(n).ToList();
 
-					n -= ids.Count;
-					/*if( messages.Length < 100 ) //this was the last pull //no longer valid with asyncenum
-						n = 0;*/
-
 					idsToDelete.AddRange(ids);
 					lastRemoved = ids.Last();
+
+					n -= ids.Count;
+					if( !IsWithinTwoWeeks(messages.Last()) )
+						n = 0;
 
 					return false;
 				});
