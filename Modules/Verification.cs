@@ -314,6 +314,7 @@ namespace Valkyrja.modules
 				if( this.Client.GlobalConfig.LogDebug )
 					Console.WriteLine("Verification: Role not set.");
 
+				await this.HandleException(new ArgumentException("Role is null"), "Failed to assign verification role.", server.Id);
 				return false;
 			}
 
@@ -322,7 +323,10 @@ namespace Valkyrja.modules
 			{
 				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 				if( user == null )
+				{
+					await this.HandleException(new ArgumentException("User is null"), "Failed to assign verification role.", server.Id);
 					continue;
+				}
 
 				try
 				{
