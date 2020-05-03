@@ -367,42 +367,48 @@ namespace Valkyrja.modules
 
 			lock( this.DbLock )
 			{
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<VerificationData> data = dbContext.Verification.AsQueryable().Where(v => v.UserId == author.Id && v.Value == msg);
-
-				if( !data.Any() )
-				{
-					dbContext.Dispose();
-					return Task.CompletedTask;
-				}
-
 				bool save = false;
-				foreach( VerificationData d in data )
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				try
 				{
-					d.Value = "done";
-					save = true;
+					IEnumerable<VerificationData> data = dbContext.Verification.AsQueryable().Where(v => v.UserId == author.Id && v.Value == msg);
 
-					try
+					if( !data.Any() )
 					{
-						this.Client.SendPmSafe(author, "Thank you, you will be verified soon\u2122").GetAwaiter().GetResult();
-					}
-					catch( Exception e )
-					{
-						this.HandleException(e, "Verification PM received", 0).GetAwaiter().GetResult();
+						dbContext.Dispose();
+						return Task.CompletedTask;
 					}
 
-					if( !this.Client.Servers.ContainsKey(d.ServerId) )
-						continue;
+					foreach( VerificationData d in data )
+					{
+						d.Value = "done";
+						save = true;
 
-					Server server = this.Client.Servers[d.ServerId];
-					UserData userData = dbContext.GetOrAddUser(server.Id, d.UserId);
-					if( VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
-						dbContext.Verification.Remove(d);
+						try
+						{
+							this.Client.SendPmSafe(author, "Thank you, you will be verified soon\u2122").GetAwaiter().GetResult();
+						if( !this.Client.Servers.ContainsKey(d.ServerId) )
+							continue;
+
+						Server server = this.Client.Servers[d.ServerId];
+						UserData userData = dbContext.GetOrAddUser(server.Id, d.UserId);
+						if( VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
+							dbContext.Verification.Remove(d);
+						}
+						catch( Exception e )
+						{
+							this.HandleException(e, "Verification PM received inner", d.ServerId).GetAwaiter().GetResult();
+						}
+					}
+
+					if( save )
+					{
+						dbContext.SaveChanges();
+					}
 				}
-
-				if( save )
+				catch( Exception e )
 				{
-					dbContext.SaveChanges();
+					this.HandleException(e, "Verification PM received", 0).GetAwaiter().GetResult();
 				}
 
 				dbContext.Dispose();
