@@ -371,7 +371,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				try
 				{
-					IEnumerable<VerificationData> data = dbContext.Verification.AsQueryable().Where(v => v.UserId == author.Id && v.Value == msg).AsEnumerable().ToList();
+					IEnumerable<VerificationData> data = dbContext.Verification.AsQueryable().Where(v => v.UserId == author.Id).AsEnumerable().Where(v => v.Value == msg).ToList();
 
 					if( !data.Any() )
 					{
