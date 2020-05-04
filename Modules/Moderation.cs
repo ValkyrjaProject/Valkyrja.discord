@@ -1401,6 +1401,11 @@ namespace Valkyrja.modules
 
 		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null, string reason = null)
 		{
+			if( userData.UserId == this.Client.DiscordClient.CurrentUser.Id )
+			{
+				return;
+			}
+
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 			string durationString = GetDurationString(duration);
 
@@ -1438,6 +1443,12 @@ namespace Valkyrja.modules
 			{
 				try
 				{
+					if( userData.UserId == this.Client.DiscordClient.CurrentUser.Id )
+					{
+						response = "But.... no? >_<";
+						continue;
+					}
+
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 					if( user == null )
 					{
