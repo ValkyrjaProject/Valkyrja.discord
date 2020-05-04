@@ -463,6 +463,7 @@ namespace Valkyrja.modules
 
 			lock( this.DbLock )
 			{
+				bool save = false;
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				foreach( VerificationData data in dbContext.Verification.AsQueryable().Where(v => v.Value == "done").ToList() )
 				{
@@ -477,8 +478,8 @@ namespace Valkyrja.modules
 						server = this.Client.Servers[data.ServerId];
 						if( VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
 						{
+							save = true;
 							dbContext.Verification.Remove(data);
-							dbContext.SaveChanges();
 						}
 					}
 					catch( HttpException e )
@@ -492,6 +493,8 @@ namespace Valkyrja.modules
 					}
 				}
 
+				if( save )
+					dbContext.SaveChanges();
 				dbContext.Dispose();
 			}
 
