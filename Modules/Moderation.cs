@@ -248,7 +248,14 @@ namespace Valkyrja.modules
 						await msg.DeleteAsync();
 					}
 				}
-				catch(Exception) { }
+				catch( HttpException ex )
+				{
+					await e.Server.HandleHttpException(ex, $"Failed to send delete a message in <#{e.Channel.Id}>");
+				}
+				catch( Exception ex )
+				{
+					await this.HandleException(ex, "clear cmd - failed to send delete a message", e.Server.Id);
+				}
 			};
 			commands.Add(newCommand);
 
@@ -1179,7 +1186,14 @@ namespace Valkyrja.modules
 					else
 						await user.AddRoleAsync(role);
 				}
-				catch(Exception) { }
+				catch( HttpException ex )
+				{
+					await server.HandleHttpException(ex, $"Failed to mute or unmute a user.");
+				}
+				catch( Exception ex )
+				{
+					await this.HandleException(ex, "Moderation - OnUserJoined - mute/unmute", server.Id);
+				}
 			}
 
 			dbContext.Dispose();

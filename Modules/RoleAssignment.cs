@@ -678,7 +678,15 @@ namespace Valkyrja.modules
 				try
 				{
 					await user.AddRoleAsync(role);
-				} catch(Exception) { }
+				}
+				catch( HttpException ex )
+				{
+					await server.HandleHttpException(ex, $"Failed to assign a Welcome role.");
+				}
+				catch( Exception ex )
+				{
+					await this.HandleException(ex, "RoleAssignment - OnUserJoined - welcome role assignment", server.Id);
+				}
 			}
 		}
 

@@ -450,7 +450,14 @@ namespace Valkyrja.modules
 						channelsToRemove.Add(channelConfig);
 						save = true;
 					}
-					catch(Exception) { }
+					catch( HttpException e )
+					{
+						await server.HandleHttpException(e, $"Failed to delete temporary voice channel `{channel.Name}`");
+					}
+					catch( Exception e )
+					{
+						await this.HandleException(e, "Delete temporary voice channel", server.Id);
+					}
 				}
 				else if( channel == null )
 				{
