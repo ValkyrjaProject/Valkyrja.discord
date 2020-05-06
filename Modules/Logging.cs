@@ -302,7 +302,7 @@ namespace Valkyrja.modules
 					if( server.Config.AntispamInvites && server.Config.AntispamInvitesBan && (this.Client.RegexDiscordInvites?.Match(user.Username).Success ?? false) )
 						return;
 
-					if( server.Config.AntispamUsername && this.Client.RegexDiscordInvites != null && (this.Client.RegexDiscordInvites.Match(user.Username).Success || this.Client.RegexShortLinks.Match(user.Username).Success || this.Client.RegexYoutubeLinks.Match(user.Username).Success || this.Client.RegexTwitchLinks.Match(user.Username).Success || this.Client.RegexHitboxLinks.Match(user.Username).Success || this.Client.RegexBeamLinks.Match(user.Username).Success || this.Client.RegexImgurOrGifLinks.Match(user.Username).Success || this.Client.RegexTwitterLinks.Match(user.Username).Success) )
+					if( server.Config.AntispamUsername && this.Client.RegexDiscordInvites != null && (this.Client.RegexDiscordInvites.Match(user.Username).Success || this.Client.RegexShortLinks.Match(user.Username).Success || this.Client.RegexYoutubeLinks.Match(user.Username).Success || this.Client.RegexTwitchLinks.Match(user.Username).Success || this.Client.RegexHitboxLinks.Match(user.Username).Success || this.Client.RegexBeamLinks.Match(user.Username).Success || this.Client.RegexChanLinks.Match(user.Username).Success || this.Client.RegexImgurOrGifLinks.Match(user.Username).Success || this.Client.RegexTwitterLinks.Match(user.Username).Success) )
 						return;
 
 					string joinMessage = string.Format(server.Config.LogMessageJoin, user.GetUsername());
