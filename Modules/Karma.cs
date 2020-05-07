@@ -137,7 +137,7 @@ namespace Valkyrja.modules
 					userData.KarmaCount--;
 					mentionedUser.KarmaCount++;
 
-					userNames.Append((count++ == 0 ? "" : count == users.Count ? ", and " : ", ") + e.Server.Guild.GetUser(mentionedUser.UserId).GetNickname());
+					userNames.Append((count++ == 0 ? "" : count == users.Count ? ", and " : ", ") + (e.Server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? "nobody"));
 				}
 
 				if( count > 0 )
