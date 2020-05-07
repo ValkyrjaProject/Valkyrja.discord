@@ -140,6 +140,8 @@ namespace Valkyrja.modules
 						await enumerator.MoveNextAsync();
 						if( enumerator?.Current == null ) //Assume it's an empty channel?
 							return false;
+						if( !enumerator.Current.Any() )
+							await enumerator.MoveNextAsync(); //There seems to be an empty page of cache if it's empty.
 						messages = enumerator.Current.ToArray();
 					}
 					catch( HttpException exception )
