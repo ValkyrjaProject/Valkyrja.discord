@@ -325,6 +325,7 @@ namespace Valkyrja.modules
 				if( user == null )
 				{
 					await this.HandleException(new ArgumentException("User is null"), "Failed to assign verification role.", server.Id);
+					verified = true; //Remove them from the list.
 					continue;
 				}
 
