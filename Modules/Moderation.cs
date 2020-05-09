@@ -1515,10 +1515,11 @@ namespace Valkyrja.modules
 				try
 				{
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-					if(user == null)
+					if( user == null )
 						continue;
 
-					await user.RemoveRoleAsync(role);
+					if( user.Roles.Any(r => r.Id == role.Id) )
+						await user.RemoveRoleAsync(role);
 					unmuted.Add(userData.UserId);
 					userData.MutedUntil = DateTime.MinValue;
 					userData.Muted = false;
