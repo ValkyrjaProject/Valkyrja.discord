@@ -151,7 +151,7 @@ namespace Valkyrja.modules
 
 				await role.ModifyAsync(r => r.Mentionable = true);
 				await Task.Delay(100);
-				await e.SendReplySafe($"{role.Mention} {message}");
+				await e.SendReplySafe($"{role.Mention} {message}"); //This needs to be updated to the new mention specs... or removed?
 				await Task.Delay(100);
 				await role.ModifyAsync(r => r.Mentionable = false);
 			};
