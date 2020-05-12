@@ -141,7 +141,12 @@ namespace Valkyrja.modules
 						if( enumerator?.Current == null ) //Assume it's an empty channel?
 							return false;
 						if( !enumerator.Current.Any() )
+						{
 							await enumerator.MoveNextAsync(); //There seems to be an empty page of cache if it's empty.
+							if( !enumerator.Current.Any() )
+								return true;
+						}
+
 						messages = enumerator.Current.ToArray();
 					}
 					catch( HttpException exception )
@@ -185,7 +190,10 @@ namespace Valkyrja.modules
 				await enumerator.DisposeAsync();
 
 				if( canceled )
+				{
+					await e.SendReplySafe($"The command `{e.CommandId}` was cancelled or interrupted by a 3rd party error.");
 					return;
+				}
 
 				if( !this.Client.ClearedMessageIDs.ContainsKey(e.Server.Id) )
 					this.Client.ClearedMessageIDs.Add(e.Server.Id, new List<guid>());
