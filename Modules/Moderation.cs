@@ -139,11 +139,11 @@ namespace Valkyrja.modules
 					{
 						await enumerator.MoveNextAsync();
 						if( enumerator?.Current == null ) //Assume it's an empty channel?
-							return false;
+							return true;
 						if( !enumerator.Current.Any() )
 						{
-							await enumerator.MoveNextAsync(); //There seems to be an empty page of cache if it's empty.
-							if( !enumerator.Current.Any() )
+							await enumerator.MoveNextAsync(); //There seems to be an empty page if cache is empty.
+							if( !(enumerator?.Current?.Any() ?? false) )
 								return true;
 						}
 
@@ -154,6 +154,7 @@ namespace Valkyrja.modules
 						if( await e.Server.HandleHttpException(exception, $"`{e.CommandId}` in <#{e.Channel.Id}>") )
 						{
 							n = 0;
+							lastRemoved = 0; // Send error message to the channel.
 							return true;
 						}
 					}
@@ -161,6 +162,7 @@ namespace Valkyrja.modules
 					{
 						await this.Client.LogException(exception, e);
 						n = 0;
+						lastRemoved = 0; // Send error message to the channel.
 						return true;
 					}
 
@@ -191,7 +193,7 @@ namespace Valkyrja.modules
 
 				if( canceled )
 				{
-					await e.SendReplySafe($"The command `{e.CommandId}` was cancelled or interrupted by a 3rd party error.");
+					await e.SendReplySafe($"The command `{e.CommandId}` was cancelled.");
 					return;
 				}
 
