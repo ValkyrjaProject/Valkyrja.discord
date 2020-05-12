@@ -53,6 +53,7 @@ popd
 
 rm packages/Newtonsoft*
 rm packages/idn*
+rm packages/0*
 git add packages/*
 git add Bot/Valkyrja.discord.csproj
 git add Modules/Valkyrja.modules.csproj
