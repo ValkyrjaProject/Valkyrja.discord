@@ -204,7 +204,7 @@ namespace Valkyrja.modules
 				dbContext.SaveChanges();
 				if( server.Config.IgnoreEveryone )
 					userNames = userNames.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
-				await this.Client.SendRawMessageToChannel(channel, string.Format("**{0}** received a _thank you_ {1}!", userNames, server.Config.KarmaCurrencySingular));
+				await channel.SendMessageSafe($"**{userNames}** received a _thank you_ {server.Config.KarmaCurrencySingular}!");
 			}
 
 			dbContext.Dispose();

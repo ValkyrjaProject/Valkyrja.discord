@@ -174,7 +174,7 @@ namespace Valkyrja.modules
 						{
 							SocketRole role = server.Roles.Values.Where(r => r.ExpLevel == newLvl)
 								.Select(r => server.Guild.GetRole(r.RoleId)).FirstOrDefault();
-							await this.Client.SendRawMessageToChannel(channel, string.Format(LevelupString, user.Id, role?.Name ?? newLvl.ToString()));
+							await channel.SendMessageSafe(string.Format(LevelupString, user.Id, role?.Name ?? newLvl.ToString()));
 						}
 
 						userData.Level = newLvl;
