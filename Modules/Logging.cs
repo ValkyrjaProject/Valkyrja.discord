@@ -318,7 +318,7 @@ namespace Valkyrja.modules
 						LogEmbedText = server.Config.LogMentionJoin ? $"<@{user.Id}>" : "",
 						LogString = (string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
 								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**") +
-						             (server.Config.LogTimestampJoin ? $"\n(Account created: `{Utils.GetTimestamp(accountCreated)}`)" : ""))
+						             (server.Config.LogTimestampJoin && accountCreated + TimeSpan.FromDays(90) > DateTime.UtcNow ? $"\n(Account created: `{Utils.GetTimestamp(accountCreated)}`)" : ""))
 							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
 					};
 					await this.MessageQueueLock.WaitAsync();
