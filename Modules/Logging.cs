@@ -26,6 +26,7 @@ namespace Valkyrja.modules
 		{
 			public MessageType DesiredType;
 			public Embed LogEmbed;
+			public string LogEmbedText = "";
 			public string LogString;
 			public SocketTextChannel Channel;
 
@@ -34,7 +35,7 @@ namespace Valkyrja.modules
 				switch( this.DesiredType )
 				{
 					case MessageType.Embed:
-						await this.Channel.SendMessageAsync(embed: this.LogEmbed);
+						await this.Channel.SendMessageAsync(text: this.LogEmbedText, embed: this.LogEmbed);
 						break;
 					case MessageType.String:
 						await this.Channel.SendMessageSafe(this.LogString);
@@ -305,17 +306,19 @@ namespace Valkyrja.modules
 					if( server.Config.AntispamUsername && this.Client.RegexDiscordInvites != null && (this.Client.RegexDiscordInvites.Match(user.Username).Success || this.Client.RegexShortLinks.Match(user.Username).Success || this.Client.RegexYoutubeLinks.Match(user.Username).Success || this.Client.RegexTwitchLinks.Match(user.Username).Success || this.Client.RegexHitboxLinks.Match(user.Username).Success || this.Client.RegexBeamLinks.Match(user.Username).Success || this.Client.RegexChanLinks.Match(user.Username).Success || this.Client.RegexImgurOrGifLinks.Match(user.Username).Success || this.Client.RegexTwitterLinks.Match(user.Username).Success) )
 						return;
 
-					string joinMessage = string.Format(server.Config.LogMessageJoin, user.GetUsername());
+					string joinMessage = string.Format(server.Config.LogMessageJoin, user.GetNickname());
 					DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 					Message msg = new Message(){
 						Channel = logChannel,
 						DesiredType = (server.Config.ActivityChannelEmbeds && joinMessage.Length < 255) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogEmbed(new Color(server.Config.ActivityChannelColor),
 							user.GetAvatarUrl(),
-							joinMessage, "", server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"{user.GetUsername()}", $"`{user.Id}`", accountCreated,
+							joinMessage, "", $"`{user.GetUsername()}`", $"`{user.Id}`", accountCreated,
 							footer: "Account created: " + Utils.GetTimestamp(accountCreated)),
-						LogString = string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
-								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+						LogEmbedText = server.Config.LogMentionJoin ? $"<@{user.Id}>" : "",
+						LogString = (string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
+								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**") +
+						             (server.Config.LogTimestampJoin ? $"\n(Account created: `{Utils.GetTimestamp(accountCreated)}`)" : ""))
 							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
 					};
 					await this.MessageQueueLock.WaitAsync();
