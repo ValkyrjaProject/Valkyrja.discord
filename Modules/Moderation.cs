@@ -262,11 +262,11 @@ namespace Valkyrja.modules
 				}
 				catch( HttpException ex )
 				{
-					await e.Server.HandleHttpException(ex, $"Failed to send delete a message in <#{e.Channel.Id}>");
+					await e.Server.HandleHttpException(ex, $"Failed to send or delete a message in <#{e.Channel.Id}>");
 				}
 				catch( Exception ex )
 				{
-					await this.HandleException(ex, "clear cmd - failed to send delete a message", e.Server.Id);
+					await this.HandleException(ex, "clear cmd - failed to send or delete a message", e.Server.Id);
 				}
 			};
 			commands.Add(newCommand);
