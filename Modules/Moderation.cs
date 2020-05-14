@@ -224,7 +224,7 @@ namespace Valkyrja.modules
 					}
 					catch( Discord.Net.HttpException exception )
 					{
-						if( await e.Server.HandleHttpException(exception, $"`{e.CommandId}` in <#{e.Channel.Id}>") )
+						if( await e.Server.HandleHttpException(exception, $"Failed command `{e.CommandId}` in <#{e.Channel.Id}>") )
 							return true;
 					}
 					catch( Exception exception )
