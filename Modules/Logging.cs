@@ -29,19 +29,18 @@ namespace Valkyrja.modules
 			public string LogEmbedText = "";
 			public string LogString;
 			public SocketTextChannel Channel;
+			public bool MentionRole = false;
 
 			public async Task Send()
 			{
 				switch( this.DesiredType )
 				{
 					case MessageType.Embed:
-						await this.Channel.SendMessageAsync(text: this.LogEmbedText, embed: this.LogEmbed);
+						await this.Channel.SendMessageAsync(text: this.LogEmbedText, embed: this.LogEmbed, allowedMentions: (this.MentionRole ? AllowedMentions.All : AllowedMentions.None));
 						break;
 					case MessageType.String:
-						await this.Channel.SendMessageSafe(this.LogString);
-						break;
-					case MessageType.Both:
-						await this.Channel.SendMessageAsync(this.LogString, embed: this.LogEmbed);
+						if( !string.IsNullOrWhiteSpace(this.LogString) )
+							await this.Channel.SendMessageSafe(this.LogString);
 						break;
 					default:
 						throw new ArgumentException();
@@ -52,8 +51,7 @@ namespace Valkyrja.modules
 		private enum MessageType
 		{
 			Embed,
-			String,
-			Both
+			String
 		}
 
 		private ValkyrjaClient Client;
@@ -638,13 +636,14 @@ namespace Valkyrja.modules
 				{
 					Message msg = new Message(){
 						Channel = logChannel,
-						DesiredType = MessageType.Both,
+						DesiredType = MessageType.Embed,
 						LogEmbed = GetLogEmbed(new Color(server.Config.AlertChannelColor), user?.GetAvatarUrl(),
 							"Alert triggered", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")),
-						LogString = server.Config.AlertRoleMention == 0 ? "" : $"<@&{server.Config.AlertRoleMention}>"
+						LogEmbedText = server.Config.AlertRoleMention == 0 ? "" : $"<@&{server.Config.AlertRoleMention}>",
+						MentionRole = server.Config.AlertRoleMention != 0
 					};
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
