@@ -530,7 +530,7 @@ namespace Valkyrja.modules
 					Message msg = new Message(){
 						Channel = logChannel,
 						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
-						LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), title, "in #" + channel.Name,
+						LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), title, $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
@@ -590,7 +590,7 @@ namespace Valkyrja.modules
 						Channel = logChannel,
 						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogEmbed(new Color(red + green + blue), user?.GetAvatarUrl(),
-							"Message Edited", "in #" + channel.Name,
+							"Message Edited", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{updatedMessage.Id})",
 							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
 							updatedMessage.Id,
 							"Before", originalMessage.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
