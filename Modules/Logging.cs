@@ -36,7 +36,7 @@ namespace Valkyrja.modules
 				switch( this.DesiredType )
 				{
 					case MessageType.Embed:
-						await this.Channel.SendMessageAsync(text: this.LogEmbedText, embed: this.LogEmbed, allowedMentions: (this.MentionRole ? AllowedMentions.All : AllowedMentions.None));
+						await this.Channel.SendMessageSafe(this.LogEmbedText, this.LogEmbed, this.MentionRole ? AllowedMentions.All : AllowedMentions.None);
 						break;
 					case MessageType.String:
 						if( !string.IsNullOrWhiteSpace(this.LogString) )
