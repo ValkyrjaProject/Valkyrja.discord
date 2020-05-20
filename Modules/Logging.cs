@@ -26,7 +26,7 @@ namespace Valkyrja.modules
 		{
 			public MessageType DesiredType;
 			public Embed LogEmbed;
-			public string LogEmbedText = "";
+			public string LogEmbedText = null;
 			public string LogString;
 			public SocketTextChannel Channel;
 			public bool MentionRole = false;
@@ -313,7 +313,7 @@ namespace Valkyrja.modules
 							user.GetAvatarUrl(),
 							joinMessage, "", $"`{user.GetUsername()}`", $"`{user.Id}`", accountCreated,
 							footer: "Account created: " + Utils.GetTimestamp(accountCreated)),
-						LogEmbedText = server.Config.LogMentionJoin ? $"<@{user.Id}>" : "",
+						LogEmbedText = server.Config.LogMentionJoin ? $"<@{user.Id}>" : null,
 						LogString = (string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
 								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**") +
 						             (server.Config.LogTimestampJoin && accountCreated + TimeSpan.FromDays(90) > DateTime.UtcNow ? $"\n(Account created: `{Utils.GetTimestamp(accountCreated)}`)" : ""))
@@ -642,7 +642,7 @@ namespace Valkyrja.modules
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")),
-						LogEmbedText = server.Config.AlertRoleMention == 0 ? "" : $"<@&{server.Config.AlertRoleMention}>",
+						LogEmbedText = server.Config.AlertRoleMention == 0 ? null : $"<@&{server.Config.AlertRoleMention}>",
 						MentionRole = server.Config.AlertRoleMention != 0
 					};
 					await this.MessageQueueLock.WaitAsync();
