@@ -161,9 +161,8 @@ namespace Valkyrja.modules
 
 						bool IsRoleToRemove(RoleConfig r)
 						{
-							return r.ExpLevel != 0 &&
-							       ((server.Config.ExpCumulativeRoles && r.ExpLevel > newLvl) ||
-							        (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl));
+							return r.ExpLevel != 0 && ((server.Config.ExpCumulativeRoles && r.ExpLevel > newLvl) || (!server.Config.ExpCumulativeRoles && r.ExpLevel != newLvl && rolesToAssign.Any()));
+							//rolesToAssign.Any() to not remove roles if we're not on a new role-giving level.
 						}
 
 						List<SocketRole> rolesToRemove = server.Roles.Values.Where(IsRoleToRemove).Select(r => server.Guild.GetRole(r.RoleId)).Where(r => r != null).ToList();
