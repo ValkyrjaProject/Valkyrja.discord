@@ -38,6 +38,7 @@ namespace Valkyrja.modules
 		                                         "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
 		                                         "(It may be either too short, or too long. The algorithm is looking for lines with at least 10 words.)```";
 
+		private const string FailedPmString = "I was unable to send a PM - please enable PMs from server members!";
 		private const string SentString = "Check your messages!";
 		private const string MentionedString = "I've sent them the instructions.";
 		private const string VerifiedString = "I haz verified {0}";
@@ -169,13 +170,17 @@ namespace Valkyrja.modules
 				else if( string.IsNullOrEmpty(e.TrimmedMessage) ) // Verify the author.
 				{
 					UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
-					await VerifyUsersPm(e.Server, new List<UserData>{userData});
-					response = SentString;
+					if( await VerifyUsersPm(e.Server, new List<UserData>{userData}) )
+						response = SentString;
+					else
+						response = FailedPmString;
 				}
 				else if( mentionedUsers.Any() ) // Verify mentioned users.
 				{
-					await VerifyUsersPm(e.Server, mentionedUsers);
-					response = MentionedString;
+					if( await VerifyUsersPm(e.Server, mentionedUsers) )
+						response = MentionedString;
+					else
+						response = FailedPmString;
 				}
 
 				if( mentionedUsers.Any() )
@@ -190,8 +195,9 @@ namespace Valkyrja.modules
 			return commands;
 		}
 
-		public async Task VerifyUsersPm(Server server, List<UserData> users)
+		public async Task<bool> VerifyUsersPm(Server server, List<UserData> users)
 		{
+			bool success = false;
 			List<UserData> alreadyVerified = new List<UserData>();
 			foreach( UserData userData in users )
 			{
@@ -298,11 +304,13 @@ namespace Valkyrja.modules
 					message += string.Format(PmKarmaString, server.Config.VerifyKarma,
 						server.Config.CommandPrefix, server.Config.KarmaCurrency);
 
-				await this.Client.SendPmSafe(user, message);
+				success = await this.Client.SendPmSafe(user, message);
 			}
 
 			if( alreadyVerified.Any() )
 				await VerifyUsers(server, alreadyVerified, false);
+
+			return success;
 		}
 
 		/// <summary> Actually verify someone - assign the roles and stuff. </summary>
