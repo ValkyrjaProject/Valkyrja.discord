@@ -22,7 +22,6 @@ namespace Valkyrja.modules
 		private const string ErrorPermissionsString = "I don't have necessary permissions.";
 		private const string BanPmString = "Hello!\nI regret to inform you, that you have been **banned {0} on the {1} server** for the following reason:\n{2}";
 		private const string BanNotFoundString = "I couldn't find them :(";
-		private const string BanConfirmString = "_\\*fires them railguns at {0}*_  Ò_Ó";
 		private const string NotFoundString = "User not found.";
 		private const string NotFoundChannelString = "Channel not found.";
 		private const string UnbanConfirmString = "I've unbanned {0}... ó_ò";
@@ -32,7 +31,6 @@ namespace Valkyrja.modules
 		private const string WarningNotFoundString = "I couldn't find them :(";
 		private const string WarningPmString = "Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}";
 		private const string MuteIgnoreChannelString = "{0}, you've been muted.";
-		private const string MuteConfirmString = "*Silence!!  ò_ó\n...\nI keel u, {0}!!*  Ò_Ó";
 		private const string MuteChannelConfirmString = "Silence!!  ò_ó";
 		private const string UnmuteConfirmString = "Speak {0}!";
 		private const string UnmuteChannelConfirmString = "You may speak now.";
@@ -651,7 +649,7 @@ namespace Valkyrja.modules
 				}
 				else if( string.IsNullOrEmpty(response) )
 				{
-					response = "I've fired them railguns at " + usernames.ToNames() + ".";
+					response = e.Server.Localisation.GetString("moderation_kick_done", usernames.ToNames());
 					dbContext.SaveChanges();
 				}
 
@@ -1356,7 +1354,7 @@ namespace Valkyrja.modules
 			}
 
 			if( banned.Any() )
-				response = string.Format(BanConfirmString, banned.ToMentions());
+				response = server.Localisation.GetString("moderation_ban_done", banned.ToMentions());
 
 			return response;
 		}
@@ -1506,7 +1504,7 @@ namespace Valkyrja.modules
 			string mentions = muted.ToMentions();
 			if( muted.Any() )
 			{
-				response = string.Format(MuteConfirmString, mentions);
+				response = server.Localisation.GetString("moderation_mute_done", mentions);
 
 				SocketTextChannel logChannel;
 				if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
