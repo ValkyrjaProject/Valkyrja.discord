@@ -61,7 +61,7 @@ namespace Valkyrja.modules
 				}
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				StringBuilder responseBuilder = new StringBuilder(string.Format("You can use `{0}join` and `{0}leave` commands with these Public Roles: ", e.Server.Config.CommandPrefix));
+				StringBuilder responseBuilder = new StringBuilder(e.Server.Localisation.GetString("role_publicroles_print", e.Server.Config.CommandPrefix));
 				Dictionary<Int64, List<RoleConfig>> groupRoles = new Dictionary<Int64, List<RoleConfig>>();
 				Dictionary<Int64, RoleGroupConfig> groupConfigs = dbContext.PublicRoleGroups.AsQueryable().Where(g => g.ServerId == e.Server.Id).ToDictionary(g => g.GroupId);
 				dbContext.Dispose();
@@ -98,7 +98,7 @@ namespace Valkyrja.modules
 					RoleGroupConfig groupConfig = groupConfigs.ContainsKey(groupRole.Key) ? groupConfigs[groupRole.Key] : new RoleGroupConfig();
 					string name = string.IsNullOrEmpty(groupConfig.Name) ? ("Group #" + groupRole.Key.ToString()) : groupConfig.Name;
 					string limitVerbose = groupConfig.RoleLimit == 0 ? "any" : groupConfig.RoleLimit.ToString();
-					responseBuilder.Append($"\n\n**{name}** - you can join {limitVerbose} of these:\n");
+					responseBuilder.Append(e.Server.Localisation.GetString("role_publicroles_group", name, limitVerbose));
 
 					responseBuilder.Append(GetRoleNames(groupRole.Value));
 				}
@@ -169,7 +169,7 @@ namespace Valkyrja.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplyUnsafe(e.Command.Description);
+					await e.SendReplySafe(e.Command.Description);
 					return;
 				}
 
@@ -186,13 +186,13 @@ namespace Valkyrja.modules
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower()))).Any() )
 				{
-					await e.SendReplyUnsafe(ErrorRoleNotFound);
+					await e.SendReplySafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await e.SendReplyUnsafe(ErrorTooManyFound);
+					await e.SendReplySafe(ErrorTooManyFound);
 					return;
 				}
 
@@ -214,14 +214,14 @@ namespace Valkyrja.modules
 
 						if( groupConfig != null && groupConfig.RoleLimit > 1 && userHasCount >= groupConfig.RoleLimit )
 						{
-							await e.SendReplyUnsafe($"You can only have {groupConfig.RoleLimit} roles from the `{groupConfig.Name}` group.");
+							await e.SendReplySafe($"You can only have {groupConfig.RoleLimit} roles from the `{groupConfig.Name}` group.");
 							return;
 						}
 					}
 				}
 
 				bool removed = false;
-				string response = "Done!";
+				string response = e.Server.Localisation.GetString("role_join_done");
 				try
 				{
 					SocketGuildUser user = (e.Message.Author as SocketGuildUser);
@@ -254,9 +254,9 @@ namespace Valkyrja.modules
 				}
 
 				if( removed )
-					response += "\n_(I've removed the other exclusive roles from the same role group.)_";
+					response += e.Server.Localisation.GetString("role_join_exclusiveremoved");
 
-				await e.SendReplyUnsafe(response);
+				await e.SendReplySafe(response);
 
 				if( this.Client.Events.LogPublicRoleJoin != null )
 					await this.Client.Events.LogPublicRoleJoin(e.Server, e.Message.Author as SocketGuildUser, roleToAssign.Name);
@@ -277,7 +277,7 @@ namespace Valkyrja.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplyUnsafe(e.Command.Description);
+					await e.SendReplySafe(e.Command.Description);
 					return;
 				}
 
@@ -294,17 +294,17 @@ namespace Valkyrja.modules
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == e.TrimmedMessage.ToLower())).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower().Contains(e.TrimmedMessage.ToLower()))).Any() )
 				{
-					await e.SendReplyUnsafe(ErrorRoleNotFound);
+					await e.SendReplySafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await e.SendReplyUnsafe(ErrorTooManyFound);
+					await e.SendReplySafe(ErrorTooManyFound);
 					return;
 				}
 
-				string response = "Done!";
+				string response = e.Server.Localisation.GetString("role_leave_done");
 				try
 				{
 					await (e.Message.Author as SocketGuildUser)?.RemoveRoleAsync(foundRoles.First());
@@ -318,7 +318,7 @@ namespace Valkyrja.modules
 					response = $"Unknown error, please poke <@{this.Client.GlobalConfig.AdminUserId}> to take a look x_x";
 				}
 
-				await e.SendReplyUnsafe(response);
+				await e.SendReplySafe(response);
 
 				if( this.Client.Events.LogPublicRoleLeave != null )
 					await this.Client.Events.LogPublicRoleLeave(e.Server, e.Message.Author as SocketGuildUser, foundRoles.First().Name);
@@ -338,7 +338,7 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				string response = string.Format("You can use `{0}promote` and `{0}demote` commands with these Member Roles: {1}",
+				string response = e.Server.Localisation.GetString("role_memberroles_print",
 					e.Server.Config.CommandPrefix,
 					e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc.RoleId == r.Id)).Select(r => r.Name).ToNames()
 				);
@@ -391,7 +391,7 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				string response = "Done!";
+				string response = e.Server.Localisation.GetString("role_promote_done");
 				SocketRole role = foundRoles.First();
 				try
 				{
@@ -461,7 +461,7 @@ namespace Valkyrja.modules
 				}
 
 				SocketRole role = foundRoles.First();
-				string response = "Done!";
+				string response = e.Server.Localisation.GetString("role_demote_done");
 				try
 				{
 					foreach( SocketGuildUser user in users )
