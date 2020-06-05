@@ -118,7 +118,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.StatsEnabled )
 				{
-					await e.SendReplyUnsafe("Stats are disabled on this server.");
+					await e.SendReplySafe("Stats are disabled on this server.");
 					return;
 				}
 

@@ -127,7 +127,7 @@ namespace Valkyrja.modules
 
 				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
-					await e.SendReplyUnsafe($"Usage: `{e.Server.Config.CommandPrefix}{e.CommandId} <roleName> <message text>`");
+					await e.SendReplySafe($"Usage: `{e.Server.Config.CommandPrefix}{e.CommandId} <roleName> <message text>`");
 					return;
 				}
 
@@ -136,13 +136,13 @@ namespace Valkyrja.modules
 				    !(foundRoles = e.Server.Guild.Roles.Where(r => r.Name.ToLower() == e.MessageArgs[0].ToLower())).Any() &&
 				    !(foundRoles = e.Server.Guild.Roles.Where(r => r.Name.ToLower().Contains(e.MessageArgs[0].ToLower()))).Any() )
 				{
-					await e.SendReplyUnsafe(ErrorRoleNotFound);
+					await e.SendReplySafe(ErrorRoleNotFound);
 					return;
 				}
 
 				if( foundRoles.Count() > 1 )
 				{
-					await e.SendReplyUnsafe(ErrorTooManyFound);
+					await e.SendReplySafe(ErrorTooManyFound);
 					return;
 				}
 

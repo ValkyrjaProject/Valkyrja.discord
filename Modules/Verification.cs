@@ -100,7 +100,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
 				{
-					await e.SendReplyUnsafe("Verification is disabled on this server.");
+					await e.SendReplySafe("Verification is disabled on this server.");
 					return;
 				}
 
@@ -110,7 +110,7 @@ namespace Valkyrja.modules
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.VerifyRoleId);
 				if( !mentionedUsers.Any() || role == null )
 				{
-					await e.SendReplyUnsafe(UserNotFoundString);
+					await e.SendReplySafe(UserNotFoundString);
 					dbContext.Dispose();
 					return;
 				}
@@ -133,7 +133,7 @@ namespace Valkyrja.modules
 				}
 
 				dbContext.Dispose();
-				await e.SendReplyUnsafe(response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
@@ -144,7 +144,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
 				{
-					await e.SendReplyUnsafe("Verification is disabled on this server.");
+					await e.SendReplySafe("Verification is disabled on this server.");
 					return;
 				}
 
@@ -159,7 +159,7 @@ namespace Valkyrja.modules
 				{
 					if( !mentionedUsers.Any() )
 					{
-						await e.SendReplyUnsafe(UserNotFoundString);
+						await e.SendReplySafe(UserNotFoundString);
 						dbContext.Dispose();
 						return;
 					}
@@ -187,7 +187,7 @@ namespace Valkyrja.modules
 					dbContext.SaveChanges();
 
 				dbContext.Dispose();
-				await e.SendReplyUnsafe(response);
+				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
 
