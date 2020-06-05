@@ -69,7 +69,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageMessages )
 				{
-					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -79,7 +79,7 @@ namespace Valkyrja.modules
 
 				if( e.Command.Id != "nuke" && (e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[0], out n)) )
 				{
-					await e.Message.Channel.SendMessageSafe("Please tell me how many messages should I delete!");
+					await e.SendReplySafe("Please tell me how many messages should I delete!");
 					return;
 				}
 
@@ -87,7 +87,7 @@ namespace Valkyrja.modules
 				bool clearRegex = e.Command.Id.ToLower() == "clearregex";
 				if( clearRegex && e.MessageArgs.Length < 2 )
 				{
-					await e.Message.Channel.SendMessageSafe("Too few parameters.");
+					await e.SendReplySafe("Too few parameters.");
 					return;
 				}
 				if( clearRegex )
@@ -335,20 +335,20 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
 				if( role == null )
 				{
-					await e.Message.Channel.SendMessageSafe(RoleNotFoundString);
+					await e.SendReplySafe(RoleNotFoundString);
 					return;
 				}
 
 				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -356,7 +356,7 @@ namespace Valkyrja.modules
 				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
 					return;
 				}
 
@@ -379,7 +379,7 @@ namespace Valkyrja.modules
 
 				if( warning.Length >= BanReasonLimit )
 				{
-					await e.Message.Channel.SendMessageSafe(BanReasonTooLongString);
+					await e.SendReplySafe(BanReasonTooLongString);
 					dbContext.Dispose();
 					return;
 				}
@@ -389,7 +389,7 @@ namespace Valkyrja.modules
 					duration = TimeSpan.FromMinutes(muteDurationMinutes);
 				if( duration == null || duration.Value.TotalMinutes <= 0 )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -419,14 +419,14 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
 				{
-					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
 				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -442,7 +442,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -474,7 +474,7 @@ namespace Valkyrja.modules
 				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
 					return;
 				}
 
@@ -564,7 +564,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.KickMembers )
 				{
-					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -572,7 +572,7 @@ namespace Valkyrja.modules
 				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
 					return;
 				}
 
@@ -594,7 +594,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count +1 > e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -608,7 +608,7 @@ namespace Valkyrja.modules
 
 				if( warning.Length >= BanReasonLimit )
 				{
-					await e.Message.Channel.SendMessageSafe(BanReasonTooLongString);
+					await e.SendReplySafe(BanReasonTooLongString);
 					dbContext.Dispose();
 					return;
 				}
@@ -666,13 +666,13 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( e.MessageArgs == null || e.MessageArgs.Length < 3 )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.BanMembers )
 				{
-					await e.Message.Channel.SendMessageSafe(ErrorPermissionsString);
+					await e.SendReplySafe(ErrorPermissionsString);
 					return;
 				}
 
@@ -680,7 +680,7 @@ namespace Valkyrja.modules
 				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.Message.Channel.SendMessageSafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
 					return;
 				}
 
@@ -696,7 +696,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count + 2 > e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -713,7 +713,7 @@ namespace Valkyrja.modules
 					duration = TimeSpan.FromHours(banDurationHours);
 				if( duration == null )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -722,7 +722,7 @@ namespace Valkyrja.modules
 
 				if( warning.Length >= BanReasonLimit )
 				{
-					await e.Message.Channel.SendMessageSafe(BanReasonTooLongString);
+					await e.SendReplySafe(BanReasonTooLongString);
 					dbContext.Dispose();
 					return;
 				}
@@ -759,13 +759,13 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
 				if( string.IsNullOrEmpty(e.Server.Config.QuickbanReason) )
 				{
-					await e.Message.Channel.SendMessageSafe("This command has to be first configured via `config` or <https://valkyrja.app/config>.");
+					await e.SendReplySafe("This command has to be first configured via `config` or <https://valkyrja.app/config>.");
 					return;
 				}
 
@@ -781,7 +781,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -811,7 +811,7 @@ namespace Valkyrja.modules
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					return;
 				}
 
@@ -827,7 +827,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
@@ -945,7 +945,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.Message.Channel.SendMessageSafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
 					dbContext.Dispose();
 					return;
 				}
