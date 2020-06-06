@@ -51,6 +51,7 @@ namespace Valkyrja.modules
 			Command newCommand = new Command("publicRoles");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "See what Public Roles can you join on this server.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				List<RoleConfig> publicRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Public).ToList();
@@ -329,6 +330,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("memberRoles");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "See what Member Roles you can assign to others.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
@@ -599,6 +601,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("countWithoutRoles");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Count how many users do not have any role.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				await e.SendReplySafe(WorkingOnItString);
@@ -612,6 +615,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("kickWithoutRoles");
 			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Kick all the users who do not have any role.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.KickMembers )

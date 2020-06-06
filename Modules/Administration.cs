@@ -33,6 +33,7 @@ namespace Valkyrja.modules
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Restrict alert logging to search only one channel. Use with `set #channel` or `reset` argument.";
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
+			newCommand.ManPage = new ManPage("<set #channel | reset>", "`<set #channel>` - Restrict the alert-logging to keep an eye only on this specific #channel.\n\n`<reset>` - Reset the restriction, alert-logging will keep an eye on all the channels.");
 			newCommand.OnExecute += async e => {
 				string response = "";
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
@@ -67,6 +68,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("getRole");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Get a name, id and color of `roleID` or `roleName` parameter.";
+			newCommand.ManPage = new ManPage("<RoleId | roleName>", "`<RoleId | roleName>` - Role to be displayed.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				guid id = 0;
@@ -101,6 +103,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("membersOf");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Display a list of members of a role.";
+			newCommand.ManPage = new ManPage("<RoleId | roleName>", "`<RoleId | roleName>` - Members of this role will be printed.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				SocketRole role = e.Server.GetRole(e.TrimmedMessage, out string response);
@@ -124,6 +127,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("createRole");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Create a role with specified name.";
+			newCommand.ManPage = new ManPage("<roleName>", "`<roleName>` - Name of the new role.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -146,7 +150,8 @@ namespace Valkyrja.modules
 // !createRoles
 			newCommand = new Command("createRoles");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Create roles with specified names. List of whitespace delimited arguments, use quotes to use spaces.";
+			newCommand.Description = "Create roles with specified names.";
+			newCommand.ManPage = new ManPage("<roleName1, roleName2, ...>", "`<roleName>` - Name of the new role. Use quotes if you want a name with multiple words/spaces.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -175,7 +180,8 @@ namespace Valkyrja.modules
 // !createPublicRoles
 			newCommand = new Command("createPublicRoles");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Create public roles with specified names. The first argument will be used as a name for the new role group, followed by a list of whitespace delimited arguments, use quotes to use spaces.";
+			newCommand.Description = "Create public roles with specified names.";
+			newCommand.ManPage = new ManPage("<groupName> <roleName1, roleName2, ...>", "`<groupName>` - Name of the Role Group under which these roles will be created.\n\n`<roleName>` - Name of the new role. Use quotes if you want a name with multiple words/spaces.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -278,6 +284,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("createColourRoles");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Create 9 roles with various colours, you can find emoji representations of these colours in Valhalla - the Valkyrja support server.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -306,6 +313,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("removeStreamPermission");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Removes Stream permission from all the roles.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )

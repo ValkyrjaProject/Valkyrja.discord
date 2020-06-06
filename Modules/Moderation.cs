@@ -64,7 +64,8 @@ namespace Valkyrja.modules
 // !clear
 			Command newCommand = new Command("clear");
 			newCommand.Type = CommandType.Operation;
-			newCommand.Description = "Deletes specified amount of messages (within two weeks.) If you mention someone as well, it will remove only their messages. Use with paremeters: `<n> [@users]` - optional `@user` mentions or ID's (this parameter has to be last, if specified.) And mandatory `<n>` parameter, the count of how many messages to remove.";
+			newCommand.Description = "Deletes specified amount of messages (within two weeks.) If you mention someone as well, it will remove only their messages.";
+			newCommand.ManPage = new ManPage("<n> [@users]", "`<n>` - The amount of messages to be deleted.\n\n`[@users]` - Optional argument specifying that only messages from these @users will be deleted. User mention(s) or ID(s)");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageMessages )
@@ -270,15 +271,18 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearLinks");
-			newCommand.Description = "Delete only messages that contain attachments (images, video, files, ...) or embeds including automated link embeds. Use with a parameter, a number of messages to delete.";
+			newCommand.Description = "Delete only messages that contain attachments (images, video, files, ...) or embeds including automated link embeds.";
+			newCommand.ManPage = new ManPage("<n> [@users]", "`<n>` - The amount of messages to be deleted.\n\n`[@users]` - Optional argument specifying that only messages from these @users will be deleted. User mention(s) or ID(s)");
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("clearRegex");
-			newCommand.Description = "Delete only messages that match a regular expression within the last `n` messages. Use with parameters: `<n> <regex> [@users]` where you should not use any whitespace in the regular expression, use `\\s` instead. (Note - ignores case.)";
+			newCommand.Description = "Delete only messages that match a regular expression within the last `n` messages.";
+			newCommand.ManPage = new ManPage("<n> <regex> [@users]", "`<n>` - The amount of messages to be deleted.\n\n`<regex>` - Regular expression based on which only the matching messages will be deleted. Do not use any whitespace in it, you can use `\\s` instead. (Note - ignores case.)\n\n`[@users]` - Optional argument specifying that only messages from these @users will be deleted. User mention(s) or ID(s)");
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("nuke");
 			newCommand.Description = "Nuke the whole channel. You can also mention a user to delete all of their messages. (Within the last two weeks.)";
+			newCommand.ManPage = new ManPage("[@users]", "`[@users]` - Optional argument specifying that only messages from these @users will be deleted. User mention(s) or ID(s)");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			commands.Add(newCommand);
 
@@ -286,6 +290,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("op");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "_op_ yourself to be able to use `mute`, `kick` or `ban` commands. (Only if configured at <https://valkyrja.app/config>)";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
@@ -330,7 +335,8 @@ namespace Valkyrja.modules
 // !mute
 			newCommand = new Command("mute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Temporarily mute mentioned members from the chat. Use with parameters `@user time` where `@user` = user mention(s) or id(s); `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.); This command has to be configured at <https://valkyrja.app/config>!";
+			newCommand.Description = "Temporarily mute mentioned members from the chat.";
+			newCommand.ManPage = new ManPage("<@users> <duration> [warning reason]", "`<@users>` - User ID(s) or mention(s) to be muted.\n\n`<duration>` - Duration with the `h` & `m` specifiers, for example `1h30m`.\n\n`[warning reason]` - An optional warning message to be recorded and PMed to the user.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -348,7 +354,7 @@ namespace Valkyrja.modules
 
 				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -389,7 +395,7 @@ namespace Valkyrja.modules
 					duration = TimeSpan.FromMinutes(muteDurationMinutes);
 				if( duration == null || duration.Value.TotalMinutes <= 0 )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -414,7 +420,8 @@ namespace Valkyrja.modules
 // !unmute
 			newCommand = new Command("unmute");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Unmute previously muted members. This command has to be configured at <https://valkyrja.app/config>.";
+			newCommand.Description = "Unmute previously muted members.";
+			newCommand.ManPage = new ManPage("<@users>", "`<@users>` - User ID(s) or mention(s) to be unmuted.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -426,7 +433,7 @@ namespace Valkyrja.modules
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
 				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -442,7 +449,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -467,7 +474,8 @@ namespace Valkyrja.modules
 // !muteChannel
 			newCommand = new Command("muteChannel");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Temporarily mute the current channel. Use with parameter `time` = duration of the mute (e.g. `7d` or `12h` or `1h30m` - without spaces.)";
+			newCommand.Description = "Temporarily mute the current channel.";
+			newCommand.ManPage = new ManPage("<duration>", "`<duration>` - Duration with the `h` & `m` specifiers, for example `1h30m`.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				SocketRole roleOp = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
@@ -478,7 +486,7 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				string responseString = "Invalid parameters...\n" + e.Command.Description;
+				string responseString = "Invalid parameters...\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId);
 				if( e.MessageArgs == null || e.MessageArgs.Length < 1 )
 				{
 					await e.SendReplySafe(responseString);
@@ -526,6 +534,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("unmuteChannel");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Unmute the current channel.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				string responseString = "";
@@ -559,7 +568,8 @@ namespace Valkyrja.modules
 // !kick
 			newCommand = new Command("kick");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Use with parameters `@user reason` where `@user` = user mention or id; `reason` = worded description why did you kick them out - they will receive this via PM.";
+			newCommand.Description = "Kick someone, with a warning message sent to the user.";
+			newCommand.ManPage = new ManPage("<@users> <warning reason>", "`<@users>` - User ID(s) or mention(s) to be kicked.\n\n<warning reason>` - A warning message to be recorded and PMed to the user.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.KickMembers )
@@ -578,7 +588,7 @@ namespace Valkyrja.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe(KickArgsString + e.Command.Description);
+					await e.SendReplySafe(KickArgsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -594,7 +604,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count +1 > e.MessageArgs.Length )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -661,12 +671,13 @@ namespace Valkyrja.modules
 // !ban
 			newCommand = new Command("ban");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Use with parameters `@user time reason` where `@user` = user mention or id; `time` = duration of the ban (e.g. `7d` or `12h` or `0` for permanent.); `reason` = worded description why did you ban them - they will receive this via PM (use `silentBan` to not send the PM)";
+			newCommand.Description = "Ban someone permanently or temporarily, with a warning message sent to the user.";
+			newCommand.ManPage = new ManPage("<UserIDs> <duration> <warning reason>", "`<UserIDs>` - User ID(s) to be banned.\n\n`<duration>` - Duration with the `d` & `h` specifiers, for example `1d12h`. Use `0` for permanent.\n\n`<warning reason>` - An optional warning message to be recorded and PMed to the user.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				if( e.MessageArgs == null || e.MessageArgs.Length < 3 )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -696,7 +707,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count + 2 > e.MessageArgs.Length )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -713,7 +724,7 @@ namespace Valkyrja.modules
 					duration = TimeSpan.FromHours(banDurationHours);
 				if( duration == null )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -744,22 +755,23 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("silentBan");
-			newCommand.Description = "Use with the same parameters like `ban`. The _reason_ message will not be sent to the user (hence silent.)";
+			newCommand.Description = "Ban someone where the warning message will not be sent to the user (hence silent.)";
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("purgeBan");
-			newCommand.Description = "Use with the same parameters like `ban`. The difference is that this command will also delete all the messages of the user in last 24 hours.";
+			newCommand.Description = "Ban someone just like the usual, but also delete all of their messages within the last 24 hours.";
 			commands.Add(newCommand);
 
 // !quickBan
 			newCommand = new Command("quickBan");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. You can mention several people at once. (This command has to be first configured via `config` or <https://valkyrja.app/config>.)";
+			newCommand.Description = "Quickly ban someone using pre-configured reason and duration, it also removes their messages. (This command has to be first configured via `config` or <https://valkyrja.app/config>.)";
+			newCommand.ManPage = new ManPage("<UserIDs>", "`<UserIDs>` - User ID(s) or mention(s) to be banned.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -781,7 +793,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -806,12 +818,13 @@ namespace Valkyrja.modules
 // !unBan
 			newCommand = new Command("unBan");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Use with parameter `@user` where `@user` = user mention or id;";
+			newCommand.Description = "Unban people. You may need to use the ID instead of a mention, since they're not on the server and you can't mention them!";
+			newCommand.ManPage = new ManPage("<UserIDs>", "`<UserIDs>` - User ID(s) to be unbanned.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -827,7 +840,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -852,12 +865,13 @@ namespace Valkyrja.modules
 // !addWarning
 			newCommand = new Command("addWarning");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database.";
+			newCommand.Description = "Adds a warning note to the database for a specific user.";
+			newCommand.ManPage = new ManPage("<UserIDs> <warning>", "`<UserIDs>` - User ID(s) or mention(s) to have a warning recorded.\n\n`<warning>` - A warning message to be recorded.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe("Give a warning to whom?\n" + e.Command.Description);
+					await e.SendReplySafe("Give a warning to whom?\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -873,7 +887,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count + 1 > e.MessageArgs.Length )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -918,18 +932,21 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 			newCommand = newCommand.CreateCopy("issueWarning");
+			newCommand.Description = "Adds a warning note to the database, and also PMs it to the user.";
 			newCommand.Description = "Use with parameters `@user warning` where `@user` = user mention or id, you can add the same warning to multiple people, just mention them all; `warning` = worded description, a warning message to store in the database. This will also be PMed to the user.";
+			newCommand.ManPage = new ManPage("<UserIDs> <warning>", "`<UserIDs>` - User ID(s) or mention(s) to have a warning recorded.\n\n`<warning>` - A warning message to be recorded and PMed to the user.");
 			commands.Add(newCommand);
 
 // !removeWarning
 			newCommand = new Command("removeWarning");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Use with parameter `@user` = user mention or id, you can remove the last warning from multiple people, just mention them all.";
+			newCommand.Description = "Removes the last recorded warning from a specific user(s).";
+			newCommand.ManPage = new ManPage("<UserIDs>", "`<UserIDs>` - User ID(s) or mention(s) to have a warning recorded.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe("Remove warning from whom?\n" + e.Command.Description);
+					await e.SendReplySafe("Remove warning from whom?\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
 
@@ -945,7 +962,7 @@ namespace Valkyrja.modules
 
 				if( mentionedUsers.Count < e.MessageArgs.Length )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.Description);
+					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
 					return;
 				}
@@ -994,7 +1011,8 @@ namespace Valkyrja.modules
 // !whois
 			newCommand = new Command("whois");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Search for a User on this server.";
+			newCommand.Description = "Search for a User on this server and display all the things we know about them, including past warnings, bans, etc.";
+			newCommand.ManPage = new ManPage("<UserID | expression>", "`<UserID>` - User ID or mention to look for.\n\n`<expression>` - A user with a username or a nickname matching this expression will be returned.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
@@ -1054,7 +1072,8 @@ namespace Valkyrja.modules
 // !find
 			newCommand = new Command("find");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Find a User in the database based on ID, or an expression search through all their previous usernames and nicknames.";
+			newCommand.Description = "Search for a User in the database and display all the things we know about them, including past warnings, bans, etc.";
+			newCommand.ManPage = new ManPage("<UserID | expression>", "`<UserID>` - User ID or mention to look for.\n\n`<expression>` - A user with any current or past username or nickname matching this expression will be returned.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
@@ -1126,7 +1145,8 @@ namespace Valkyrja.modules
 // !slow
 			newCommand = new Command("slow");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Enable or disable slowmode in the current channel. Use with a number parameter to specify message interval in seconds (or use time quantifiers `s`, `m`, `h` or `d` - e.g. `1m30s`)";
+			newCommand.Description = "Enable or disable slowmode in the current channel.";
+			newCommand.ManPage = new ManPage("[n]", "`[n]` - A number specifying the time interval between two messages in seconds (or use time quantifiers `s`, `m`, `h` or `d` - e.g. `1m30s`.) Defaults to 60m.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				string response = "";
@@ -1162,7 +1182,7 @@ namespace Valkyrja.modules
 					await e.Channel.ModifyAsync(c => c.SlowModeInterval = seconds);
 				}
 				else
-					response = InvalidArgumentsString + e.Command.Description;
+					response = InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId);
 
 				await e.SendReplySafe(response);
 			};

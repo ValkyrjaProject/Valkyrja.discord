@@ -42,6 +42,7 @@ namespace Valkyrja.modules
 			Command newCommand = new Command("tempChannel");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Creates a temporary voice channel. This channel will be destroyed when it becomes empty, with grace period of three minutes since it's creation.";
+			newCommand.ManPage = new ManPage("[userLimit] <channelName>", "`[userLimit]` - Optional user limit.\n\n`<channelName>` - Name of the new temporary voice channel.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( e.Server.Config.TempChannelCategoryId == 0 )
@@ -116,6 +117,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("mentionRole");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Mention a role with a message. Use with the name of the role as the first parameter and the message will be the rest.";
+			newCommand.ManPage = new ManPage("<roleName> <message text>", "`<roleName>` - Name of the role to be mentioned with a ping.\n\n`<message text>` - Text that will be said with the role mention.");
 			newCommand.DeleteRequest = true;
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
@@ -162,6 +164,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("cheatsheet");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Send an embed cheatsheet with various moderation commands.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -206,6 +209,18 @@ namespace Valkyrja.modules
 			newCommand = new Command("embed");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Build an embed. Use without arguments for help.";
+			newCommand.ManPage = new ManPage("<options>", "Use any combination of:\n" +
+				"`--channel    ` - Channel where to send the embed.\n" +
+				"`--title      ` - Title\n" +
+				"`--description` - Description\n" +
+				"`--footer     ` - Footer\n" +
+				"`--color      ` - #rrggbb hex color used for the embed stripe.\n" +
+				"`--image      ` - URL of a Hjuge image in the bottom.\n" +
+				"`--thumbnail  ` - URL of a smol image on the side.\n" +
+				"`--fieldName  ` - Create a new field with specified name.\n" +
+				"`--fieldValue ` - Text value of a field - has to follow a name.\n" +
+				"`--fieldInline` - Use to set the field as inline.\n" +
+				"Where you can repeat the field* options multiple times.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || e.TrimmedMessage == "-h" || e.TrimmedMessage == "--help" )

@@ -28,6 +28,7 @@ namespace Valkyrja.modules
 			Command newCommand = new Command("getQuote");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Get a random quote, or a quote with specific id, oooor search for a quote by a specific user!";
+			newCommand.ManPage = new ManPage("[ID | @user]", "`[ID]` - Optional IDentificator of a specific quote.\n\n`[@user]` - Optional username or mention to display quote by a specific user.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
@@ -89,6 +90,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("findQuote");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Search for a quote with a message content expression.";
+			newCommand.ManPage = new ManPage("<expression>", "`<expression>` - An expression based on which matching quotes will be returned.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
@@ -133,6 +135,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("removeQuote");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Remove the last created quote, or specify ID to be removed.";
+			newCommand.ManPage = new ManPage("[ID]", "`[ID]` - Optional IDentificator of a specific quote to be removed.");
 			newCommand.RequiredPermissions = PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
@@ -181,6 +184,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("addQuote");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Add a new quote! Use with a username or mention as the first parameter, and the text as second. (Or you can just use a message ID.)";
+			newCommand.ManPage = new ManPage("<MessageId> | <@user text>", "`<MessageId>` - ID of a message which will be added as a quote.\n\n`<@user text>` - An alternative way to create a quote based on a mention of a user to be used as the author, and plain text for the content.");
 			newCommand.RequiredPermissions = PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);

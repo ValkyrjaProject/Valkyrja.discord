@@ -39,6 +39,7 @@ namespace Valkyrja.modules
 			Command newCommand = new Command("lvl");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Find out what's your level!";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.IsPremiumServerwideCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {

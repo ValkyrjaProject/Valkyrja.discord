@@ -41,7 +41,8 @@ namespace Valkyrja.modules
 // !memo
 			Command newCommand = new Command("memo");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Display your memo. If used with a username or @mention, it will display someone else' memo.";
+			newCommand.Description = "Display your (or other) memo.";
+			newCommand.ManPage = new ManPage("[@user]", "`[@user]` - Optional username or mention to display memo of someone else.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.MemoEnabled )
@@ -91,6 +92,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("setMemo");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Set your memo.";
+			newCommand.ManPage = new ManPage("<memo text>", "`<memo text>` - Text to be recorded as your memo.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.MemoEnabled )
@@ -123,7 +125,8 @@ namespace Valkyrja.modules
 // !profile
 			newCommand = new Command("profile");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Display your profile. If used with a username or @mention, it will display someone else' profile. Get Help: setProfile --help";
+			newCommand.Description = "Display your (or other) profile. Get Help: setProfile --help";
+			newCommand.ManPage = new ManPage("[@user]", "`[@user]` - Optional username or mention to display profile of someone else.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )
@@ -177,6 +180,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("sendProfile");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Send your profile to preconfigured introduction channel. Get Help: setProfile --help";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )
@@ -213,6 +217,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("getProfile");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Get the source used to set your profile.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )
@@ -252,7 +257,8 @@ namespace Valkyrja.modules
 // !setProfile
 			newCommand = new Command("setProfile");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Set your profile. Get Help: setProfile --help";
+			newCommand.Description = "Set your profile.";
+			newCommand.ManPage = new ManPage("[--help]", "`[--help]` - Display options configured for this server.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !this.Client.IsPremium(e.Server) && !this.Client.IsTrialServer(e.Server.Id) )

@@ -96,6 +96,7 @@ namespace Valkyrja.modules
 			Command newCommand = new Command("unverify");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Remove verified status from someone.";
+			newCommand.ManPage = new ManPage("<@user>", "`<@user>` - User mention of a user to have their verified status removed.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
@@ -140,7 +141,8 @@ namespace Valkyrja.modules
 // !verify
 			newCommand = new Command("verify");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "This will send you some info about verification. You can use this with a parameter to send the info to your friend - you have to @mention them.";
+			newCommand.Description = "This will send you (or someone else) some info about verification.";
+			newCommand.ManPage = new ManPage("[@user [force]]", "`[@user]` - Optional user mention of someone else to send them the info.\n\n`[force]` - Optional administrative indicator that will directly verify mentioned user.");
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
 				{

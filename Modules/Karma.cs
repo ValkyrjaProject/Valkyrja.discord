@@ -33,6 +33,7 @@ namespace Valkyrja.modules
 			Command newCommand = new Command("cookies");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Check how many cookies you've got.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.IsPremiumServerwideCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
@@ -61,6 +62,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("nom");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Eat one of your cookies!";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.IsPremiumServerwideCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
@@ -97,7 +99,8 @@ namespace Valkyrja.modules
 // !give
 			newCommand = new Command("give");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Give one of your cookies to a friend =] (use with their @mention as a parameter)";
+			newCommand.Description = "Give one of your cookies to a friend =]";
+			newCommand.ManPage = new ManPage("<@user>", "`<@user>` - User mention of a user to receive a cookie.");
 			newCommand.IsPremiumServerwideCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {

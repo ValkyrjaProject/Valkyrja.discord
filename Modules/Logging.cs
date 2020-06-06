@@ -113,7 +113,8 @@ namespace Valkyrja.modules
 // !stats
 			Command newCommand = new Command("stats");
 			newCommand.Type = CommandType.Operation;
-			newCommand.Description = "Display user-join statistics. Use with either a number of days, or `[fromDate] [toDate]` arguments. You can omit the toDate to query since-to-now, or omit both to query only today since midnight. Use ISO date format `yyyy-mm-dd`";
+			newCommand.Description = "Display statistics, counts of how many people joined, verified, left, got kicked out or were banned by antispam. Use with either a number of days, or `[fromDate] [toDate]` arguments. You can omit the toDate to query since-to-now, or omit both to query only today since midnight. Use ISO date format `yyyy-mm-dd`";
+			newCommand.ManPage = new ManPage("[n | fromDate [toDate]", "`[n]` - Number of previous days to count.\n\n`[fromDate [toDate]]` - From which specific date to count, with optional to specific date. Use ISO date format yyyy-mm-dd.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Config.StatsEnabled )
