@@ -307,12 +307,12 @@ namespace Valkyrja.modules
 					if( user.Roles.Any(r => r.Id == e.Server.Config.OperatorRoleId) )
 					{
 						await user.RemoveRoleAsync(role);
-						response = "All done?";
+						response = e.Server.Localisation.GetString("moderation_op_disabled");
 					}
 					else
 					{
 						await user.AddRoleAsync(role);
-						response = "Go get em tiger!";
+						response = e.Server.Localisation.GetString("moderation_op_enabled");
 					}
 				} catch(HttpException exception)
 				{
@@ -356,7 +356,7 @@ namespace Valkyrja.modules
 				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
 					return;
 				}
 
@@ -474,7 +474,7 @@ namespace Valkyrja.modules
 				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
 					return;
 				}
 
@@ -572,7 +572,7 @@ namespace Valkyrja.modules
 				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
 					return;
 				}
 
@@ -680,7 +680,7 @@ namespace Valkyrja.modules
 				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
-					await e.SendReplySafe($"`{e.Server.Config.CommandPrefix}op`?");
+					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
 					return;
 				}
 
