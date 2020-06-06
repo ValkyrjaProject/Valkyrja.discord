@@ -912,7 +912,7 @@ namespace Valkyrja.modules
 
 					if( sendMessage )
 					{
-						if( user == null || !await this.Client.SendPmSafe(user, string.Format(WarningPmString, e.Server.Guild.Name, warning.ToString())) )
+						if( user == null || 0 != await this.Client.SendPmSafe(user, string.Format(WarningPmString, e.Server.Guild.Name, warning.ToString())) )
 							failedToPmUsers.Add(userData);
 					}
 				}

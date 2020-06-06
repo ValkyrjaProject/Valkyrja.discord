@@ -38,6 +38,7 @@ namespace Valkyrja.modules
 		                                         "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
 		                                         "(It may be either too short, or too long. The algorithm is looking for lines with at least 10 words.)```";
 
+		private const string DidntPmString = "I was unable to send the PM three times. I ain't gonna bother anymore.";
 		private const string FailedPmString = "I was unable to send a PM - please enable PMs from server members!";
 		private const string SentString = "Check your messages!";
 		private const string MentionedString = "I've sent them the instructions.";
@@ -172,17 +173,23 @@ namespace Valkyrja.modules
 				else if( string.IsNullOrEmpty(e.TrimmedMessage) ) // Verify the author.
 				{
 					UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
-					if( await VerifyUsersPm(e.Server, new List<UserData>{userData}) )
+					int result = await VerifyUsersPm(e.Server, new List<UserData>{userData});
+					if( result == 1 )
 						response = SentString;
-					else
+					else if( result == 0 )
 						response = FailedPmString;
+					else
+						response = DidntPmString;
 				}
 				else if( mentionedUsers.Any() ) // Verify mentioned users.
 				{
-					if( await VerifyUsersPm(e.Server, mentionedUsers) )
+					int result = await VerifyUsersPm(e.Server, mentionedUsers);
+					if( result == 1 )
 						response = MentionedString;
-					else
+					else if( result == 0 )
 						response = FailedPmString;
+					else
+						response = DidntPmString;
 				}
 
 				if( mentionedUsers.Any() )
@@ -197,9 +204,15 @@ namespace Valkyrja.modules
 			return commands;
 		}
 
-		public async Task<bool> VerifyUsersPm(Server server, List<UserData> users)
+		/// <summary> Returns the result of user PM. </summary>
+		/// <returns>
+		///  1 = success
+		///  0 = first 3 attempts failed
+		/// -1 = more than 3 attempts failed
+		/// </returns>
+		public async Task<int> VerifyUsersPm(Server server, List<UserData> users)
 		{
-			bool success = false;
+			int success = 0;
 			List<UserData> alreadyVerified = new List<UserData>();
 			foreach( UserData userData in users )
 			{
