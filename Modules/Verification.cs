@@ -473,7 +473,12 @@ namespace Valkyrja.modules
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 					UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-					VerifyUsersPm(server, new List<UserData>{userData}).GetAwaiter().GetResult();
+					int result = VerifyUsersPm(server, new List<UserData>{userData}).GetAwaiter().GetResult();
+					SocketTextChannel channel = null;
+					if( result == 0 && server.Config.VerifyChannelId > 0 && (channel = server.Guild.GetTextChannel(server.Config.VerifyChannelId)) != null )
+					{
+						channel.SendMessageSafe($"<@{user.Id}> I couldn't PM you, please re-enable PMs from server members and try again using the `{server.Config.CommandPrefix}verify` command.").GetAwaiter().GetResult();
+					}
 
 					dbContext.Dispose();
 				}
