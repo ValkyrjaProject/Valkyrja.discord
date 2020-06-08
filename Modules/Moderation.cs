@@ -569,7 +569,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("kick");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Kick someone, with a warning message sent to the user.";
-			newCommand.ManPage = new ManPage("<@users> <warning reason>", "`<@users>` - User ID(s) or mention(s) to be kicked.\n\n<warning reason>` - A warning message to be recorded and PMed to the user.");
+			newCommand.ManPage = new ManPage("<@users> <warning reason>", "`<@users>` - User ID(s) or mention(s) to be kicked.\n\n`<warning reason>` - A warning message to be recorded and PMed to the user.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.KickMembers )
