@@ -38,6 +38,7 @@ namespace Valkyrja.modules
 		                                         "Please get in touch with the server administrator and let them know, that their Verification PM is invalid " +
 		                                         "(It may be either too short, or too long. The algorithm is looking for lines with at least 10 words.)```";
 
+		private const string DiscordPoopString = "I was unable to send the PM because Discord has full pants " + Localisation.SystemStrings.DiscordShitEmoji + "\n<https://status.discord.com>";
 		private const string DidntPmString = "I was unable to send the PM three times. I ain't gonna bother anymore.";
 		private const string FailedPmString = "I was unable to send a PM - please enable PMs from server members!";
 		private const string SentString = "Check your messages!";
@@ -178,8 +179,10 @@ namespace Valkyrja.modules
 						response = SentString;
 					else if( result == 0 )
 						response = FailedPmString;
-					else
+					else if( result == -1 )
 						response = DidntPmString;
+					else
+						response = DiscordPoopString;
 				}
 				else if( mentionedUsers.Any() ) // Verify mentioned users.
 				{
@@ -188,8 +191,10 @@ namespace Valkyrja.modules
 						response = MentionedString;
 					else if( result == 0 )
 						response = FailedPmString;
-					else
+					else if( result == -1 )
 						response = DidntPmString;
+					else
+						response = DiscordPoopString;
 				}
 
 				if( mentionedUsers.Any() )
@@ -209,6 +214,7 @@ namespace Valkyrja.modules
 		///  1 = success
 		///  0 = first 3 attempts failed
 		/// -1 = more than 3 attempts failed
+		/// -2 = failed due to Discord server issues;
 		/// </returns>
 		public async Task<int> VerifyUsersPm(Server server, List<UserData> users)
 		{
