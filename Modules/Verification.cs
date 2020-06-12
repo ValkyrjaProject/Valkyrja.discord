@@ -337,6 +337,9 @@ namespace Valkyrja.modules
 		/// <summary> Actually verify someone - assign the roles and stuff. </summary>
 		private async Task<bool> VerifyUsers(Server server, List<UserData> users, bool sendMessage = true)
 		{
+			if( server.Config.VerifyRoleId == 0 )
+				return false;
+
 			IRole role = server.Guild.GetRole(server.Config.VerifyRoleId);
 			if( role == null )
 			{
@@ -514,7 +517,7 @@ namespace Valkyrja.modules
 						if( userData == null )
 							continue;
 						server = this.Client.Servers[data.ServerId];
-						if( VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
+						if( server.Config.VerifyRoleId != 0 && VerifyUsers(server, new List<UserData>{userData}).GetAwaiter().GetResult() )
 						{
 							save = true;
 							dbContext.Verification.Remove(data);
