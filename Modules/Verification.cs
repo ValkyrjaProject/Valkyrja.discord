@@ -146,7 +146,7 @@ namespace Valkyrja.modules
 			newCommand.Description = "This will send you (or someone else) some info about verification.";
 			newCommand.ManPage = new ManPage("[@user [force]]", "`[@user]` - Optional user mention of someone else to send them the info.\n\n`[force]` - Optional administrative indicator that will directly verify mentioned user.");
 			newCommand.OnExecute += async e => {
-				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
+				if( (!e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled) || e.Server.Config.VerifyRoleId == 0 )
 				{
 					await e.SendReplySafe("Verification is disabled on this server.");
 					return;
@@ -471,7 +471,7 @@ namespace Valkyrja.modules
 				}
 			}
 
-			if( (server.Config.CodeVerificationEnabled || server.Config.CaptchaVerificationEnabled) && server.Config.VerifyOnWelcome && !verifiedByAge )
+			if( (server.Config.CodeVerificationEnabled || server.Config.CaptchaVerificationEnabled) && server.Config.VerifyRoleId != 0 && server.Config.VerifyOnWelcome && !verifiedByAge )
 			{
 				await Task.Delay(3000);
 				lock( this.DbLock )
