@@ -218,7 +218,7 @@ namespace Valkyrja.modules
 		/// </returns>
 		public async Task<int> VerifyUsersPm(Server server, List<UserData> users)
 		{
-			int success = 0;
+			int success = -2;
 			List<UserData> alreadyVerified = new List<UserData>();
 			foreach( UserData userData in users )
 			{
