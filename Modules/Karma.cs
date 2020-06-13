@@ -173,7 +173,14 @@ namespace Valkyrja.modules
 				return;
 			if( !this.Client.IsPremium(server) && !this.Client.IsTrialServer(server.Id) )
 				return;
-			if( !server.Config.KarmaEnabled || message.MentionedUsers == null || !message.MentionedUsers.Any() || !this.RegexKarma.Match(message.Content).Success )
+			if( !server.Config.KarmaEnabled || message.MentionedUsers == null || !message.MentionedUsers.Any() )
+				return;
+
+			bool match = false;
+			foreach( string line in message.Content.Split('\n') )
+				if( !line.StartsWith(">") && this.RegexKarma.Match(line).Success )
+					match = true;
+			if( !match )
 				return;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
