@@ -710,91 +710,99 @@ namespace Valkyrja.modules
 			if( !(reaction.Channel is SocketTextChannel channel) || !this.Client.Servers.ContainsKey(channel.Guild.Id) || (server = this.Client.Servers[channel.Guild.Id]) == null || server.Config == null )
 				return;
 
-			IEnumerable<ReactionAssignedRole> roles;
-			lock(server.ReactionRolesLock)
+			server.ReactionRolesLock.Wait();
+
+			try
 			{
+				IEnumerable<ReactionAssignedRole> roles;
 				roles = server.ReactionAssignedRoles.Where(r => r.MessageId == reaction.MessageId && r.Emoji == reaction.Emote.Name).ToList();
-			}
 
-			if( roles.Any() )
-			{
-				SocketGuildUser user = null;
-				if( !reaction.User.IsSpecified || (user = reaction.User.Value as SocketGuildUser) == null )
+				if( roles.Any() )
 				{
-					user = server.Guild.GetUser(reaction.UserId);
-					if( user == null )
-						return;
-				}
-
-				string name = "unknown";
-				try
-				{
-					foreach( ReactionAssignedRole role in roles )
+					SocketGuildUser user = null;
+					if( !reaction.User.IsSpecified || (user = reaction.User.Value as SocketGuildUser) == null )
 					{
-						if( assignRoles == user.Roles.Any(r => r.Id == role.RoleId) )
-							continue;
-
-						IRole discordRole = server.Guild.GetRole(role.RoleId);
-						if( discordRole == null )
-							continue;
-
-						name = discordRole.Name;
-
-						if( !assignRoles )
-						{
-							await user.RemoveRoleAsync(discordRole);
+						user = server.Guild.GetUser(reaction.UserId);
+						if( user == null )
 							return;
-						}
+					}
 
-						//else...
-						Int64 groupId = server.Roles.ContainsKey(discordRole.Id) ? server.Roles[discordRole.Id].PublicRoleGroupId : 0;
-						if( groupId != 0 )
+					string name = "unknown";
+					try
+					{
+						foreach( ReactionAssignedRole role in roles )
 						{
-							List<guid> groupRoleIds = server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId).Select(r => r.Value.RoleId).ToList();
-							int userHasCount = user.Roles.Count(r => groupRoleIds.Any(id => id == r.Id));
+							if( assignRoles == user.Roles.Any(r => r.Id == role.RoleId) )
+								continue;
 
-							RoleGroupConfig groupConfig = null;
-							if( userHasCount > 0 )
+							IRole discordRole = server.Guild.GetRole(role.RoleId);
+							if( discordRole == null )
+								continue;
+
+							name = discordRole.Name;
+
+							if( !assignRoles )
 							{
-								ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-								groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
-								dbContext.Dispose();
+								await user.RemoveRoleAsync(discordRole);
+								return;
+							}
 
-								while( userHasCount >= groupConfig.RoleLimit && groupRoleIds.Any() )
+							//else...
+							Int64 groupId = server.Roles.ContainsKey(discordRole.Id) ? server.Roles[discordRole.Id].PublicRoleGroupId : 0;
+							if( groupId != 0 )
+							{
+								List<guid> groupRoleIds = server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId).Select(r => r.Value.RoleId).ToList();
+								int userHasCount = user.Roles.Count(r => groupRoleIds.Any(id => id == r.Id));
+
+								RoleGroupConfig groupConfig = null;
+								if( userHasCount > 0 )
 								{
-									IRole roleToRemove = server.Guild.GetRole(groupRoleIds.Last());
-									groupRoleIds.Remove(groupRoleIds.Last());
-									if( roleToRemove == null || user.Roles.All(r => r.Id != roleToRemove.Id) )
-										continue;
+									ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+									groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
+									dbContext.Dispose();
 
-									await user.RemoveRoleAsync(roleToRemove);
-									try
+									while( userHasCount >= groupConfig.RoleLimit && groupRoleIds.Any() )
 									{
-										if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage msg )
-											await msg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
-									}
-									catch( Exception e )
-									{
-										await this.HandleException(e, "Failed to remove reaction.", server.Id);
-									}
+										IRole roleToRemove = server.Guild.GetRole(groupRoleIds.Last());
+										groupRoleIds.Remove(groupRoleIds.Last());
+										if( roleToRemove == null || user.Roles.All(r => r.Id != roleToRemove.Id) )
+											continue;
 
-									userHasCount--;
+										await user.RemoveRoleAsync(roleToRemove);
+										try
+										{
+											if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage msg )
+												await msg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
+										}
+										catch( Exception e )
+										{
+											await this.HandleException(e, "Failed to remove reaction.", server.Id);
+										}
+
+										userHasCount--;
+									}
 								}
 							}
-						}
 
-						await user.AddRoleAsync(discordRole);
+							await user.AddRoleAsync(discordRole);
+						}
+					}
+					catch( HttpException e )
+					{
+						await server.HandleHttpException(e, $"This happened in <#{channel.Id}> when trying to change reactions or assign roles based on emojis.");
+					}
+					catch( Exception e )
+					{
+						await this.HandleException(e, "Reaction Assigned Roles", server.Id);
 					}
 				}
-				catch( HttpException e )
-				{
-					await server.HandleHttpException(e, $"This happened in <#{channel.Id}> when trying to change reactions or assign roles based on emojis.");
-				}
-				catch( Exception e )
-				{
-					await this.HandleException(e, "Reaction Assigned Roles", server.Id);
-				}
 			}
+			catch( Exception e )
+			{
+				await this.HandleException(e, "Reaction Assigned Roles", server.Id);
+			}
+
+			server.ReactionRolesLock.Release();
 		}
 
 		public Task Update(IValkyrjaClient iClient)
