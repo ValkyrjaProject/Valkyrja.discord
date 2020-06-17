@@ -34,6 +34,7 @@ namespace Valkyrja.modules
 
 		private ValkyrjaClient Client;
 
+		private readonly List<guid> ReactionUsers = new List<guid>();
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = true;
@@ -710,7 +711,16 @@ namespace Valkyrja.modules
 			if( !(reaction.Channel is SocketTextChannel channel) || !this.Client.Servers.ContainsKey(channel.Guild.Id) || (server = this.Client.Servers[channel.Guild.Id]) == null || server.Config == null )
 				return;
 
+			if( this.ReactionUsers.Contains(reaction.UserId) )
+				return;
+
 			server.ReactionRolesLock.Wait();
+			if( this.ReactionUsers.Contains(reaction.UserId) )
+			{
+				server.ReactionRolesLock.Release();
+				return;
+			}
+			this.ReactionUsers.Add(reaction.UserId);
 
 			try
 			{
@@ -724,7 +734,11 @@ namespace Valkyrja.modules
 					{
 						user = server.Guild.GetUser(reaction.UserId);
 						if( user == null )
+						{
+							this.ReactionUsers.Remove(reaction.UserId);
+							server.ReactionRolesLock.Release();
 							return;
+						}
 					}
 
 					string name = "unknown";
@@ -744,6 +758,8 @@ namespace Valkyrja.modules
 							if( !assignRoles )
 							{
 								await user.RemoveRoleAsync(discordRole);
+								this.ReactionUsers.Remove(reaction.UserId);
+								server.ReactionRolesLock.Release();
 								return;
 							}
 
@@ -802,6 +818,7 @@ namespace Valkyrja.modules
 				await this.HandleException(e, "Reaction Assigned Roles", server.Id);
 			}
 
+			this.ReactionUsers.Remove(reaction.UserId);
 			server.ReactionRolesLock.Release();
 		}
 
