@@ -244,7 +244,7 @@ namespace Valkyrja.modules
 				}
 
 				bool debug = false;
-				SocketUserMessage msg = null;
+				IMessage msg = null;
 				SocketTextChannel channel = e.Channel;
 				EmbedFieldBuilder currentField = null;
 				EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -421,7 +421,7 @@ namespace Valkyrja.modules
 
 							break;
 						case "--edit":
-							if( !guid.TryParse(value, out guid msgId) || (msg = await channel.GetMessageAsync(msgId) as SocketUserMessage) == null )
+							if( !guid.TryParse(value, out guid msgId) || (msg = await channel.GetMessageAsync(msgId)) == null )
 							{
 								await e.SendReplySafe($"`--edit` did not find a message with ID `{value}` in the <#{channel.Id}> channel.");
 								return;
@@ -440,10 +440,21 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				if( msg != null )
-					await msg.ModifyAsync(m => m.Embed = embedBuilder.Build());
-				else
-					await channel.SendMessageAsync(embed: embedBuilder.Build());
+				switch( msg )
+				{
+					case null:
+						await channel.SendMessageAsync(embed: embedBuilder.Build());
+						break;
+					case RestUserMessage message:
+						await message?.ModifyAsync(m => m.Embed = embedBuilder.Build());
+						break;
+					case SocketUserMessage message:
+						await message?.ModifyAsync(m => m.Embed = embedBuilder.Build());
+						break;
+					default:
+						await e.SendReplySafe("GetMessage went bork.");
+						break;
+				}
 			};
 			commands.Add(newCommand);
 
