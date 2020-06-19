@@ -210,16 +210,17 @@ namespace Valkyrja.modules
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Build an embed. Use without arguments for help.";
 			newCommand.ManPage = new ManPage("<options>", "Use any combination of:\n" +
-				"`--channel    ` - Channel where to send the embed.\n" +
-				"`--title      ` - Title\n" +
-				"`--description` - Description\n" +
-				"`--footer     ` - Footer\n" +
-				"`--color      ` - #rrggbb hex color used for the embed stripe.\n" +
-				"`--image      ` - URL of a Hjuge image in the bottom.\n" +
-				"`--thumbnail  ` - URL of a smol image on the side.\n" +
-				"`--fieldName  ` - Create a new field with specified name.\n" +
-				"`--fieldValue ` - Text value of a field - has to follow a name.\n" +
-				"`--fieldInline` - Use to set the field as inline.\n" +
+				"`--channel     ` - Channel where to send the embed.\n" +
+				"`--edit <msgId>` - Replace a MessageId with a new embed (use after --channel)\n" +
+				"`--title       ` - Title\n" +
+				"`--description ` - Description\n" +
+				"`--footer      ` - Footer\n" +
+				"`--color       ` - #rrggbb hex color used for the embed stripe.\n" +
+				"`--image       ` - URL of a Hjuge image in the bottom.\n" +
+				"`--thumbnail   ` - URL of a smol image on the side.\n" +
+				"`--fieldName   ` - Create a new field with specified name.\n" +
+				"`--fieldValue  ` - Text value of a field - has to follow a name.\n" +
+				"`--fieldInline ` - Use to set the field as inline.\n" +
 				"Where you can repeat the field* options multiple times.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
@@ -227,6 +228,7 @@ namespace Valkyrja.modules
 				{
 					await e.SendReplySafe("```md\nCreate an embed using the following parameters:\n" +
 					                      "[ --channel     ] Channel where to send the embed.\n" +
+					                      "[ --edit <msgId>] Replace a MessageId with a new embed (use after --channel)\n" +
 					                      "[ --title       ] Title\n" +
 					                      "[ --description ] Description\n" +
 					                      "[ --footer      ] Footer\n" +
@@ -242,6 +244,7 @@ namespace Valkyrja.modules
 				}
 
 				bool debug = false;
+				SocketUserMessage msg = null;
 				SocketTextChannel channel = e.Channel;
 				EmbedFieldBuilder currentField = null;
 				EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -417,6 +420,14 @@ namespace Valkyrja.modules
 								await e.SendReplySafe($"Setting value:\n```\n{value}\n```\n...for field:`{currentField.Name}`");
 
 							break;
+						case "--edit":
+							if( !guid.TryParse(value, out guid msgId) || (msg = await channel.GetMessageAsync(msgId) as SocketUserMessage) == null )
+							{
+								await e.SendReplySafe($"`--edit` did not find a message with ID `{value}` in the <#{channel.Id}> channel.");
+								return;
+							}
+
+							break;
 						default:
 							await e.SendReplySafe($"Unknown option: `{optionString}`");
 							return;
@@ -429,7 +440,10 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				await channel.SendMessageAsync(embed: embedBuilder.Build());
+				if( msg != null )
+					await msg.ModifyAsync(m => m.Embed = embedBuilder.Build());
+				else
+					await channel.SendMessageAsync(embed: embedBuilder.Build());
 			};
 			commands.Add(newCommand);
 
