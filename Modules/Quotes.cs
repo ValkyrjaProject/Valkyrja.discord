@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Valkyrja.core;
 using Valkyrja.entities;
 using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using guid = System.UInt64;
 
@@ -197,7 +198,8 @@ namespace Valkyrja.modules
 				}
 				else if( guid.TryParse(e.TrimmedMessage, out guid messageId) )
 				{
-					if( await e.Channel.GetMessageAsync(messageId) is SocketMessage message )
+					IMessage message = await e.Channel.GetMessageAsync(messageId);
+					if( message != null )
 					{
 						quote = new Quote(){
 							CreatedTime = new DateTime(message.CreatedAt.Ticks),
@@ -207,7 +209,7 @@ namespace Valkyrja.modules
 						};
 					}
 					else
-						response = "Message not found _(it may be too old)_";
+						response = "Message not found.";
 				}
 				else if( e.MessageArgs.Length > 1 )
 				{
