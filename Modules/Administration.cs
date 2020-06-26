@@ -251,7 +251,7 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 // !prune
-			newCommand = new Command("prune");
+			/*newCommand = new Command("prune");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "";
 			newCommand.ManPage = new ManPage("<n> [yes]", "`<n>` - Number of days of user inactivity.\n\n`[yes]` - If specified \"yes\" will actually prune, only returns the counts otherwise.");
@@ -267,7 +267,7 @@ namespace Valkyrja.modules
 				string response = "";
 				try
 				{
-					int count = await e.Server.Guild.PruneUsersAsync(n, prune);
+					int count = await e.Server.Guild.PruneUsersAsync(n, !prune);
 					response = prune ? $"I've kicked out `{count}` humans.\n_\\*waves*_" : $"I can kick out `{count}` humans. Should you wish to proceed, append `yes` to the command arguments (you can edit your message) as follows:\n `{e.Server.Config.CommandPrefix + e.CommandId} {e.TrimmedMessage} yes`";
 				}
 				catch( HttpException exception )
@@ -283,7 +283,7 @@ namespace Valkyrja.modules
 
 				await e.SendReplySafe(response);
 			};
-			commands.Add(newCommand);
+			commands.Add(newCommand);*/
 
 /*
 // !createTempRole
