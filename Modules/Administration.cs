@@ -253,7 +253,7 @@ namespace Valkyrja.modules
 // !prune
 			newCommand = new Command("prune");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "";
+			newCommand.Description = "Kicks out all the inactive members.";
 			newCommand.ManPage = new ManPage("<n> [roleIDs] [yes]", "`<n>` - Number of days of user inactivity.\n\n`[roleIDs]` - An optional, whitespace delimited list of role IDs to include in the prune.\n\n`[yes]` - If specified \"yes\" will actually prune, only returns the counts otherwise.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			newCommand.OnExecute += async e => {
