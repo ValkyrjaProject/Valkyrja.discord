@@ -251,10 +251,10 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 // !prune
-			/*newCommand = new Command("prune");
+			newCommand = new Command("prune");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "";
-			newCommand.ManPage = new ManPage("<n> [yes]", "`<n>` - Number of days of user inactivity.\n\n`[yes]` - If specified \"yes\" will actually prune, only returns the counts otherwise.");
+			newCommand.ManPage = new ManPage("<n> [roleIDs] [yes]", "`<n>` - Number of days of user inactivity.\n\n`[roleIDs]` - An optional, whitespace delimited list of role IDs to include in the prune.\n\n`[yes]` - If specified \"yes\" will actually prune, only returns the counts otherwise.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			newCommand.OnExecute += async e => {
 				int n = 0;
@@ -263,11 +263,12 @@ namespace Valkyrja.modules
 					await e.SendReplySafe("Invalid Arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
 				}
-				bool prune = e.MessageArgs.Length > 1 && e.MessageArgs[1].ToLower() == "yes";
+				bool prune = e.MessageArgs.Length > 1 && e.MessageArgs[e.MessageArgs.Length-1].ToLower() == "yes";
+				guid[] roleIDs = e.MessageArgs.Length > 2 || (!prune && e.MessageArgs.Length > 1) ? e.MessageArgs.Skip(1).TakeWhile(r => guid.TryParse(r, out guid _)).Select(guid.Parse).ToArray() : null;
 				string response = "";
 				try
 				{
-					int count = await e.Server.Guild.PruneUsersAsync(n, !prune);
+					int count = await e.Server.Guild.PruneUsersAsync(n, !prune, roleIDs);
 					response = prune ? $"I've kicked out `{count}` humans.\n_\\*waves*_" : $"I can kick out `{count}` humans. Should you wish to proceed, append `yes` to the command arguments (you can edit your message) as follows:\n `{e.Server.Config.CommandPrefix + e.CommandId} {e.TrimmedMessage} yes`";
 				}
 				catch( HttpException exception )
@@ -283,7 +284,7 @@ namespace Valkyrja.modules
 
 				await e.SendReplySafe(response);
 			};
-			commands.Add(newCommand);*/
+			commands.Add(newCommand);
 
 /*
 // !createTempRole
