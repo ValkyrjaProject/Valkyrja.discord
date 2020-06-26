@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Valkyrja.core;
 using Valkyrja.entities;
 using Discord;
+using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
 using guid = System.UInt64;
@@ -248,6 +249,42 @@ namespace Valkyrja.modules
 				await e.SendReplySafe(response.ToString());
 			};
 			commands.Add(newCommand);
+
+// !prune
+			newCommand = new Command("prune");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "";
+			newCommand.ManPage = new ManPage("<n> [yes]", "`<n>` - Number of days of user inactivity.\n\n`[yes]` - If specified \"yes\" will actually prune, only returns the counts otherwise.");
+			newCommand.RequiredPermissions = PermissionType.ServerOwner;
+			newCommand.OnExecute += async e => {
+				int n = 0;
+				if( e.MessageArgs == null || e.MessageArgs.Length < 1 || int.TryParse(e.MessageArgs[0], out n))
+				{
+					await e.SendReplySafe("Invalid Arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
+					return;
+				}
+				bool prune = e.MessageArgs.Length > 1 && e.MessageArgs[1].ToLower() == "yes";
+				string response = "";
+				try
+				{
+					int count = await e.Server.Guild.PruneUsersAsync(n, prune);
+					response = prune ? $"I've kicked out `{count}` humans.\n_\\*waves*_" : $"I can kick out `{count}` humans. Should you wish to proceed, append `yes` to the command arguments (you can edit your message) as follows:\n `{e.Server.Config.CommandPrefix + e.CommandId} {e.TrimmedMessage} yes`";
+				}
+				catch( HttpException exception )
+				{
+					await e.Server.HandleHttpException(exception, $"Command failed to prune users in <#{e.Channel.Id}>");
+					response = Utils.HandleHttpException(exception);
+				}
+				catch( Exception exception )
+				{
+					await this.HandleException(exception, "Command prune", e.Server.Id);
+					response = "Unknown error.";
+				}
+
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+
 /*
 // !createTempRole
 			newCommand = new Command("createTempRole");
