@@ -258,7 +258,7 @@ namespace Valkyrja.modules
 			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			newCommand.OnExecute += async e => {
 				int n = 0;
-				if( e.MessageArgs == null || e.MessageArgs.Length < 1 || int.TryParse(e.MessageArgs[0], out n))
+				if( e.MessageArgs == null || e.MessageArgs.Length < 1 || !int.TryParse(e.MessageArgs[0], out n))
 				{
 					await e.SendReplySafe("Invalid Arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
