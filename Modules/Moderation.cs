@@ -662,7 +662,7 @@ namespace Valkyrja.modules
 				}
 				else if( string.IsNullOrEmpty(response) )
 				{
-					response = e.Server.Localisation.GetString("moderation_kick_done", usernames.ToNames()) + infractions.ToString();
+					response = e.Server.Localisation.GetString("moderation_kick_done", usernames.ToNames()) + "\n" + infractions.ToString();
 					dbContext.SaveChanges();
 				}
 
@@ -926,7 +926,7 @@ namespace Valkyrja.modules
 				if( this.Client.Events.LogWarning != null )
 					await this.Client.Events.LogWarning(e.Server, userNames, userIds, warning.ToString(), e.Message.Author as SocketGuildUser);
 
-				string response = "Done." + infractions.ToString();
+				string response = "Done.\n" + infractions.ToString();
 				if( failedToPmUsers.Any() )
 					response = "Failed to PM " + failedToPmUsers.Select(u => u.UserId).ToMentions();
 
@@ -1012,6 +1012,51 @@ namespace Valkyrja.modules
 
 			newCommand = newCommand.CreateCopy("removeAllWarnings");
 			newCommand.Description = "Use with parameter `@user` = user mention or id, you can remove all the warnings from multiple people, just mention them all.";
+			commands.Add(newCommand);
+
+// !listWarnedUsers
+			newCommand = new Command("listWarnedUsers");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Display a list of users with more than specific amount of warnings.";
+			newCommand.ManPage = new ManPage("<n>", "`<n>` - Threshold above which a user will be added to the output.");
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				int n = 0;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) || !int.TryParse(e.TrimmedMessage, out n) || n < 1 )
+				{
+					await e.SendReplySafe("How many?");
+					return;
+				}
+
+				if( e.Server?.Guild?.Users == null )
+				{
+					await e.SendReplySafe("Encountered unexpected D.Net library error.");
+					return;
+				}
+
+				string response = "I found too many, please be more specific.";
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> foundUserData = dbContext.UserDatabase.AsQueryable().Where(u => u.ServerId == e.Server.Id && u.WarningCount >= n).ToList();
+
+				if( foundUserData.Count <= 50 )
+				{
+					StringBuilder responseBuilder = new StringBuilder("`UserId` | `n` | `UserName`");
+					foreach( UserData userData in foundUserData )
+					{
+						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{user?.GetUsername() ?? userData.LastUsername}`");
+					}
+
+					response = responseBuilder.ToString();
+					if( string.IsNullOrEmpty(response) )
+					{
+						response = "I did not find anyone.";
+					}
+				}
+
+				dbContext.Dispose();
+				await e.SendReplySafe(response);
+			};
 			commands.Add(newCommand);
 
 // !whois
@@ -1383,7 +1428,7 @@ namespace Valkyrja.modules
 			}
 
 			if( banned.Any() )
-				response = server.Localisation.GetString("moderation_ban_done", banned.ToMentions()) + infractions.ToString();
+				response = server.Localisation.GetString("moderation_ban_done", banned.ToMentions()) + "\n" + infractions.ToString();
 
 			return response;
 		}
@@ -1536,7 +1581,7 @@ namespace Valkyrja.modules
 			string mentions = muted.ToMentions();
 			if( muted.Any() )
 			{
-				response = server.Localisation.GetString("moderation_mute_done", mentions) + infractions.ToString();
+				response = server.Localisation.GetString("moderation_mute_done", mentions) + "\n" + infractions.ToString();
 
 				SocketTextChannel logChannel;
 				if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
