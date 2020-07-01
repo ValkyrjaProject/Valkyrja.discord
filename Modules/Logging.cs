@@ -500,7 +500,7 @@ namespace Valkyrja.modules
 
 					MessageDeleteAuditLogData auditData = null;
 					RestAuditLogEntry auditEntry = null;
-					if( server.Guild.CurrentUser.GuildPermissions.ViewAuditLog )
+					if( server.Guild?.CurrentUser?.GuildPermissions.ViewAuditLog ?? false )
 					{
 						await Task.Delay(500);
 						try
@@ -672,7 +672,7 @@ namespace Valkyrja.modules
 
 			BanAuditLogData auditData = null;
 			RestAuditLogEntry auditEntry = null;
-			if( guild.CurrentUser.GuildPermissions.ViewAuditLog )
+			if( guild?.CurrentUser?.GuildPermissions.ViewAuditLog ?? false )
 			{
 				await Task.Delay(300);
 				try
