@@ -691,7 +691,7 @@ namespace Valkyrja.modules
 				}
 
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
-				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
+				if( role != null && ((e.Message.Author as SocketGuildUser)?.Roles.All(r => r.Id != role.Id) ?? false) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
@@ -709,7 +709,7 @@ namespace Valkyrja.modules
 				}
 
 				int argOffset = string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) ? 1 : 0;
-				if( mentionedUsers.Count + 1 + argOffset > e.MessageArgs.Length )
+				if( e.MessageArgs.Length < mentionedUsers.Count + 1 + argOffset )
 				{
 					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					dbContext.Dispose();
@@ -720,7 +720,7 @@ namespace Valkyrja.modules
 				if( duration == null && int.TryParse(e.MessageArgs[mentionedUsers.Count], out int banDurationHours) )
 					duration = TimeSpan.FromHours(banDurationHours);
 
-				argOffset = string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) || duration == null ? 1 : 0;
+				argOffset = string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) || duration != null ? 1 : 0;
 				if( duration == null )
 					duration = Utils.GetTimespanFromString(e.Server.Config.BanDuration);
 
