@@ -1066,7 +1066,7 @@ namespace Valkyrja.modules
 				if( foundUserData.Count <= 50 )
 				{
 					StringBuilder responseBuilder = new StringBuilder("`UserId` | `n` | `UserName`\n");
-					foreach( UserData userData in foundUserData )
+					foreach( UserData userData in foundUserData.OrderByDescending(u => u.WarningCount) )
 					{
 						if( userData.BannedUntil > DateTime.UtcNow + TimeSpan.FromDays(1000) )
 							continue;
