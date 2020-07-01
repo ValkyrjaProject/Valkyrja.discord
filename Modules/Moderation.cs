@@ -708,28 +708,37 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				if( mentionedUsers.Count + 2 > e.MessageArgs.Length )
+				int argOffset = string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) ? 1 : 0;
+				if( mentionedUsers.Count + 1 + argOffset > e.MessageArgs.Length )
 				{
 					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
+					dbContext.Dispose();
+					return;
+				}
+
+				TimeSpan? duration = Utils.GetTimespanFromString(e.MessageArgs[mentionedUsers.Count]);
+				if( duration == null && int.TryParse(e.MessageArgs[mentionedUsers.Count], out int banDurationHours) )
+					duration = TimeSpan.FromHours(banDurationHours);
+
+				argOffset = string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) || duration == null ? 1 : 0;
+				if( duration == null )
+					duration = Utils.GetTimespanFromString(e.Server.Config.BanDuration);
+
+				if( duration == null )
+				{
+					if( string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) )
+						await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
+					else
+						await e.SendReplySafe("Default ban duration is in invalid format. Pls fix.");
 					dbContext.Dispose();
 					return;
 				}
 
 				StringBuilder warning = new StringBuilder();
-				for(int i = mentionedUsers.Count + 1; i < e.MessageArgs.Length; i++)
+				for(int i = mentionedUsers.Count + argOffset; i < e.MessageArgs.Length; i++)
 				{
 					warning.Append(e.MessageArgs[i]);
 					warning.Append(" ");
-				}
-
-				TimeSpan? duration = Utils.GetTimespanFromString(e.MessageArgs[mentionedUsers.Count]);
-				if( int.TryParse(e.MessageArgs[mentionedUsers.Count], out int banDurationHours) )
-					duration = TimeSpan.FromHours(banDurationHours);
-				if( duration == null )
-				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
-					dbContext.Dispose();
-					return;
 				}
 
 				string response = "ò_ó";
