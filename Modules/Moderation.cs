@@ -1071,8 +1071,7 @@ namespace Valkyrja.modules
 						if( userData.BannedUntil > DateTime.UtcNow + TimeSpan.FromDays(1000) )
 							continue;
 						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
-						string username = user?.GetUsername() ?? userData.LastUsername;
-						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{(string.IsNullOrWhiteSpace(username) ? "<unknown>" : username)}`");
+						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{(user?.GetUsername() ?? "<User Not Present>")}`");
 					}
 
 					response = responseBuilder.ToString();
