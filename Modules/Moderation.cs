@@ -1014,6 +1014,22 @@ namespace Valkyrja.modules
 			newCommand.Description = "Use with parameter `@user` = user mention or id, you can remove all the warnings from multiple people, just mention them all.";
 			commands.Add(newCommand);
 
+// !warnings
+			newCommand = new Command("warnings");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Display your own warnings.";
+			newCommand.ManPage = new ManPage("", "");
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
+				string response = userData.GetWarningsString();
+				dbContext.Dispose();
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("infractions"));
+
 // !listWarnedUsers
 			newCommand = new Command("listWarnedUsers");
 			newCommand.Type = CommandType.Standard;
