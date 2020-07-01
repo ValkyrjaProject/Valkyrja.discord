@@ -678,7 +678,7 @@ namespace Valkyrja.modules
 			newCommand.ManPage = new ManPage("<UserIDs> <duration> <warning reason>", "`<UserIDs>` - User ID(s) to be banned.\n\n`<duration>` - Duration with the `d` & `h` specifiers, for example `1d12h`. Use `0` for permanent.\n\n`<warning reason>` - An optional warning message to be recorded and PMed to the user.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
-				if( e.MessageArgs == null || e.MessageArgs.Length < 3 )
+				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
 					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
 					return;
@@ -709,6 +709,7 @@ namespace Valkyrja.modules
 				}
 
 				int argOffset = string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) ? 1 : 0;
+				Console.WriteLine($"{e.MessageArgs.Length} < {mentionedUsers.Count} + 1 + {argOffset}");
 				if( e.MessageArgs.Length < mentionedUsers.Count + 1 + argOffset )
 				{
 					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
