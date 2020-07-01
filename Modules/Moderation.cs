@@ -1042,7 +1042,7 @@ namespace Valkyrja.modules
 // !listWarnedUsers
 			newCommand = new Command("listWarnedUsers");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Display a list of users with more than specific amount of warnings.";
+			newCommand.Description = "Display a list of users with more than specific amount of warnings. (Ignores permanently banned.)";
 			newCommand.ManPage = new ManPage("<n>", "`<n>` - Threshold above which a user will be added to the output.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
@@ -1065,11 +1065,14 @@ namespace Valkyrja.modules
 
 				if( foundUserData.Count <= 50 )
 				{
-					StringBuilder responseBuilder = new StringBuilder("`UserId` | `n` | `UserName`");
+					StringBuilder responseBuilder = new StringBuilder("`UserId` | `n` | `UserName`\n");
 					foreach( UserData userData in foundUserData )
 					{
+						if( userData.BannedUntil > DateTime.UtcNow + TimeSpan.FromDays(1000) )
+							continue;
 						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
-						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{user?.GetUsername() ?? userData.LastUsername}`");
+						string username = user?.GetUsername() ?? userData.LastUsername;
+						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{(string.IsNullOrWhiteSpace(username) ? "<unknown>" : username)}`");
 					}
 
 					response = responseBuilder.ToString();
