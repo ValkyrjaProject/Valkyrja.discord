@@ -181,8 +181,10 @@ namespace Valkyrja.modules
 						response = FailedPmString;
 					else if( result == -1 )
 						response = DidntPmString;
-					else
+					else if( result == -2 )
 						response = DiscordPoopString;
+					else
+						response = UserNotFoundString;
 				}
 				else if( mentionedUsers.Any() ) // Verify mentioned users.
 				{
@@ -193,8 +195,10 @@ namespace Valkyrja.modules
 						response = FailedPmString;
 					else if( result == -1 )
 						response = DidntPmString;
-					else
+					else if( result == -2 )
 						response = DiscordPoopString;
+					else
+						response = UserNotFoundString;
 				}
 
 				if( mentionedUsers.Any() )
