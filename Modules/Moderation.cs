@@ -625,6 +625,7 @@ namespace Valkyrja.modules
 
 				string response = "";
 				List<string> usernames = new List<string>();
+				StringBuilder infractions = new StringBuilder();
 				try
 				{
 					foreach( UserData userData in mentionedUsers )
@@ -642,6 +643,8 @@ namespace Valkyrja.modules
 						await user.KickAsync(warning.ToString());
 						userData.AddWarning(warning.ToString());
 						usernames.Add(user.GetUsername());
+						if( userData.WarningCount > 1 && user != null )
+							infractions.AppendLine(e.Server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
 					}
 				} catch(HttpException exception)
 				{
@@ -659,7 +662,7 @@ namespace Valkyrja.modules
 				}
 				else if( string.IsNullOrEmpty(response) )
 				{
-					response = e.Server.Localisation.GetString("moderation_kick_done", usernames.ToNames());
+					response = e.Server.Localisation.GetString("moderation_kick_done", usernames.ToNames()) + infractions.ToString();
 					dbContext.SaveChanges();
 				}
 
@@ -903,12 +906,15 @@ namespace Valkyrja.modules
 				List<UserData> failedToPmUsers = new List<UserData>();
 				List<string> userNames = new List<string>();
 				List<guid> userIds = new List<guid>();
+				StringBuilder infractions = new StringBuilder();
 				foreach(UserData userData in mentionedUsers)
 				{
 					SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
 					userNames.Add(user?.GetUsername() ?? "<unknown>");
 					userIds.Add(userData.UserId);
 					userData.AddWarning(warning.ToString());
+					if( userData.WarningCount > 1 && user != null )
+						infractions.AppendLine(e.Server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
 
 					if( sendMessage )
 					{
@@ -920,7 +926,7 @@ namespace Valkyrja.modules
 				if( this.Client.Events.LogWarning != null )
 					await this.Client.Events.LogWarning(e.Server, userNames, userIds, warning.ToString(), e.Message.Author as SocketGuildUser);
 
-				string response = "Done.";
+				string response = "Done." + infractions.ToString();
 				if( failedToPmUsers.Any() )
 					response = "Failed to PM " + failedToPmUsers.Select(u => u.UserId).ToMentions();
 
@@ -1343,6 +1349,7 @@ namespace Valkyrja.modules
 
 			string response = "";
 			List<guid> banned = new List<guid>();
+			StringBuilder infractions = new StringBuilder();
 			foreach( UserData userData in users )
 			{
 				SocketGuildUser user = null;
@@ -1364,6 +1371,8 @@ namespace Valkyrja.modules
 					userData.Banned = true;
 					userData.AddWarning(logMessage);
 					banned.Add(userData.UserId);
+					if( userData.WarningCount > 1 && user != null )
+						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
 					if( logBan != null )
 						await logBan;
 				} catch(HttpException exception)
@@ -1374,7 +1383,7 @@ namespace Valkyrja.modules
 			}
 
 			if( banned.Any() )
-				response = server.Localisation.GetString("moderation_ban_done", banned.ToMentions());
+				response = server.Localisation.GetString("moderation_ban_done", banned.ToMentions()) + infractions.ToString();
 
 			return response;
 		}
@@ -1483,6 +1492,7 @@ namespace Valkyrja.modules
 
 			string response = "";
 			List<guid> muted = new List<guid>();
+			StringBuilder infractions = new StringBuilder();
 			foreach( UserData userData in users )
 			{
 				try
@@ -1509,6 +1519,8 @@ namespace Valkyrja.modules
 					userData.MutedUntil = mutedUntil;
 					userData.Muted = true;
 					muted.Add(userData.UserId);
+					if( userData.WarningCount > 1 && user != null )
+						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
 
 					if( this.Client.Events.LogMute != null )
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
@@ -1524,7 +1536,7 @@ namespace Valkyrja.modules
 			string mentions = muted.ToMentions();
 			if( muted.Any() )
 			{
-				response = server.Localisation.GetString("moderation_mute_done", mentions);
+				response = server.Localisation.GetString("moderation_mute_done", mentions) + infractions.ToString();
 
 				SocketTextChannel logChannel;
 				if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
