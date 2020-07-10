@@ -1598,7 +1598,7 @@ namespace Valkyrja.modules
 					if( this.Client.Events.LogMute != null )
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
 
-					await this.Client.SendPmSafe(user, $"You were {warning}");
+					await this.Client.SendPmSafe(user, $"You were {warning}\n{(server.Config.MuteMessage ?? "")}");
 				} catch(HttpException exception)
 				{
 					await server.HandleHttpException(exception, $"This happened in when trying to mute <@{userData.UserId}>");
