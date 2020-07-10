@@ -709,7 +709,6 @@ namespace Valkyrja.modules
 				}
 
 				int argOffset = string.IsNullOrWhiteSpace(e.Server.Config.BanDuration) ? 1 : 0;
-				Console.WriteLine($"{e.MessageArgs.Length} < {mentionedUsers.Count} + 1 + {argOffset}");
 				if( e.MessageArgs.Length < mentionedUsers.Count + 1 + argOffset )
 				{
 					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
