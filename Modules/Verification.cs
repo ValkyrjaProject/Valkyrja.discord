@@ -399,7 +399,7 @@ namespace Valkyrja.modules
 		/// <summary> Verifies a user based on a hashCode string and returns true if successful. </summary>
 		private Task VerifyUserHash(SocketUser author, string msg)
 		{
-			if( this.CaptchaValidAnswers.Contains(msg) )
+			if( this.CaptchaValidAnswers.Contains(msg.ToLower()) )
 				msg = "captcha";
 
 			lock( this.DbLock )
