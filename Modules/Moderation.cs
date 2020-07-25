@@ -41,6 +41,8 @@ namespace Valkyrja.modules
 
 		private ValkyrjaClient Client;
 
+		private guid JustBannedId = 0;
+
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
 		public bool DoUpdate{ get; set; } = true;
@@ -1316,8 +1318,9 @@ namespace Valkyrja.modules
 			bool save = false;
 			DateTime minTime = DateTime.MinValue + TimeSpan.FromMinutes(1);
 
+			this.JustBannedId = 0;
+
 			//Channels
-			//List<ChannelConfig> channelsToRemove = new List<ChannelConfig>();
 			foreach( ChannelConfig channelConfig in dbContext.Channels.AsQueryable().Where(c => c.Muted) )
 			{
 				Server server;
@@ -1332,10 +1335,6 @@ namespace Valkyrja.modules
 					save = true;
 				}
 			}
-
-			//if( channelsToRemove.Any() )
-			//	dbContext.Channels.RemoveRange(channelsToRemove);
-
 
 			//Users
 			foreach( UserData userData in dbContext.UserDatabase.AsQueryable().Where(ud => ud.Banned || ud.Muted) )
@@ -1378,7 +1377,6 @@ namespace Valkyrja.modules
 				dbContext.SaveChanges();
 			dbContext.Dispose();
 		}
-
 
 
 // Ban
@@ -1478,8 +1476,11 @@ namespace Valkyrja.modules
 			}
 
 			Task logBan = null;
-			if( this.Client.Events.LogBan != null )
+			if( this.Client.Events.LogBan != null && userData.UserId != this.JustBannedId )
+			{
+				this.JustBannedId = userData.UserId;
 				logBan = this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString, bannedBy);
+			}
 
 			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
 			userData.BannedUntil = bannedUntil;
