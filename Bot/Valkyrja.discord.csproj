@@ -7,11 +7,20 @@
   <PropertyGroup>
     <RestoreSources>../Core/packages;https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
+  <Choose>
+    <When Condition="$(UseValkyrjaExtras) == '1'">
+      <PropertyGroup>
+        <DefineConstants>VALKYRJASECURE;VALKYRJASPECIFIC</DefineConstants>
+      </PropertyGroup>
+      <ItemGroup>
+        <ProjectReference Include="..\Secure\Valkyrja.secure.csproj" />
+        <ProjectReference Include="..\ServerSpecific\Valkyrja.specific.csproj" />
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <ProjectReference Include="..\Core\Valkyrja.core.csproj" />
     <ProjectReference Include="..\Modules\Valkyrja.modules.csproj" />
-    <ProjectReference Include="..\Secure\Valkyrja.secure.csproj" />
-    <ProjectReference Include="..\ServerSpecific\Valkyrja.specific.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Discord.Net.Core" Version="2.3.0-dev-dev" />

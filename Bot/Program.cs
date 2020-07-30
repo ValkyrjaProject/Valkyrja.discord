@@ -1,7 +1,4 @@
-﻿#define UsingValkyrjaSecure
-#define UsingValkyrjaSpecific
-
-using System;
+﻿using System;
 using System.IO;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
@@ -9,9 +6,6 @@ using System.Threading.Tasks;
 using Valkyrja.core;
 using Valkyrja.entities;
 using Valkyrja.modules;
-#if UsingValkyrjaSecure
-using Valkyrja.secure;
-#endif
 
 using guid = System.UInt64;
 
@@ -65,8 +59,8 @@ namespace Valkyrja.discord
 
 		private void InitModules()
 		{
-			#if UsingValkyrjaSecure
-			this.Bot.Modules.Add(new Antispam());
+			#if VALKYRJASECURE
+			this.Bot.Modules.Add(new Valkyrja.secure.Antispam());
 			#endif
 
 			this.Bot.Modules.Add(new Moderation());
@@ -80,7 +74,7 @@ namespace Valkyrja.discord
 			this.Bot.Modules.Add(new Memo());
 			this.Bot.Modules.Add(new Quotes());
 
-			#if UsingValkyrjaSpecific
+			#if VALKYRJASPECIFIC
 			this.Bot.Modules.Add(new Recruitment());
 			#endif
 		}

@@ -20,6 +20,6 @@ jobs:
       with:
         dotnet-version: 3.1.x
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore Bot/Valkyrja.discord.csproj
     - name: Build
-      run: dotnet build --configuration Debug --no-restore
+      run: dotnet build --configuration Debug --no-restore Bot/Valkyrja.discord.csproj
