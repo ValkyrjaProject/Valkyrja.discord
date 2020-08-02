@@ -10,11 +10,11 @@ newVersion="2.3.0-dev-dev"
 #discordNetDirectory="~/dev/Discord.Net"
 discordNetDirectory="/c/_stuff/dev/Discord.Net"
 
-git rm packages/*
-mkdir packages || true
+git rm Core/packages/*
+mkdir Core/packages || true
 #rm -rf ~/.nuget/packages/discord.net*
-find "$discordNetDirectory" -name *.nupkg -exec cp {} packages/ \;
-rm packages/0*
+find "$discordNetDirectory" -name *.nupkg -exec cp {} Core/packages/ \;
+rm Core/packages/0*
 
 sed -i "s/$oldVersion/$newVersion/g" Core/Valkyrja.core.csproj
 sed -i "s/$oldVersion/$newVersion/g" Bot/Valkyrja.discord.csproj
@@ -31,6 +31,10 @@ dotnet restore
 popd
 
 pushd Core
+rm packages/Newtonsoft*
+rm packages/idn*
+rm packages/0*
+git add packages/*
 git add Valkyrja.core.csproj
 git commit -m "D.NET Update"
 git push
@@ -51,10 +55,6 @@ git push
 dotnet restore
 popd
 
-rm packages/Newtonsoft*
-rm packages/idn*
-rm packages/0*
-git add packages/*
 git add Bot/Valkyrja.discord.csproj
 git add Modules/Valkyrja.modules.csproj
 git commit -m "D.NET Update"
