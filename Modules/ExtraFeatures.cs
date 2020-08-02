@@ -38,6 +38,8 @@ namespace Valkyrja.modules
 			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
+			this.Client.Events.MessageReceived += OnMessageReceived;
+
 // !tempChannel
 			Command newCommand = new Command("tempChannel");
 			newCommand.Type = CommandType.Standard;
@@ -459,6 +461,16 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 			return commands;
+		}
+
+		public async Task OnMessageReceived(SocketMessage msg)
+		{
+			if( !(msg.Channel is SocketNewsChannel channel) || !(msg is SocketUserMessage message) ) //Not an announcement channel.
+				return;
+
+			Server server = null;
+			if( this.Client.Servers.ContainsKey(channel.Guild.Id) && (server = this.Client.Servers[channel.Guild.Id]) != null && server.AutoAnnounceChannels.Contains(channel.Id) )
+				await message.CrosspostAsync();
 		}
 
 		public async Task Update(IValkyrjaClient iClient)
