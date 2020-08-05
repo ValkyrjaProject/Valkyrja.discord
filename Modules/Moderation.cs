@@ -98,6 +98,13 @@ namespace Valkyrja.modules
 
 				bool clearLinks = e.Command.Id.ToLower() == "clearlinks";
 
+				int expectedArgsWithoutMentions = e.Command.Id == "nuke" ? 0 : clearRegex ? 2 : 1;
+				if( userIDs.Count < e.MessageArgs.Length - expectedArgsWithoutMentions )
+				{
+					await e.Message.Channel.SendMessageSafe("I can see that you're trying to use more parameters, but I did not find any IDs or mentions.");
+					return;
+				}
+
 				if( e.Command.Id == "nuke" )
 				{
 					n = int.MaxValue - 1;
