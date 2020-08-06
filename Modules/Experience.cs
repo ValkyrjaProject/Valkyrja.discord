@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Valkyrja.core;
 using Valkyrja.entities;
 using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+using Microsoft.EntityFrameworkCore.Internal;
 using guid = System.UInt64;
 
 namespace Valkyrja.modules
@@ -77,6 +79,46 @@ namespace Valkyrja.modules
 			};
 			commands.Add(newCommand);
 
+// !lockExp
+			newCommand = new Command("lockExp");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Locks, or unlocks, someones experience and therefore also activity role assignment.";
+			newCommand.ManPage = new ManPage("<@user>", "`<@user>` - User mentions or IDs who to lock out of the experience system.");
+			newCommand.IsPremiumServerwideCommand = true;
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await e.SendReplySafe("A who?");
+					return;
+				}
+
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				List<UserData> mentionedUserData = this.Client.GetMentionedUsersData(dbContext, e);
+				if( !mentionedUserData.Any() )
+				{
+					dbContext.Dispose();
+					await e.SendReplySafe("A who?");
+					return;
+				}
+				foreach( UserData userData in mentionedUserData )
+				{
+					userData.ExpLocked = !userData.ExpLocked;
+				}
+
+				string response = "";
+				if( mentionedUserData.Any(u => u.ExpLocked) )
+					response += "I've locked " + mentionedUserData.Where(u => u.ExpLocked).Select(u => $"<@{u.UserId}>").ToNames();
+				if( mentionedUserData.Any(u => !u.ExpLocked) )
+					response += "I've unlocked " + mentionedUserData.Where(u => !u.ExpLocked).Select(u => $"<@{u.UserId}>").ToNames();
+
+				dbContext.SaveChanges();
+				dbContext.Dispose();
+
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+
 
 			return commands;
 		}
@@ -98,8 +140,13 @@ namespace Valkyrja.modules
 				return;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-
 			UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
+			if( userData.ExpLocked )
+			{
+				dbContext.Dispose();
+				return;
+			}
+
 			if( !string.IsNullOrEmpty(message.Content) )
 				userData.CountMessages++;
 			if( message.Attachments.Any() )
