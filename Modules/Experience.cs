@@ -108,9 +108,9 @@ namespace Valkyrja.modules
 
 				string response = "";
 				if( mentionedUserData.Any(u => u.ExpLocked) )
-					response += "I've locked " + mentionedUserData.Where(u => u.ExpLocked).Select(u => $"<@{u.UserId}>").ToNames();
+					response += "I've locked " + mentionedUserData.Where(u => u.ExpLocked).Select(u => $"<@{u.UserId}>").ToNames("", "");
 				if( mentionedUserData.Any(u => !u.ExpLocked) )
-					response += "I've unlocked " + mentionedUserData.Where(u => !u.ExpLocked).Select(u => $"<@{u.UserId}>").ToNames();
+					response += "I've unlocked " + mentionedUserData.Where(u => !u.ExpLocked).Select(u => $"<@{u.UserId}>").ToNames("", "");
 
 				dbContext.SaveChanges();
 				dbContext.Dispose();
