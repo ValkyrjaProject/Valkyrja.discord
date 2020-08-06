@@ -85,7 +85,7 @@ namespace Valkyrja.modules
 			newCommand.Description = "Locks, or unlocks, someones experience and therefore also activity role assignment.";
 			newCommand.ManPage = new ManPage("<@user>", "`<@user>` - User mentions or IDs who to lock out of the experience system.");
 			newCommand.IsPremiumServerwideCommand = true;
-			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
