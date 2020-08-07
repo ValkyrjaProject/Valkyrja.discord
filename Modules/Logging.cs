@@ -1209,6 +1209,9 @@ namespace Valkyrja.modules
 			msg1 = msg1.Replace('`', '\'');
 			msg2 = msg2.Replace('`', '\'');
 
+			if( authorTitle.Length > 255 )
+				authorTitle = authorTitle.Substring(0, 255);
+
 			EmbedBuilder embedBuilder = new EmbedBuilder{
 					Color = color,
 					Timestamp = timestamp
@@ -1232,6 +1235,9 @@ namespace Valkyrja.modules
 
 		private static Embed GetLogSmolEmbed(Color color, string authorTitle, string titleIconUrl, string description, string footer, DateTime timestamp)
 		{
+			if( authorTitle.Length > 255 )
+				authorTitle = authorTitle.Substring(0, 255);
+
 			EmbedBuilder embedBuilder = new EmbedBuilder{
 					Color = color,
 					Description = description,
