@@ -936,7 +936,7 @@ namespace Valkyrja.modules
 
 					if( sendMessage )
 					{
-						if( user == null || 1 != await this.Client.SendPmSafe(user, string.Format(WarningPmString, e.Server.Guild.Name, warning.ToString())) )
+						if( user == null || PmErrorCode.Success != await this.Client.SendPmSafe(user, string.Format(WarningPmString, e.Server.Guild.Name, warning.ToString())) )
 							failedToPmUsers.Add(userData);
 					}
 				}

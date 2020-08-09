@@ -41,6 +41,7 @@ namespace Valkyrja.modules
 		private const string DiscordPoopString = "I was unable to send the PM because Discord has full pants " + Localisation.SystemStrings.DiscordShitEmoji + "\n<https://status.discord.com>";
 		private const string DidntPmString = "I was unable to send the PM three times. I ain't gonna bother anymore.";
 		private const string FailedPmString = "I was unable to send a PM - please enable PMs from server members!";
+		private const string AlreadyVerifiedString = "Already verified, I ensured that the roles are there as well.";
 		private const string SentString = "Check your messages!";
 		private const string MentionedString = "I've sent them the instructions.";
 		private const string VerifiedString = "I haz verified {0}";
@@ -155,6 +156,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				List<UserData> mentionedUsers = this.Client.GetMentionedUsersData(dbContext, e);
 				string response = InvalidParametersString;
+				PmErrorCode result = PmErrorCode.Undefined;
 
 				// Admin verified someone.
 				if( e.MessageArgs != null && e.MessageArgs.Length > 1 &&
@@ -170,39 +172,41 @@ namespace Valkyrja.modules
 
 					await VerifyUsers(e.Server, mentionedUsers); // actually verify people
 					response = string.Format(VerifiedString, mentionedUsers.Select(u => u.UserId).ToMentions());
+					result = PmErrorCode.Undefined;
 				}
 				else if( string.IsNullOrEmpty(e.TrimmedMessage) ) // Verify the author.
 				{
 					UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
-					int result = await VerifyUsersPm(e.Server, new List<UserData>{userData});
-					if( result == 1 )
-						response = SentString;
-					else if( result == 0 )
-						response = FailedPmString;
-					else if( result == -1 )
-						response = DidntPmString;
-					else if( result == -2 )
-						response = DiscordPoopString;
-					else if( result == -3 )
-						response = UserNotFoundString;
-					else
-						response = "Unknown error.";
+					result = await VerifyUsersPm(e.Server, new List<UserData>{userData});
+					if( result == PmErrorCode.Undefined )
+						response = AlreadyVerifiedString;
 				}
 				else if( mentionedUsers.Any() ) // Verify mentioned users.
 				{
-					int result = await VerifyUsersPm(e.Server, mentionedUsers);
-					if( result == 1 )
-						response = MentionedString;
-					else if( result == 0 )
+					result = await VerifyUsersPm(e.Server, mentionedUsers);
+					if( result == PmErrorCode.Undefined )
+						response = AlreadyVerifiedString;
+				}
+
+				switch( result ) {
+					case PmErrorCode.Success:
+						response = SentString;
+						break;
+					case PmErrorCode.Failed:
 						response = FailedPmString;
-					else if( result == -1 )
+						break;
+					case PmErrorCode.ThresholdExceeded:
 						response = DidntPmString;
-					else if( result == -2 )
+						break;
+					case PmErrorCode.Thrown500:
 						response = DiscordPoopString;
-					else if( result == -3 )
+						break;
+					case PmErrorCode.UserNull:
 						response = UserNotFoundString;
-					else
+						break;
+					case PmErrorCode.Unknown:
 						response = "Unknown error.";
+						break;
 				}
 
 				if( mentionedUsers.Any() )
@@ -217,18 +221,9 @@ namespace Valkyrja.modules
 			return commands;
 		}
 
-		/// <summary> Returns the result of user PM. </summary>
-		/// <returns>
-		///  1 = success
-		///  0 = first 3 attempts failed
-		/// -1 = more than 3 attempts failed
-		/// -2 = failed due to Discord server issues;
-		/// -3 = user not found;
-		/// -4 = unknown;
-		/// </returns>
-		public async Task<int> VerifyUsersPm(Server server, List<UserData> users)
+		public async Task<PmErrorCode> VerifyUsersPm(Server server, List<UserData> users)
 		{
-			int success = -4;
+			PmErrorCode pmErrorCode = PmErrorCode.Unknown;
 			List<UserData> alreadyVerified = new List<UserData>();
 			foreach( UserData userData in users )
 			{
@@ -335,13 +330,16 @@ namespace Valkyrja.modules
 					message += string.Format(PmKarmaString, server.Config.VerifyKarma,
 						server.Config.CommandPrefix, server.Config.KarmaCurrency);
 
-				success = await this.Client.SendPmSafe(user, message);
+				pmErrorCode = await this.Client.SendPmSafe(user, message);
 			}
 
 			if( alreadyVerified.Any() )
+			{
 				await VerifyUsers(server, alreadyVerified, false);
+				pmErrorCode = PmErrorCode.Undefined;
+			}
 
-			return success;
+			return pmErrorCode;
 		}
 
 		/// <summary> Actually verify someone - assign the roles and stuff. </summary>
@@ -492,13 +490,13 @@ namespace Valkyrja.modules
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
 					UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-					int result = VerifyUsersPm(server, new List<UserData>{userData}).GetAwaiter().GetResult();
+					PmErrorCode result = VerifyUsersPm(server, new List<UserData>{userData}).GetAwaiter().GetResult();
 					SocketTextChannel channel = null;
 					if( server.Config.VerifyChannelId > 0 && (channel = server.Guild.GetTextChannel(server.Config.VerifyChannelId)) != null )
 					{
-						if( result == 0 )
+						if( result == PmErrorCode.Failed )
 							channel.SendMessageSafe($"<@{user.Id}> I couldn't PM you, please re-enable PMs from server members and try again using the `{server.Config.CommandPrefix}verify` command.").GetAwaiter().GetResult();
-						else if( result == -2 )
+						else if( result == PmErrorCode.Thrown500 )
 							channel.SendMessageSafe($"<@{user.Id}> I couldn't PM you because Discord is currently pooping itself. " + Localisation.SystemStrings.DiscordShitEmoji).GetAwaiter().GetResult();
 					}
 
