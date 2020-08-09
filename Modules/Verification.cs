@@ -183,8 +183,10 @@ namespace Valkyrja.modules
 						response = DidntPmString;
 					else if( result == -2 )
 						response = DiscordPoopString;
-					else
+					else if( result == -3 )
 						response = UserNotFoundString;
+					else
+						response = "Unknown error.";
 				}
 				else if( mentionedUsers.Any() ) // Verify mentioned users.
 				{
@@ -197,8 +199,10 @@ namespace Valkyrja.modules
 						response = DidntPmString;
 					else if( result == -2 )
 						response = DiscordPoopString;
-					else
+					else if( result == -3 )
 						response = UserNotFoundString;
+					else
+						response = "Unknown error.";
 				}
 
 				if( mentionedUsers.Any() )
@@ -219,10 +223,12 @@ namespace Valkyrja.modules
 		///  0 = first 3 attempts failed
 		/// -1 = more than 3 attempts failed
 		/// -2 = failed due to Discord server issues;
+		/// -3 = user not found;
+		/// -4 = unknown;
 		/// </returns>
 		public async Task<int> VerifyUsersPm(Server server, List<UserData> users)
 		{
-			int success = -2;
+			int success = -4;
 			List<UserData> alreadyVerified = new List<UserData>();
 			foreach( UserData userData in users )
 			{
