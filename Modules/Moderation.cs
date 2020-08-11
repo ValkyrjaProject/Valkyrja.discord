@@ -368,7 +368,7 @@ namespace Valkyrja.modules
 				}
 
 				SocketRole roleOp = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
-				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
+				if( e.Server.Config.OperatorEnforce && roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
@@ -488,7 +488,7 @@ namespace Valkyrja.modules
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator;
 			newCommand.OnExecute += async e => {
 				SocketRole roleOp = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
-				if( roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
+				if( e.Server.Config.OperatorEnforce && roleOp != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != roleOp.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
@@ -588,7 +588,7 @@ namespace Valkyrja.modules
 				}
 
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
-				if( role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
+				if( e.Server.Config.OperatorEnforce && role != null && (e.Message.Author as SocketGuildUser).Roles.All(r => r.Id != role.Id) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
@@ -700,7 +700,7 @@ namespace Valkyrja.modules
 				}
 
 				SocketRole role = e.Server.Guild.GetRole(e.Server.Config.OperatorRoleId);
-				if( role != null && ((e.Message.Author as SocketGuildUser)?.Roles.All(r => r.Id != role.Id) ?? false) &&
+				if( e.Server.Config.OperatorEnforce && role != null && ((e.Message.Author as SocketGuildUser)?.Roles.All(r => r.Id != role.Id) ?? false) &&
 				    !this.Client.IsGlobalAdmin(e.Message.Author.Id) )
 				{
 					await e.SendReplySafe(e.Server.Localisation.GetString("moderation_op_missing", e.Server.Config.CommandPrefix));
