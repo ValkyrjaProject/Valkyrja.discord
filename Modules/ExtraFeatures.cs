@@ -231,22 +231,44 @@ namespace Valkyrja.modules
 			newCommand = new Command("addEmoji");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Add an emoji reaction to a message.";
-			newCommand.ManPage = new ManPage("<messageId> <emoji>", "`<messageId>` - ID of the message (in the current channel)\n\n`<emoji>` - Emoji that will be added as a reaction.");
+			newCommand.ManPage = new ManPage("<messageId> <emojis>", "`<messageId>` - ID of the message (in the current channel)\n\n`<emojis>` - Emojis that will be added as a reaction.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				if( e.MessageArgs == null || e.MessageArgs.Length < 2 || !guid.TryParse(e.MessageArgs[0], out guid messageId) || !Emote.TryParse(e.MessageArgs[1], out Emote emote) )
+				if( e.MessageArgs == null || e.MessageArgs.Length < 2 || !guid.TryParse(e.MessageArgs[0], out guid messageId) )
 				{
 					await e.SendReplySafe("Invalid parameters:\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
+				List<IEmote> emotes = new List<IEmote>();
+				for( int i = 1; i < e.MessageArgs.Length; i++ )
+				{
+					if( Emote.TryParse(e.MessageArgs[i], out Emote emote) )
+						emotes.Add(emote);
+					else
+						emotes.Add(new Emoji(e.MessageArgs[i]));
+				}
+
+				if( !emotes.Any() )
+				{
+					await e.SendReplySafe("No emotes found:\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
+					return;
+				}
+
 				string response = "K.";
-				if( await e.Channel.GetMessageAsync(messageId) is SocketUserMessage sMsg )
-					await sMsg.AddReactionAsync(emote);
-				else if( await e.Channel.GetMessageAsync(messageId) is RestUserMessage rMsg )
-					await rMsg.AddReactionAsync(emote);
-				else
-					response = "Failed to fetch a message with that ID. Did you use this command in a correct channel?";
+				try
+				{
+					if( await e.Channel.GetMessageAsync(messageId) is SocketUserMessage sMsg )
+						await sMsg.AddReactionsAsync(emotes.ToArray());
+					else if( await e.Channel.GetMessageAsync(messageId) is RestUserMessage rMsg )
+						await rMsg.AddReactionsAsync(emotes.ToArray());
+					else
+						response = "Failed to fetch a message with that ID. Did you use this command in a correct channel?";
+				}
+				catch( Exception )
+				{
+					response = "You've dun goof'd, eh?";
+				}
 
 				await e.SendReplySafe(response);
 			};
