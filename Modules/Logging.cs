@@ -475,6 +475,8 @@ namespace Valkyrja.modules
 			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
 				return;
 
+			this.Client.Monitoring.MsgsDeleted.Inc();
+
 			if( !(c is SocketTextChannel channel) )
 				return;
 
@@ -540,8 +542,6 @@ namespace Valkyrja.modules
 							"Message", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here"),
 							message.Attachments.Any() ? "Files" : "", attachment.ToString())
 					};
-
-					this.Client.Monitoring.MsgsDeleted.Inc();
 
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
@@ -760,17 +760,17 @@ namespace Valkyrja.modules
 		{
 			try
 			{
+				this.Client.Monitoring.Bans.Inc();
+				if( issuedBy?.Id == server.Guild.CurrentUser.Id )
+					await StatsIncrement(server, StatsType.BannedByValk);
+
 				SocketTextChannel logChannel;
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
-				this.Client.Monitoring.Bans.Inc();
-				if( issuedBy?.Id == this.Client.GlobalConfig.UserId )
-					await StatsIncrement(server, StatsType.BannedByValk);
-
-				Color color = issuedBy?.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Color color = issuedBy?.Id == server.Guild.CurrentUser.Id ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
@@ -841,6 +841,9 @@ namespace Valkyrja.modules
 		{
 			try
 			{
+				if( issuedBy?.Id == server.Guild.CurrentUser.Id )
+					await StatsIncrement(server, StatsType.KickedByValk);
+
 				SocketTextChannel logChannel;
 				guid channelId = issuedBy.Id == server.Guild.CurrentUser.Id ? server.Config.ActivityChannelId : server.Config.ModChannelId; // kick-no-role
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(channelId)) == null )
@@ -848,10 +851,7 @@ namespace Valkyrja.modules
 
 				this.RecentlyBannedUserIDs.Add(userId); //Don't trigger the on-event log message as well as this custom one.
 
-				if( issuedBy?.Id == this.Client.GlobalConfig.UserId )
-					await StatsIncrement(server, StatsType.KickedByValk);
-
-				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Color color = issuedBy.Id == server.Guild.CurrentUser.Id ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
@@ -883,11 +883,13 @@ namespace Valkyrja.modules
 		{
 			try
 			{
+				this.Client.Monitoring.Mutes.Inc();
+
 				SocketTextChannel logChannel;
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Color color = issuedBy.Id == server.Guild.CurrentUser.Id ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
@@ -899,8 +901,6 @@ namespace Valkyrja.modules
 						user.GetUsername(), user.Id.ToString(),
 						Utils.GetTimestamp())
 				};
-
-				this.Client.Monitoring.Mutes.Inc();
 
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);
@@ -956,7 +956,7 @@ namespace Valkyrja.modules
 				if( !server.Config.LogBans || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				Color color = issuedBy.Id == this.Client.GlobalConfig.UserId ? this.AntispamColor : new Color(server.Config.ModChannelColor);
+				Color color = issuedBy.Id == server.Guild.CurrentUser.Id ? this.AntispamColor : new Color(server.Config.ModChannelColor);
 				Message msg = new Message(){
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
