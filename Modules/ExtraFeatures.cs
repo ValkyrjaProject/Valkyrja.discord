@@ -234,9 +234,9 @@ namespace Valkyrja.modules
 			newCommand.ManPage = new ManPage("<messageId> <emoji>", "`<messageId>` - ID of the message (in the current channel)\n\n`<emoji>` - Emoji that will be added as a reaction.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				if( e.MessageArgs == null || e.MessageArgs.Length < 2 || guid.TryParse(e.MessageArgs[0], out guid messageId) || !Emote.TryParse(e.MessageArgs[1], out Emote emote) )
+				if( e.MessageArgs == null || e.MessageArgs.Length < 2 || !guid.TryParse(e.MessageArgs[0], out guid messageId) || !Emote.TryParse(e.MessageArgs[1], out Emote emote) )
 				{
-					await e.SendReplySafe("Invalid parameters:\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix));
+					await e.SendReplySafe("Invalid parameters:\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
