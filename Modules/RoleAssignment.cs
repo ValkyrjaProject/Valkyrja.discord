@@ -787,8 +787,10 @@ namespace Valkyrja.modules
 										await user.RemoveRoleAsync(roleToRemove);
 										try
 										{
-											if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage msg )
-												await msg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
+											if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage sMsg )
+												await sMsg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
+											if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is RestUserMessage rMsg )
+												await rMsg.RemoveReactionAsync(reaction.Emote, reaction.UserId);
 										}
 										catch( Exception e )
 										{
