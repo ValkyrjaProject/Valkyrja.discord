@@ -26,6 +26,7 @@ namespace Valkyrja.modules
 		private static string ErrorGroupNotFound = "I did not find a group based on that expression.";
 		private static string ErrorRoleNotFoundId = "Role not found. Use with roleID parameter.\n(Use the `getRole` command to get the ID)";
 		private static string ErrorPromoteEveryone = "Failed to assign the role to more than 10 people - aborting. (Assuming wrong permissions or hierarchy.)";
+		private static string ErrorDemoteEveryone = "Failed to remove the role from more than 10 people - aborting. (Assuming wrong permissions or hierarchy.)";
 		private static string ErrorKickWithoutRole = "Failed to kick more than 10 people - aborting. (Assuming wrong permissions, hierarchy, or Discord derps much.)";
 		private static string PromoteEveryoneResponseString = "I will assign a role to everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
 		private static string DemoteEveryoneResponseString = "I will remove a role from everyone, which may take **very** long time. Please be patient.\n_(You can check using `operations` and you can also `cancel` it.)_";
@@ -593,7 +594,7 @@ namespace Valkyrja.modules
 				if( canceled )
 					return;
 
-				string response = exceptions > 10 ? ErrorPromoteEveryone : ($"Done! I've removed `{role.Name}` from `{count}` member" + (count != 1 ? "s." : "."));
+				string response = exceptions > 10 ? ErrorDemoteEveryone : ($"Done! I've removed `{role.Name}` from `{count}` member" + (count != 1 ? "s." : "."));
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
