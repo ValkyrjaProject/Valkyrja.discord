@@ -114,6 +114,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("roleCounts");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Get some numbers about public roles for specific group.";
+			newCommand.ManPage = new ManPage("<expression>", "`<expression>` - An expression using which to search for a role group.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				string expression = e.TrimmedMessage;
@@ -161,7 +162,8 @@ namespace Valkyrja.modules
 // !join
 			newCommand = new Command("join");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Use with parameter, name of a Role that you wish to join.";
+			newCommand.Description = "Grab a public role for yourself.";
+			newCommand.ManPage = new ManPage("<expression>", "`<expression>` - An expression using which to search for a public role.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -269,7 +271,8 @@ namespace Valkyrja.modules
 // !leave
 			newCommand = new Command("leave");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Use with parameter, name of a Role that you wish to leave.";
+			newCommand.Description = "Dispose of your public role.";
+			newCommand.ManPage = new ManPage("<expression>", "`<expression>` - An expression using which to search for a public role.");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -354,7 +357,8 @@ namespace Valkyrja.modules
 // !promote
 			newCommand = new Command("promote");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Assign someone a member role. Use with parameters `@user` mention(s) or ID(s) and then the name of the role.";
+			newCommand.Description = "Assign someone a member role.";
+			newCommand.ManPage = new ManPage("<@users> <expression>", "`<@users>` - User mention(s) (or IDs) whom to assign the member role.\n\n`<expression>` - An expression using which to search for a member role.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -432,7 +436,8 @@ namespace Valkyrja.modules
 // !demote
 			newCommand = new Command("demote");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Remove a member role from someone. Use with parameters `@user` mention(s) or ID(s) and then the name of the role.";
+			newCommand.Description = "Remove a member role from someone.";
+			newCommand.ManPage = new ManPage("<@users> <expression>", "`<@users>` - User mention(s) (or IDs) whom to remove the member role.\n\n`<expression>` - An expression using which to search for a member role.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -511,6 +516,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("promoteEveryone");
 			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Assign everyone a role identified by it's ID. Use the `getRole` command to get the ID.";
+			newCommand.ManPage = new ManPage("<roleID>", "`<roleID>` - Specific Role ID of a role.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
@@ -566,6 +572,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("demoteEveryone");
 			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Remove a role from everyone, identified by roleID. Use the `getRole` command to get the ID.";
+			newCommand.ManPage = new ManPage("<roleID>", "`<roleID>` - Specific Role ID of a role.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				if( !e.Server.Guild.CurrentUser.GuildPermissions.ManageRoles )
