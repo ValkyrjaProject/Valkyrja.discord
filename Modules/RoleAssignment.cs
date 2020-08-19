@@ -520,6 +520,65 @@ namespace Valkyrja.modules
 			};
 			commands.Add(newCommand);
 
+// !categoryMembers
+			newCommand = new Command("categoryMembers");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Configure category member roles.";
+			newCommand.ManPage = new ManPage("<add> <modRoleId> <memberRoleId> | <reset> <modRoleId> | <resetAll>", "`<add>` - An instruction to add the following roles as a moderator who can assign the member role.\n\n`<reset>` - An instruction to clear all the member roles associated with the specified moderator role ID.\n\n`<modRoleId>` - Moderator role ID to be added or reset. \n\n`<memberRoleId>` Member role ID to be added.");
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				string response = "Invalid arguments:\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId);
+
+				if( e.MessageArgs == null || e.MessageArgs.Length < 1 )
+				{
+					await e.SendReplySafe(response);
+					return;
+				}
+
+				guid modRoleId;
+				IEnumerable<CategoryMemberRole> rolesToRemove;
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				switch( e.MessageArgs[0].ToLower() )
+				{
+					case "add":
+						if( !guid.TryParse(e.MessageArgs[1], out modRoleId) || !guid.TryParse(e.MessageArgs[2], out guid memberRoleId) )
+							break;
+						dbContext.GetOrAddMemberRole(e.Server.Id, modRoleId, memberRoleId);
+						dbContext.SaveChanges();
+
+						response = "Sure.";
+						break;
+					case "reset":
+						if( !guid.TryParse(e.MessageArgs[1], out modRoleId) )
+							break;
+						rolesToRemove = dbContext.CategoryMemberRoles.AsQueryable().Where(r => r.ServerId == e.Server.Id && r.ModRoleId == modRoleId);
+						if( rolesToRemove.Any() )
+						{
+							dbContext.CategoryMemberRoles.RemoveRange(rolesToRemove);
+							dbContext.SaveChanges();
+						}
+
+						response = "Sure.";
+						break;
+					case "resetAll":
+						rolesToRemove = dbContext.CategoryMemberRoles.AsQueryable().Where(r => r.ServerId == e.Server.Id);
+						if( rolesToRemove.Any() )
+						{
+							dbContext.CategoryMemberRoles.RemoveRange(rolesToRemove);
+							dbContext.SaveChanges();
+						}
+
+						response = "Sure.";
+						break;
+					default:
+						break;
+				}
+
+				dbContext.Dispose();
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+
 // !promoteEveryone
 			newCommand = new Command("promoteEveryone");
 			newCommand.Type = CommandType.Operation;
