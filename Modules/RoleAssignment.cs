@@ -338,7 +338,15 @@ namespace Valkyrja.modules
 			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
-				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
+				SocketGuildUser moderator = e.Message.Author as SocketGuildUser;
+				if( moderator == null )
+				{
+					await this.HandleException(new NullReferenceException("Message author is not a SocketGuildUser"), e.Message.Author.Id.ToString(), e.Server.Id);
+					return;
+				}
+
+				List<guid> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).Select(r => r.RoleId).ToList();
+				memberRoles.AddRange(e.Server.CategoryMemberRoles.Values.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
 					await e.SendReplySafe(ErrorNoMemberRoles);
@@ -347,7 +355,7 @@ namespace Valkyrja.modules
 
 				string response = e.Server.Localisation.GetString("role_memberroles_print",
 					e.Server.Config.CommandPrefix,
-					e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc.RoleId == r.Id)).Select(r => r.Name).ToNames()
+					e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc == r.Id)).Select(r => r.Name).ToNames()
 				);
 
 				await e.SendReplySafe(response);
