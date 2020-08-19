@@ -363,6 +363,13 @@ namespace Valkyrja.modules
 					return;
 				}
 
+				SocketGuildUser moderator = e.Message.Author as SocketGuildUser;
+				if( moderator == null )
+				{
+					await this.HandleException(new NullReferenceException("Message author is not a SocketGuildUser"), e.Message.Author.Id.ToString(), e.Server.Id);
+					return;
+				}
+
 				List<SocketGuildUser> users;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count )
 				{
@@ -370,7 +377,9 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				List<RoleConfig> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).ToList();
+				List<guid> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).Select(r => r.RoleId).ToList();
+				memberRoles.AddRange(e.Server.CategoryMemberRoles.Values.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
+
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
 					await e.SendReplySafe(ErrorNoMemberRoles);
@@ -379,7 +388,7 @@ namespace Valkyrja.modules
 
 				string expression = e.TrimmedMessage.Substring(e.TrimmedMessage.IndexOf(e.MessageArgs[users.Count]));
 
-				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc.RoleId == r.Id));
+				IEnumerable<SocketRole> roles = e.Server.Guild.Roles.Where(r => memberRoles.Any(rc => rc == r.Id));
 				IEnumerable<SocketRole> foundRoles = null;
 				if( !(foundRoles = roles.Where(r => r.Name == expression)).Any() &&
 				    !(foundRoles = roles.Where(r => r.Name.ToLower() == expression.ToLower())).Any() &&
