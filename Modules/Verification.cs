@@ -364,9 +364,14 @@ namespace Valkyrja.modules
 				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
 				if( user == null )
 				{
-					await this.HandleException(new ArgumentException("User is null"), "Failed to assign verification role.", server.Id);
-					verified = true; //Remove them from the list.
-					continue;
+					await server.Guild.DownloadUsersAsync();
+					user = server.Guild.GetUser(userData.UserId);
+					if( user == null )
+					{
+						await this.HandleException(new ArgumentException("User is null"), "Failed to assign verification role.", server.Id);
+						verified = true; //Remove them from the list.
+						continue;
+					}
 				}
 
 				try
