@@ -656,6 +656,10 @@ namespace Valkyrja.modules
 						this.Client.AntispamMessageIDs.Add(message.Id);
 						await message.DeleteAsync();
 						this.Client.Monitoring.AntispamActions.Inc();
+						string trimmedContent = message.Content;
+						if( trimmedContent.Length + 72 > GlobalConfig.MessageCharacterLimit )
+							trimmedContent = trimmedContent.Substring(0, GlobalConfig.MessageCharacterLimit);
+						await this.Client.SendPmSafe(message.Author, $"Your message was deleted because it matches a banned expression:\n```\n{trimmedContent}\n```");
 					}
 				}
 			}
