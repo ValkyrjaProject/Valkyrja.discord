@@ -632,7 +632,7 @@ namespace Valkyrja.modules
 			{
 				SocketTextChannel logChannel;
 				if( server.Config.AlertChannelId != 0 && (logChannel = server.Guild.GetTextChannel(server.Config.AlertChannelId)) != null &&
-				    server.Config.AlertChannelId != message.Channel.Id && server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content) &&
+				    server.Config.AlertChannelId != message.Channel.Id && ((server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content)) || (server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(message.Content))) &&
 					!server.IgnoredChannels.Contains(channel.Id) && (server.Config.AlertWhitelistId == 0 || server.Config.AlertWhitelistId == channel.Id) )
 				{
 					Message msg = new Message(){
@@ -649,6 +649,9 @@ namespace Valkyrja.modules
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
 					this.MessageQueueLock.Release();
+
+					if( server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(message.Content) )
+						await message.DeleteAsync();
 				}
 			}
 			catch( HttpException exception )
