@@ -650,8 +650,13 @@ namespace Valkyrja.modules
 					this.MessageQueue.Add(msg);
 					this.MessageQueueLock.Release();
 
-					if( server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(message.Content) )
+					if( server.DeleteAlertRegex != null && !server.HasIgnoredRole(user) && (!server.Config.AntispamIgnoreMembers || server.IsMember(user)) &&
+					    server.DeleteAlertRegex.IsMatch(message.Content) )
+					{
+						this.Client.AntispamMessageIDs.Add(message.Id);
 						await message.DeleteAsync();
+						this.Client.Monitoring.AntispamActions.Inc();
+					}
 				}
 			}
 			catch( HttpException exception )
