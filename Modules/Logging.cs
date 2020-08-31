@@ -789,7 +789,7 @@ namespace Valkyrja.modules
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(color, "", "User Banned " + duration,
 						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-						userName ?? "<unknown>", $"`{userId.ToString()}`",
+						userName ?? "<unknown>", $"`{(userName?.EndsWith("#redacted") ?? false ? "redacted" : userId.ToString())}`",
 						DateTime.UtcNow,
 						"Reason", reason),
 					LogString = GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
