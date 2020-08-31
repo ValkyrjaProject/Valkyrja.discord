@@ -624,8 +624,9 @@ namespace Valkyrja.modules
 				return;
 
 			Server server;
+			SocketGuildUser user = message.Author as SocketGuildUser;
 			if( !this.Client.Servers.ContainsKey(channel.Guild.Id) || (server = this.Client.Servers[channel.Guild.Id]) == null ||
-			    server.Config.IgnoreBots && message.Author.IsBot || !(message.Author is SocketGuildUser user) )
+			    (server.Config.IgnoreBots && message.Author.IsBot) || !(message.Author.IsWebhook || user != null) )
 				return;
 
 			try
@@ -638,7 +639,7 @@ namespace Valkyrja.modules
 					Message msg = new Message(){
 						Channel = logChannel,
 						DesiredType = MessageType.Embed,
-						LogEmbed = GetLogEmbed(new Color(server.Config.AlertChannelColor), user?.GetAvatarUrl(),
+						LogEmbed = GetLogEmbed(new Color(server.Config.AlertChannelColor), message.Author.GetAvatarUrl(),
 							"Alert triggered", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
@@ -650,7 +651,7 @@ namespace Valkyrja.modules
 					this.MessageQueue.Add(msg);
 					this.MessageQueueLock.Release();
 
-					if( server.DeleteAlertRegex != null && !server.HasIgnoredRole(user) && (!server.Config.AntispamIgnoreMembers || server.IsMember(user)) &&
+					if( server.DeleteAlertRegex != null && (user == null || (!server.HasIgnoredRole(user) && (!server.Config.AntispamIgnoreMembers || server.IsMember(user)))) &&
 					    server.DeleteAlertRegex.IsMatch(message.Content) )
 					{
 						this.Client.AntispamMessageIDs.Add(message.Id);
