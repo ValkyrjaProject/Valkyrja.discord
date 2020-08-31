@@ -762,7 +762,7 @@ namespace Valkyrja.modules
 				try
 				{
 					response = await Ban(e.Server, mentionedUsers, duration.Value, warning.ToString(), e.Message.Author as SocketGuildUser,
-						e.Command.Id.ToLower() == "silentban", e.Command.Id.ToLower() == "purgeban");
+						e.Command.Id.ToLower() == "silentban", e.Command.Id.ToLower() == "purgeban", e.Command.Id.ToLower() == "redactedban");
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
@@ -781,6 +781,10 @@ namespace Valkyrja.modules
 
 			newCommand = newCommand.CreateCopy("purgeBan");
 			newCommand.Description = "Ban someone just like the usual, but also delete all of their messages within the last 24 hours.";
+			commands.Add(newCommand);
+
+			newCommand = newCommand.CreateCopy("redactedBan");
+			newCommand.Description = "Ban someone just like the usual, but do not log their user ID or #discrim.";
 			commands.Add(newCommand);
 
 // !quickBan
@@ -1414,7 +1418,7 @@ namespace Valkyrja.modules
 		/// <summary> Ban the User - this will also ban them as soon as they join the server, if they are not there right now. </summary>
 		/// <param name="duration">Use zero for permanent ban.</param>
 		/// <param name="silent">Set to true to not PM the user information about the ban (time, server, reason)</param>
-		public async Task<string> Ban(Server server, List<UserData> users, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false)
+		public async Task<string> Ban(Server server, List<UserData> users, TimeSpan duration, string reason, SocketGuildUser bannedBy = null, bool silent = false, bool deleteMessages = false, bool redacted = false)
 		{
 			DateTime bannedUntil = DateTime.MaxValue;
 			if( duration.TotalHours >= 1 )
@@ -1440,7 +1444,7 @@ namespace Valkyrja.modules
 				{
 					Task logBan = null;
 					if( this.Client.Events.LogBan != null ) // This is in "wrong" order to prevent false positive "user left" logging.
-						logBan = this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
+						logBan = this.Client.Events.LogBan(server, redacted ? user.Username : user?.GetUsername(), redacted ? 0 : userData.UserId, reason, durationString.ToString(), bannedBy);
 
 					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
