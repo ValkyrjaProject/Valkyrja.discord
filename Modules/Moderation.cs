@@ -1444,7 +1444,7 @@ namespace Valkyrja.modules
 				{
 					Task logBan = null;
 					if( this.Client.Events.LogBan != null ) // This is in "wrong" order to prevent false positive "user left" logging.
-						logBan = this.Client.Events.LogBan(server, redacted ? user.Username + "#redacted" : user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
+						logBan = this.Client.Events.LogBan(server, redacted ? user?.Username + "#redacted" : user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
 
 					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
