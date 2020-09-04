@@ -225,9 +225,16 @@ namespace Valkyrja.modules
 		{
 			PmErrorCode pmErrorCode = PmErrorCode.Unknown;
 			List<UserData> alreadyVerified = new List<UserData>();
+			bool downloaded = false;
 			foreach( UserData userData in users )
 			{
 				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+				if( !downloaded && user == null )
+				{
+					await server.Guild.DownloadUsersAsync();
+					downloaded = true;
+					user = server.Guild.GetUser(userData.UserId);
+				}
 				if( user == null )
 					continue;
 
@@ -359,19 +366,20 @@ namespace Valkyrja.modules
 			}
 
 			bool verified = false;
+			bool downloaded = false;
 			foreach( UserData userData in users )
 			{
 				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-				if( user == null )
+				if( !downloaded && user == null )
 				{
 					await server.Guild.DownloadUsersAsync();
 					user = server.Guild.GetUser(userData.UserId);
-					if( user == null )
-					{
-						await this.HandleException(new ArgumentException("User is null"), "Failed to assign verification role.", server.Id);
-						verified = true; //Remove them from the list.
-						continue;
-					}
+				}
+				if( user == null )
+				{
+					await this.HandleException(new ArgumentException("User is null"), "Failed to assign verification role.", server.Id);
+					verified = true; //Remove them from the list.
+					continue;
 				}
 
 				try

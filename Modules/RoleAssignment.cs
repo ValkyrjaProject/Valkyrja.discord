@@ -828,6 +828,11 @@ namespace Valkyrja.modules
 						user = server.Guild.GetUser(reaction.UserId);
 						if( user == null )
 						{
+							await server.Guild.DownloadUsersAsync();
+							user = server.Guild.GetUser(reaction.UserId);
+						}
+						if( user == null )
+						{
 							this.ReactionUsers.Remove(reaction.UserId);
 							server.ReactionRolesLock.Release();
 							return;

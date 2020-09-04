@@ -637,9 +637,16 @@ namespace Valkyrja.modules
 				StringBuilder infractions = new StringBuilder();
 				try
 				{
+					bool downloaded = false;
 					foreach( UserData userData in mentionedUsers )
 					{
 						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+						if( !downloaded && user == null )
+						{
+							await e.Server.Guild.DownloadUsersAsync();
+							downloaded = true;
+							user = e.Server.Guild.GetUser(userData.UserId);
+						}
 						if( user == null )
 							continue;
 
@@ -929,9 +936,16 @@ namespace Valkyrja.modules
 				List<string> userNames = new List<string>();
 				List<guid> userIds = new List<guid>();
 				StringBuilder infractions = new StringBuilder();
+				bool downloaded = false;
 				foreach(UserData userData in mentionedUsers)
 				{
 					SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+					if( !downloaded && user == null )
+					{
+						await e.Server.Guild.DownloadUsersAsync();
+						downloaded = true;
+						user = e.Server.Guild.GetUser(userData.UserId);
+					}
 					userNames.Add(user?.GetUsername() ?? "<unknown>");
 					userIds.Add(userData.UserId);
 					userData.AddWarning(warning.ToString());
@@ -1079,11 +1093,18 @@ namespace Valkyrja.modules
 				if( foundUserData.Count <= 50 )
 				{
 					StringBuilder responseBuilder = new StringBuilder("`UserId` | `n` | `UserName`\n");
+					bool downloaded = false;
 					foreach( UserData userData in foundUserData.OrderByDescending(u => u.WarningCount) )
 					{
 						if( userData.BannedUntil > DateTime.UtcNow + TimeSpan.FromDays(1000) )
 							continue;
 						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+						if( !downloaded && user == null )
+						{
+							await e.Server.Guild.DownloadUsersAsync();
+							downloaded = true;
+							user = e.Server.Guild.GetUser(userData.UserId);
+						}
 						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{(user?.GetUsername() ?? "<User Not Present>")}`");
 					}
 
@@ -1138,12 +1159,19 @@ namespace Valkyrja.modules
 				if( foundUserIds.Count <= 5 )
 				{
 					StringBuilder whoisStrings = new StringBuilder();
+					bool downloaded = false;
 					for( int i = 0; i < foundUserIds.Count; i++ )
 					{
 						UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundUserIds[i]);
 						if( userData != null )
 						{
 							SocketGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
+							if( !downloaded && user == null )
+							{
+								await e.Server.Guild.DownloadUsersAsync();
+								downloaded = true;
+								user = e.Server.Guild.GetUser(userData.UserId);
+							}
 							whoisStrings.AppendLine(userData.GetWhoisString(dbContext, user));
 						}
 					}
@@ -1204,12 +1232,19 @@ namespace Valkyrja.modules
 				if( foundUserIds.Count <= 5 )
 				{
 					StringBuilder whoisStrings = new StringBuilder();
+					bool downloaded = false;
 					for( int i = 0; i < foundUserIds.Count; i++ )
 					{
 						UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundUserIds[i]);
 						if( userData != null )
 						{
 							SocketGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
+							if( !downloaded && user == null )
+							{
+								await e.Server.Guild.DownloadUsersAsync();
+								downloaded = true;
+								user = e.Server.Guild.GetUser(userData.UserId);
+							}
 							if( e.Command.Id == "names" )
 								whoisStrings.AppendLine(userData.GetNamesString(dbContext, user));
 							else
@@ -1547,6 +1582,11 @@ namespace Valkyrja.modules
 			string durationString = GetDurationString(duration);
 
 			SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+			if( user == null )
+			{
+				await server.Guild.DownloadUsersAsync();
+				user = server.Guild.GetUser(userData.UserId);
+			}
 			await user.AddRoleAsync(role);
 
 			string warning = $"Muted {durationString}";
@@ -1577,6 +1617,7 @@ namespace Valkyrja.modules
 			string response = "";
 			List<guid> muted = new List<guid>();
 			StringBuilder infractions = new StringBuilder();
+			bool downloaded = false;
 			foreach( UserData userData in users )
 			{
 				try
@@ -1588,6 +1629,12 @@ namespace Valkyrja.modules
 					}
 
 					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					if( !downloaded && user == null )
+					{
+						await server.Guild.DownloadUsersAsync();
+						downloaded = true;
+						user = server.Guild.GetUser(userData.UserId);
+					}
 					if( user == null )
 					{
 						response = NotFoundString;
