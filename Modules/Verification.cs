@@ -225,6 +225,7 @@ namespace Valkyrja.modules
 		{
 			PmErrorCode pmErrorCode = PmErrorCode.Unknown;
 			List<UserData> alreadyVerified = new List<UserData>();
+			List<UserData> nulls = new List<UserData>();
 			bool downloaded = false;
 			foreach( UserData userData in users )
 			{
@@ -235,8 +236,12 @@ namespace Valkyrja.modules
 					downloaded = true;
 					user = server.Guild.GetUser(userData.UserId);
 				}
+
 				if( user == null )
+				{
+					nulls.Add(userData);
 					continue;
+				}
 
 				if( userData.Verified )
 				{
@@ -344,6 +349,11 @@ namespace Valkyrja.modules
 			{
 				await VerifyUsers(server, alreadyVerified, false);
 				pmErrorCode = PmErrorCode.Undefined;
+			}
+
+			if( nulls.Count == users.Count )
+			{
+				pmErrorCode = PmErrorCode.UserNull;
 			}
 
 			return pmErrorCode;
