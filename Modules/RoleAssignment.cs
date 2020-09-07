@@ -525,7 +525,7 @@ namespace Valkyrja.modules
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Configure category member roles.";
 			newCommand.ManPage = new ManPage("<add> <modRoleId> <memberRoleId> | <reset> <modRoleId> | <resetAll>", "`<add>` - An instruction to add the following roles as a moderator who can assign the member role.\n\n`<reset>` - An instruction to clear all the member roles associated with the specified moderator role ID.\n\n`<modRoleId>` - Moderator role ID to be added or reset. \n\n`<memberRoleId>` Member role ID to be added.");
-			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
 				string response = "Invalid arguments:\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId);
 
