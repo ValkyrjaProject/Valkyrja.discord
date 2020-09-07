@@ -346,7 +346,7 @@ namespace Valkyrja.modules
 				}
 
 				List<guid> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).Select(r => r.RoleId).ToList();
-				memberRoles.AddRange(e.Server.CategoryMemberRoles.Values.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
+				memberRoles.AddRange(e.Server.CategoryMemberRoles.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
 					await e.SendReplySafe(ErrorNoMemberRoles);
@@ -390,7 +390,7 @@ namespace Valkyrja.modules
 				}
 
 				List<guid> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).Select(r => r.RoleId).ToList();
-				memberRoles.AddRange(e.Server.CategoryMemberRoles.Values.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
+				memberRoles.AddRange(e.Server.CategoryMemberRoles.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
 
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
@@ -469,7 +469,7 @@ namespace Valkyrja.modules
 				}
 
 				List<guid> memberRoles = e.Server.Roles.Values.Where(r => r.PermissionLevel == RolePermissionLevel.Member).Select(r => r.RoleId).ToList();
-				memberRoles.AddRange(e.Server.CategoryMemberRoles.Values.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
+				memberRoles.AddRange(e.Server.CategoryMemberRoles.Where(rc => moderator.Roles.Any(r => r.Id == rc.ModRoleId)).Select(r => r.MemberRoleId));
 
 				if( memberRoles == null || memberRoles.Count == 0 )
 				{
