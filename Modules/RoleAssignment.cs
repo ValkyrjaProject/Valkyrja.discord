@@ -822,14 +822,13 @@ namespace Valkyrja.modules
 
 				if( roles.Any() )
 				{
-					SocketGuildUser user = null;
+					IGuildUser user = null;
 					if( !reaction.User.IsSpecified || (user = reaction.User.Value as SocketGuildUser) == null )
 					{
 						user = server.Guild.GetUser(reaction.UserId);
 						if( user == null )
 						{
-							await server.Guild.DownloadUsersAsync();
-							user = server.Guild.GetUser(reaction.UserId);
+							user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, reaction.UserId);
 						}
 						if( user == null )
 						{
@@ -844,7 +843,7 @@ namespace Valkyrja.modules
 					{
 						foreach( ReactionAssignedRole role in roles )
 						{
-							if( assignRoles == user.Roles.Any(r => r.Id == role.RoleId) )
+							if( assignRoles == user.RoleIds.Any(rId => rId == role.RoleId) )
 								continue;
 
 							IRole discordRole = server.Guild.GetRole(role.RoleId);
@@ -866,7 +865,7 @@ namespace Valkyrja.modules
 							if( groupId != 0 )
 							{
 								List<guid> groupRoleIds = server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId).Select(r => r.Value.RoleId).ToList();
-								int userHasCount = user.Roles.Count(r => groupRoleIds.Any(id => id == r.Id));
+								int userHasCount = user.RoleIds.Count(rId => groupRoleIds.Any(id => id == rId));
 
 								RoleGroupConfig groupConfig = null;
 								if( userHasCount > 0 )
@@ -879,7 +878,7 @@ namespace Valkyrja.modules
 									{
 										IRole roleToRemove = server.Guild.GetRole(groupRoleIds.Last());
 										groupRoleIds.Remove(groupRoleIds.Last());
-										if( roleToRemove == null || user.Roles.All(r => r.Id != roleToRemove.Id) )
+										if( roleToRemove == null || user.RoleIds.All(rId => rId != roleToRemove.Id) )
 											continue;
 
 										await user.RemoveRoleAsync(roleToRemove);

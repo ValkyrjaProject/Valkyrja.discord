@@ -226,15 +226,12 @@ namespace Valkyrja.modules
 			PmErrorCode pmErrorCode = PmErrorCode.Unknown;
 			List<UserData> alreadyVerified = new List<UserData>();
 			List<UserData> nulls = new List<UserData>();
-			bool downloaded = false;
 			foreach( UserData userData in users )
 			{
-				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-				if( !downloaded && user == null )
+				IGuildUser user = server.Guild.GetUser(userData.UserId);
+				if( user == null )
 				{
-					await server.Guild.DownloadUsersAsync();
-					downloaded = true;
-					user = server.Guild.GetUser(userData.UserId);
+					user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, userData.UserId);
 				}
 
 				if( user == null )
@@ -376,14 +373,12 @@ namespace Valkyrja.modules
 			}
 
 			bool verified = false;
-			bool downloaded = false;
 			foreach( UserData userData in users )
 			{
-				SocketGuildUser user = server.Guild.GetUser(userData.UserId);
-				if( !downloaded && user == null )
+				IGuildUser user = server.Guild.GetUser(userData.UserId);
+				if( user == null )
 				{
-					await server.Guild.DownloadUsersAsync();
-					user = server.Guild.GetUser(userData.UserId);
+					user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, userData.UserId);
 				}
 				if( user == null )
 				{

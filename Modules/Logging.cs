@@ -892,7 +892,7 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private async Task LogMute(Server server, SocketGuildUser user, string duration, SocketGuildUser issuedBy)
+		private async Task LogMute(Server server, IGuildUser user, string duration, SocketGuildUser issuedBy)
 		{
 			try
 			{
@@ -906,7 +906,7 @@ namespace Valkyrja.modules
 				Message msg = new Message(){
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
-					LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), "User muted " + duration,
+					LogEmbed = GetLogEmbed(color, user.GetAvatarUrl(), "User muted " + duration,
 						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 						user.GetUsername(), $"`{user.Id.ToString()}`",
 						DateTime.UtcNow),
