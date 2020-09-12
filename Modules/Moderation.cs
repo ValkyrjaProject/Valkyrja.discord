@@ -1426,7 +1426,7 @@ namespace Valkyrja.modules
 			else
 				duration = TimeSpan.Zero;
 
-			string durationString = GetDurationString(duration);
+			string durationString = Utils.GetDurationString(duration);
 			string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
@@ -1452,7 +1452,7 @@ namespace Valkyrja.modules
 			else
 				duration = TimeSpan.Zero;
 
-			string durationString = GetDurationString(duration);
+			string durationString = Utils.GetDurationString(duration);
 
 			string response = "";
 			List<guid> banned = new List<guid>();
@@ -1503,7 +1503,7 @@ namespace Valkyrja.modules
 			else
 				duration = TimeSpan.Zero;
 
-			string durationString = GetDurationString(duration);
+			string durationString = Utils.GetDurationString(duration);
 
 			SocketGuildUser user = null;
 			if( !silent && (user = server.Guild.GetUser(userData.UserId)) != null )
@@ -1570,7 +1570,7 @@ namespace Valkyrja.modules
 			}
 
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
-			string durationString = GetDurationString(duration);
+			string durationString = Utils.GetDurationString(duration);
 
 			IGuildUser user = server.Guild.GetUser(userData.UserId);
 			if( user == null )
@@ -1602,7 +1602,7 @@ namespace Valkyrja.modules
 		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null, string reason = null)
 		{
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
-			string durationString = GetDurationString(duration);
+			string durationString = Utils.GetDurationString(duration);
 
 			string response = "";
 			List<guid> muted = new List<guid>();
@@ -1723,7 +1723,7 @@ namespace Valkyrja.modules
 				channelConfig.Muted = true;
 
 				if( this.Client.Events.LogMutedChannel != null )
-					await this.Client.Events.LogMutedChannel(server, channel, GetDurationString(duration), mutedBy);
+					await this.Client.Events.LogMutedChannel(server, channel, Utils.GetDurationString(duration), mutedBy);
 			} catch(HttpException exception)
 			{
 				await server.HandleHttpException(exception, $"This happened in <#{channelConfig.ChannelId}> when muting the channel (modifying its permissions)");
@@ -1761,39 +1761,6 @@ namespace Valkyrja.modules
 				response = Utils.HandleHttpException(exception);
 			}
 			return response;
-		}
-
-		private string GetDurationString(TimeSpan duration)
-		{
-			StringBuilder durationString = new StringBuilder();
-
-			if( duration == TimeSpan.Zero )
-				durationString.Append("permanently");
-			else
-			{
-				durationString.Append("for ");
-				if( duration.Days > 0 )
-				{
-					durationString.Append(duration.Days);
-					durationString.Append(duration.Days == 1 ? " day" : " days");
-					if( duration.Hours > 0 || duration.Minutes > 0 )
-						durationString.Append(" and ");
-				}
-				if( duration.Hours > 0 )
-				{
-					durationString.Append(duration.Hours);
-					durationString.Append(duration.Hours == 1 ? " hour" : " hours");
-					if( duration.Minutes > 0 )
-						durationString.Append(" and ");
-				}
-				if( duration.Minutes > 0 )
-				{
-					durationString.Append(duration.Minutes);
-					durationString.Append(duration.Minutes == 1 ? " minute" : " minutes");
-				}
-			}
-
-			return durationString.ToString();
 		}
 	}
 }
