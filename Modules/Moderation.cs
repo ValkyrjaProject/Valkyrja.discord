@@ -1672,11 +1672,18 @@ namespace Valkyrja.modules
 			{
 				try
 				{
-					SocketGuildUser user = server.Guild.GetUser(userData.UserId);
+					IGuildUser user = server.Guild.GetUser(userData.UserId);
 					if( user == null )
+					{
+						user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, userData.UserId);
+					}
+					if( user == null )
+					{
+						response = NotFoundString;
 						continue;
+					}
 
-					if( user.Roles.Any(r => r.Id == role.Id) )
+					if( user.RoleIds.Any(rId => rId == role.Id) )
 						await user.RemoveRoleAsync(role);
 					unmuted.Add(userData.UserId);
 					userData.MutedUntil = DateTime.MinValue;

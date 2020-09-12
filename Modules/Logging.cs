@@ -929,7 +929,7 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private async Task LogUnmute(Server server, SocketGuildUser user, SocketGuildUser issuedBy)
+		private async Task LogUnmute(Server server, IGuildUser user, SocketGuildUser issuedBy)
 		{
 			try
 			{
@@ -940,7 +940,7 @@ namespace Valkyrja.modules
 				Message msg = new Message(){
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
-					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), user?.GetAvatarUrl(), "User Unmuted",
+					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), user.GetAvatarUrl(), "User Unmuted",
 						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 						user.GetUsername(), $"`{user.Id.ToString()}`",
 						DateTime.UtcNow),
