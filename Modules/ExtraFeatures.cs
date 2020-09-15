@@ -258,12 +258,19 @@ namespace Valkyrja.modules
 				string response = "K.";
 				try
 				{
-					if( await e.Channel.GetMessageAsync(messageId) is SocketUserMessage sMsg )
-						await sMsg.AddReactionsAsync(emotes.ToArray());
-					else if( await e.Channel.GetMessageAsync(messageId) is RestUserMessage rMsg )
-						await rMsg.AddReactionsAsync(emotes.ToArray());
-					else
-						response = "Failed to fetch a message with that ID. Did you use this command in a correct channel?";
+					IMessage msg = await e.Channel.GetMessageAsync(messageId);
+					switch( msg )
+					{
+						case RestUserMessage message:
+							await message.AddReactionsAsync(emotes.ToArray());
+							break;
+						case SocketUserMessage message:
+							await message.AddReactionsAsync(emotes.ToArray());
+							break;
+						default:
+							response = "Failed to fetch a message with that ID. Did you use this command in a correct channel?";
+							break;
+					}
 				}
 				catch( Exception )
 				{

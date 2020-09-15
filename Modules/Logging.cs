@@ -558,7 +558,7 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private async Task OnMessageUpdated(SocketMessage originalMessage, SocketMessage updatedMessage, ISocketMessageChannel c)
+		private async Task OnMessageUpdated(IMessage originalMessage, SocketMessage updatedMessage, ISocketMessageChannel c)
 		{
 			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
 				return;
