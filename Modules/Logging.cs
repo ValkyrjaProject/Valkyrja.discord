@@ -535,12 +535,12 @@ namespace Valkyrja.modules
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " ",
-							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString()),
+							message.Attachments?.Any() ?? false ? "Files" : " ", attachment.ToString() + " "),
 						LogString = GetLogMessage(title, "#" + channel.Name,
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " ",
-							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString())
+							message.Attachments?.Any() ?? false ? "Files" : " ", attachment.ToString() + " ")
 					};
 
 					await this.MessageQueueLock.WaitAsync();
