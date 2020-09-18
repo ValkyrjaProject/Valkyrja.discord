@@ -152,7 +152,7 @@ namespace Valkyrja.modules
 
 				await role.ModifyAsync(r => r.Mentionable = true);
 				await Task.Delay(100);
-				await e.SendReplySafe($"{role.Mention} {message}", new AllowedMentions(AllowedMentionTypes.Users | AllowedMentionTypes.Everyone | AllowedMentionTypes.Roles));
+				await e.SendReplySafe($"{role.Mention} {message}", allowedMentions: new AllowedMentions(AllowedMentionTypes.Users | AllowedMentionTypes.Everyone | AllowedMentionTypes.Roles));
 				await Task.Delay(100);
 				await role.ModifyAsync(r => r.Mentionable = false);
 			};
