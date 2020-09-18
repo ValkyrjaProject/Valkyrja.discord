@@ -160,16 +160,16 @@ namespace Valkyrja.modules
 					}
 					else if( user.Id == this.Client.DiscordClient.CurrentUser.Id )
 					{
-						await e.Channel.SendMessageAsync("", embed: GetValkyrjaEmbed(user as SocketGuildUser));
+						await e.SendReplySafe(null, embed: GetValkyrjaEmbed(user as SocketGuildUser));
 					}
 					else
 					{
-						await e.Channel.SendMessageAsync("", embed: GetProfileEmbed(dbContext, e.Server, user as SocketGuildUser));
+						await e.SendReplySafe(null, embed: GetProfileEmbed(dbContext, e.Server, user as SocketGuildUser));
 					}
 				}
 				else
 				{
-					await e.Channel.SendMessageAsync("", embed: GetProfileEmbed(dbContext, e.Server, e.Message.Author as SocketGuildUser));
+					await e.SendReplySafe(null, embed: GetProfileEmbed(dbContext, e.Server, e.Message.Author as SocketGuildUser));
 				}
 
 				dbContext.Dispose();
@@ -395,8 +395,8 @@ namespace Valkyrja.modules
 				.AddField("Platform", "[.NET Core](https://github.com/dotnet)", true)
 				.AddField("License", "[MIT](https://github.com/RheaAyase/Valkyrja.discord/blob/master/LICENSE)", true)
 				.AddField("Operating System", "[Fedora Linux](https://discord.gg/fedora)", true)
-				.AddField("Server", "Water cooled DualZeeon with 32x 3.8GHz, 64GB ECC memory and ~20TB raid5. [It's pink!](https://persephone.cloud)")
-				.AddField("Author", "A girl who inspires the desolate white space of Linux world with the delicate C# letters of simplified artificial intelligence. Also a [Mountain Biker](https://rhea-ayase.eu/mtb)")
+				.AddField("Server", "AMD Ryzen 3950x, 128GBs G.Skill memory and ~20TB raid5.")
+				.AddField("Author", "A young woman who inspires the desolate white space of Linux world with the delicate C# letters of simplified artificial intelligence. Also a [Mountain Biker](https://rhea-ayase.eu/mtb) and a .NET Core QE Lead at Red Hat.")
 				.AddField("Web-Author", "[Her fiancé](https://github.com/SpyTec), also a professional slacker.")
 				.AddField("Questions?", $"Direct them to the [Valhalla]({GlobalConfig.DiscordInvite}), Valkyrja's support server.");
 
