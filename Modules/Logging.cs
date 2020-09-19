@@ -534,13 +534,13 @@ namespace Valkyrja.modules
 						LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), title, $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
-							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " ",
-							message.Attachments?.Any() ?? false ? "Files" : " ", attachment.ToString() + " "),
+							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
+							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString() + ""),
 						LogString = GetLogMessage(title, "#" + channel.Name,
 							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
-							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " ",
-							message.Attachments?.Any() ?? false ? "Files" : " ", attachment.ToString() + " ")
+							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
+							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString() + "")
 					};
 
 					await this.MessageQueueLock.WaitAsync();
@@ -592,13 +592,13 @@ namespace Valkyrja.modules
 							"Message Edited", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{updatedMessage.Id})",
 							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
 							updatedMessage.Id,
-							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " ",
-							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " "),
+							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
+							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? ""),
 						LogString = GetLogMessage("Message Edited", "#" + channel.Name,
 							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
 							updatedMessage.Id,
-							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " ",
-							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? " ")
+							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
+							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "")
 					};
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
