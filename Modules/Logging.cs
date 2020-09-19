@@ -470,7 +470,7 @@ namespace Valkyrja.modules
 				await StatsIncrement(server, StatsType.Verified);
 		}
 
-		private async Task OnMessageDeleted(SocketMessage message, ISocketMessageChannel c)
+		private async Task OnMessageDeleted(IMessage message, ISocketMessageChannel c)
 		{
 			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
 				return;
