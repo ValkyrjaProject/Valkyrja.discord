@@ -1111,6 +1111,50 @@ namespace Valkyrja.modules
 			};
 			commands.Add(newCommand);
 
+// !listIDs
+			newCommand = new Command("listIDs");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Search and display all User IDs on this server that match a username expression.";
+			newCommand.ManPage = new ManPage("<expression>", "`<expression>` - User IDs with a username or a nickname matching this expression will be returned.");
+			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
+			newCommand.OnExecute += async e => {
+				if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				{
+					await e.SendReplySafe("Who are you looking for?");
+					return;
+				}
+
+				if( e.Server?.Guild?.Users == null )
+				{
+					await e.SendReplySafe("Encountered unexpected D.Net library error.");
+					return;
+				}
+
+				string expression = e.TrimmedMessage.ToLower();
+				List<guid> foundUserIds = e.Server.Guild.Users
+					.Where(u => u != null && ((u.Username != null && u.Username.ToLower().Contains(expression)) ||
+					            (u.Nickname != null && u.Nickname.ToLower().Contains(expression))))
+					.Select(u => u.Id).ToList();
+
+				StringBuilder idStrings = new StringBuilder();
+				if( foundUserIds.Any() )
+				{
+					foreach( guid id in foundUserIds )
+					{
+						idStrings.AppendLine($"`{id}`");
+					}
+				}
+
+				string response = idStrings.ToString();
+				if( string.IsNullOrEmpty(response) )
+				{
+					response = "I did not find anyone.";
+				}
+
+				await e.SendReplySafe(response);
+			};
+			commands.Add(newCommand);
+
 // !whois
 			newCommand = new Command("whois");
 			newCommand.Type = CommandType.Standard;
@@ -1150,19 +1194,15 @@ namespace Valkyrja.modules
 				if( foundUserIds.Count <= 5 )
 				{
 					StringBuilder whoisStrings = new StringBuilder();
-					bool downloaded = false;
 					for( int i = 0; i < foundUserIds.Count; i++ )
 					{
 						UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundUserIds[i]);
 						if( userData != null )
 						{
-							SocketGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
-							if( !downloaded && user == null )
-							{
-								await e.Server.Guild.DownloadUsersAsync();
-								downloaded = true;
-								user = e.Server.Guild.GetUser(userData.UserId);
-							}
+							IGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
+							if( user == null )
+								user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(e.Server.Id, userData.UserId);
+
 							whoisStrings.AppendLine(userData.GetWhoisString(dbContext, user));
 						}
 					}
@@ -1223,19 +1263,15 @@ namespace Valkyrja.modules
 				if( foundUserIds.Count <= 5 )
 				{
 					StringBuilder whoisStrings = new StringBuilder();
-					bool downloaded = false;
 					for( int i = 0; i < foundUserIds.Count; i++ )
 					{
 						UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundUserIds[i]);
 						if( userData != null )
 						{
-							SocketGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
-							if( !downloaded && user == null )
-							{
-								await e.Server.Guild.DownloadUsersAsync();
-								downloaded = true;
-								user = e.Server.Guild.GetUser(userData.UserId);
-							}
+							IGuildUser user = e.Server.Guild.GetUser(foundUserIds[i]);
+							if( user == null )
+								user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(e.Server.Id, userData.UserId);
+
 							if( e.Command.Id == "names" )
 								whoisStrings.AppendLine(userData.GetNamesString(dbContext, user));
 							else
