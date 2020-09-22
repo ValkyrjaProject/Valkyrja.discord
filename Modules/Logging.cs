@@ -632,8 +632,9 @@ namespace Valkyrja.modules
 			try
 			{
 				SocketTextChannel logChannel;
+				bool isDeleteMatch = server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(message.Content);
 				if( server.Config.AlertChannelId != 0 && (logChannel = server.Guild.GetTextChannel(server.Config.AlertChannelId)) != null &&
-				    server.Config.AlertChannelId != message.Channel.Id && ((server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content)) || (server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(message.Content))) &&
+				    server.Config.AlertChannelId != message.Channel.Id && ((server.AlertRegex != null && server.AlertRegex.IsMatch(message.Content)) || isDeleteMatch) &&
 					!server.IgnoredChannels.Contains(channel.Id) && (server.Config.AlertWhitelistId == 0 || server.Config.AlertWhitelistId == channel.Id) )
 				{
 					Message msg = new Message(){
@@ -651,8 +652,7 @@ namespace Valkyrja.modules
 					this.MessageQueue.Add(msg);
 					this.MessageQueueLock.Release();
 
-					if( server.DeleteAlertRegex != null && (user == null || (!server.HasIgnoredRole(user) && (!server.Config.AntispamIgnoreMembers || server.IsMember(user)))) &&
-					    server.DeleteAlertRegex.IsMatch(message.Content) )
+					if( isDeleteMatch && (user == null || (!server.HasIgnoredRole(user) && (!server.Config.AntispamIgnoreMembers || !server.IsMember(user)))) )
 					{
 						this.Client.AntispamMessageIDs.Add(message.Id);
 						await message.DeleteAsync();
