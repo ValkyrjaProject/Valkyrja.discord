@@ -570,15 +570,14 @@ namespace Valkyrja.modules
 
 			Server server;
 			if( !this.Client.Servers.ContainsKey(channel.Guild.Id) ||
-			    (server = this.Client.Servers[channel.Guild.Id]) == null ||
-			    server.Config.IgnoreBots && updatedMessage.Author.IsBot ||
-			    !(updatedMessage.Author is SocketGuildUser user) )
+			    (server = this.Client.Servers[channel.Guild.Id]) == null )
 				return;
 
 			try
 			{
 				SocketTextChannel logChannel;
-				if( server.Config.LogEditedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
+				if( (!server.Config.IgnoreBots || !updatedMessage.Author.IsBot) && updatedMessage.Author is SocketGuildUser user &&
+					server.Config.LogEditedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
 					    server.IgnoredChannels.Contains(channel.Id) ||
 					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
 				{
@@ -604,6 +603,13 @@ namespace Valkyrja.modules
 					this.MessageQueue.Add(msg);
 					this.MessageQueueLock.Release();
 				}
+
+				if( updatedMessage.Content != null && server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(updatedMessage.Content) )
+				{
+					this.Client.AntispamMessageIDs.Add(updatedMessage.Id);
+					await updatedMessage.DeleteAsync();
+					this.Client.Monitoring.AntispamActions.Inc();
+				}
 			}
 			catch( HttpException exception )
 			{
@@ -620,7 +626,7 @@ namespace Valkyrja.modules
 			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
 				return;
 
-			if( message == null || !(message.Channel is SocketTextChannel channel) )
+			if( message?.Content == null || !(message.Channel is SocketTextChannel channel) )
 				return;
 
 			Server server;
