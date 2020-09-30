@@ -85,6 +85,7 @@ namespace Valkyrja.discord
 			Command newCommand = new Command("wat");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "The best command of all time.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				await e.SendReplySafe("**-wat-**\n<http://destroyallsoftware.com/talks/wat>");
@@ -95,6 +96,7 @@ namespace Valkyrja.discord
 			newCommand = new Command("bunneh");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "The best command of all time.";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
 				if( Directory.Exists(GlobalConfig.DataFolder) && Directory.Exists(Path.Combine(GlobalConfig.DataFolder, BunnehDataFolder)) )
