@@ -576,7 +576,7 @@ namespace Valkyrja.modules
 			try
 			{
 				SocketTextChannel logChannel;
-				if( (!server.Config.IgnoreBots || !updatedMessage.Author.IsBot) && updatedMessage.Author is SocketGuildUser user &&
+				if( updatedMessage.Author != null && (!server.Config.IgnoreBots || !updatedMessage.Author.IsBot) && updatedMessage.Author is SocketGuildUser user &&
 					server.Config.LogEditedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
 					    server.IgnoredChannels.Contains(channel.Id) ||
 					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
