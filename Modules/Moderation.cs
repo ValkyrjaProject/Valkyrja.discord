@@ -1308,29 +1308,30 @@ namespace Valkyrja.modules
 
 				if( e.MessageArgs == null || e.MessageArgs.Length < 1 || int.TryParse(e.MessageArgs[0], out seconds) || (interval = Utils.GetTimespanFromString(e.MessageArgs[0])) != null )
 				{
-					if( interval.HasValue && (int)interval.Value.TotalSeconds < 21600 )
+					if( seconds >= 21600 || (interval.HasValue && (int)interval.Value.TotalSeconds >= 21600) )
+					{
+						seconds = 21600;
+						response = $"Y'all can now send one message every 6 hours. (Yes that is the maximum.)";
+					}
+					else if( interval.HasValue && (int)interval.Value.TotalSeconds < 21600 )
 					{
 						seconds = (int)interval.Value.TotalSeconds;
-						response = "Y'all can now send one message every" + interval.Value.ToFancyString();
+						response = "Y'all can now send one message every " + interval.Value.ToFancyString();
 					}
-					else if( seconds == 0 )
+					else if( seconds < 21600 )
 					{
+						response = "Y'all can now send one message every " + TimeSpan.FromSeconds(seconds).ToFancyString();
+					}
+					else
+					{
+						seconds = 0;
 						if( e.Channel.SlowModeInterval > 0 )
 							response = "Slowmode disabled.";
 						else
 						{
 							seconds = e.Server.Config.SlowmodeDefaultSeconds;
-							response = $"Y'all can now send one message every{(seconds == 1 ? " second." : $" `{seconds}` seconds.")}";
+							response = "Y'all can now send one message every " + TimeSpan.FromSeconds(seconds).ToFancyString();
 						}
-					}
-					else if( seconds < 21600 )
-					{
-						response = $"Y'all can now send one message every{(seconds == 1 ? " second." : $" `{seconds}` seconds.")}";
-					}
-					else if( seconds >= 21600 || (int)interval.Value.TotalSeconds >= 21600 )
-					{
-						seconds = 21600;
-						response = $"Y'all can now send one message every 6 hours. (Yes that is the maximum.)";
 					}
 
 					await e.Channel.ModifyAsync(c => c.SlowModeInterval = seconds);
