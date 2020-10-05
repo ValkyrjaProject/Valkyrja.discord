@@ -1327,8 +1327,9 @@ namespace Valkyrja.modules
 					{
 						response = $"Y'all can now send one message every{(seconds == 1 ? " second." : $" `{seconds}` seconds.")}";
 					}
-					else
+					else if( seconds >= 21600 || (int)interval.Value.TotalSeconds >= 21600 )
 					{
+						seconds = 21600;
 						response = $"Y'all can now send one message every 6 hours. (Yes that is the maximum.)";
 					}
 
