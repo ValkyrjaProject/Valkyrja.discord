@@ -1316,11 +1316,11 @@ namespace Valkyrja.modules
 					else if( interval.HasValue && (int)interval.Value.TotalSeconds < 21600 )
 					{
 						seconds = (int)interval.Value.TotalSeconds;
-						response = "Y'all can now send one message every " + interval.Value.ToFancyString();
+						response = "Y'all can now send one message every" + interval.Value.ToFancyString();
 					}
 					else if( seconds > 0 && seconds < 21600 )
 					{
-						response = "Y'all can now send one message every " + TimeSpan.FromSeconds(seconds).ToFancyString();
+						response = "Y'all can now send one message every" + TimeSpan.FromSeconds(seconds).ToFancyString();
 					}
 					else
 					{
@@ -1330,7 +1330,7 @@ namespace Valkyrja.modules
 						else
 						{
 							seconds = e.Server.Config.SlowmodeDefaultSeconds;
-							response = "Y'all can now send one message every " + TimeSpan.FromSeconds(seconds).ToFancyString();
+							response = "Y'all can now send one message every" + TimeSpan.FromSeconds(seconds).ToFancyString();
 						}
 					}
 
