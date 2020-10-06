@@ -1318,7 +1318,7 @@ namespace Valkyrja.modules
 						seconds = (int)interval.Value.TotalSeconds;
 						response = "Y'all can now send one message every " + interval.Value.ToFancyString();
 					}
-					else if( seconds < 21600 )
+					else if( seconds > 0 && seconds < 21600 )
 					{
 						response = "Y'all can now send one message every " + TimeSpan.FromSeconds(seconds).ToFancyString();
 					}
