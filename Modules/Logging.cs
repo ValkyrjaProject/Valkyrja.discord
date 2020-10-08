@@ -573,10 +573,12 @@ namespace Valkyrja.modules
 			    (server = this.Client.Servers[channel.Guild.Id]) == null )
 				return;
 
+			SocketGuildUser user = updatedMessage.Author as SocketGuildUser;
+
 			try
 			{
 				SocketTextChannel logChannel;
-				if( updatedMessage.Author != null && (!server.Config.IgnoreBots || !updatedMessage.Author.IsBot) && updatedMessage.Author is SocketGuildUser user &&
+				if( updatedMessage.Author != null && (!server.Config.IgnoreBots || !updatedMessage.Author.IsBot) && user != null &&
 					server.Config.LogEditedMessages && (logChannel = server.Guild.GetTextChannel(server.Config.LogChannelId)) != null && !(
 					    server.IgnoredChannels.Contains(channel.Id) ||
 					    server.Roles.Where(r => r.Value.LoggingIgnored).Any(r => user.Roles.Any(role => role.Id == r.Value.RoleId))) )
@@ -604,11 +606,18 @@ namespace Valkyrja.modules
 					this.MessageQueueLock.Release();
 				}
 
-				if( updatedMessage.Content != null && server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(updatedMessage.Content) )
+				if( updatedMessage.Content != null && server.DeleteAlertRegex != null && server.DeleteAlertRegex.IsMatch(updatedMessage.Content) && (user == null || !server.HasIgnoredRole(user)) )
 				{
 					this.Client.AntispamMessageIDs.Add(updatedMessage.Id);
 					await updatedMessage.DeleteAsync();
 					this.Client.Monitoring.AntispamActions.Inc();
+					if( user != null )
+					{
+						string trimmedContent = updatedMessage.Content ?? "";
+						if( trimmedContent.Length + 72 > GlobalConfig.MessageCharacterLimit )
+							trimmedContent = trimmedContent.Substring(0, GlobalConfig.MessageCharacterLimit - 72);
+						await this.Client.SendPmSafe(user, $"Your message was deleted because it matches a banned expression:\n```\n{trimmedContent}\n```");
+					}
 				}
 			}
 			catch( HttpException exception )
@@ -665,7 +674,7 @@ namespace Valkyrja.modules
 						this.Client.Monitoring.AntispamActions.Inc();
 						string trimmedContent = message.Content;
 						if( trimmedContent.Length + 72 > GlobalConfig.MessageCharacterLimit )
-							trimmedContent = trimmedContent.Substring(0, GlobalConfig.MessageCharacterLimit);
+							trimmedContent = trimmedContent.Substring(0, GlobalConfig.MessageCharacterLimit - 72);
 						await this.Client.SendPmSafe(message.Author, $"Your message was deleted because it matches a banned expression:\n```\n{trimmedContent}\n```");
 					}
 				}
