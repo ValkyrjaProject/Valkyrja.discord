@@ -314,7 +314,7 @@ namespace Valkyrja.modules
 							user.GetAvatarUrl(),
 							joinMessage, "", $"`{user.GetUsername()}`", $"`{user.Id}`", accountCreated,
 							footer: "Account created: " + Utils.GetTimestamp(accountCreated)),
-						LogEmbedText = server.Config.LogMentionJoin ? $"<@{user.Id}>" : null,
+						LogEmbedText = server.Config.LogMentionJoin || server.Config.LogTimestampJoin ? (server.Config.LogMentionJoin ? $"<@{user.Id}>" : "") + (server.Config.LogTimestampJoin ? $" at `{Utils.GetTimestamp()}`" : "") : null,
 						LogString = (string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
 								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**") +
 						             (server.Config.LogTimestampJoin && accountCreated + TimeSpan.FromDays(90) > DateTime.UtcNow ? $"\n(Account created: `{Utils.GetTimestamp(accountCreated)}`)" : ""))
