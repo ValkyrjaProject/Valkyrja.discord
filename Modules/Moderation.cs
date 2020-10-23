@@ -121,7 +121,8 @@ namespace Valkyrja.modules
 					msg = await e.Message.Channel.SendMessageAsync($"Deleting {(clearLinks ? "attachments and embeds in the last " : clearRegex ? "regular expression matches in the last " : "")} {n.ToString()} message{(n == 1 ? "" : "s")}.");
 
 				int userCount = userIDs.Count();
-				guid lastRemoved = e.Message.Id;
+				guid lastMessageId = e.Message.Id;
+				bool failed = false;
 
 				bool IsWithinTwoWeeks(IMessage m)
 				{
@@ -138,31 +139,26 @@ namespace Valkyrja.modules
 				}
 
 				List<guid> idsToDelete = new List<guid>();
-				IAsyncEnumerator<IReadOnlyCollection<IMessage>> enumerator = e.Message.Channel.GetMessagesAsync(lastRemoved, Direction.Before, int.MaxValue, CacheMode.AllowDownload).GetAsyncEnumerator();
 
 				bool canceled = await e.Operation.While(() => n > 0, async () => {
 					IMessage[] messages = null;
 
 					try
 					{
-						await enumerator.MoveNextAsync();
-						if( enumerator?.Current == null ) //Assume it's an empty channel?
+						//Avoid using IAsyncEnumerator the way it's supposed to as a means to solve magic download failures.
+						IEnumerable<IMessage> batch = await e.Message.Channel.GetMessagesAsync(lastMessageId-1, Direction.Before, 100, CacheMode.AllowDownload).FlattenAsync();
+						if( batch == null || !batch.Any() )
 							return true;
-						if( !enumerator.Current.Any() )
-						{
-							await enumerator.MoveNextAsync(); //There seems to be an empty page if cache is empty.
-							if( !(enumerator?.Current?.Any() ?? false) )
-								return true;
-						}
+						lastMessageId = batch.OrderBy(m => m.Id).First().Id;
 
-						messages = enumerator.Current.ToArray();
+						messages = batch.ToArray();
 					}
 					catch( HttpException exception )
 					{
 						if( await e.Server.HandleHttpException(exception, $"`{e.CommandId}` in <#{e.Channel.Id}>") )
 						{
 							n = 0;
-							lastRemoved = 0; // Send error message to the channel.
+							failed = true;
 							return true;
 						}
 					}
@@ -170,7 +166,7 @@ namespace Valkyrja.modules
 					{
 						await this.Client.LogException(exception, e);
 						n = 0;
-						lastRemoved = 0; // Send error message to the channel.
+						failed = true;
 						return true;
 					}
 
@@ -188,7 +184,6 @@ namespace Valkyrja.modules
 						ids = ids.Take(n).ToList();
 
 					idsToDelete.AddRange(ids);
-					lastRemoved = ids.Last();
 
 					n -= ids.Count;
 					if( !IsWithinTwoWeeks(messages.Last()) )
@@ -196,8 +191,6 @@ namespace Valkyrja.modules
 
 					return false;
 				});
-
-				await enumerator.DisposeAsync();
 
 				if( canceled )
 				{
@@ -254,8 +247,8 @@ namespace Valkyrja.modules
 
 				try
 				{
-					if( lastRemoved == 0 )
-						await msg.ModifyAsync(m => m.Content = "There was an error while downloading messages, you can try again but if it doesn't work, then it's a bug - please tell Rhea :<");
+					if( failed )
+						await msg.ModifyAsync(m => m.Content = "There was an error while downloading messages. You can try again, but make sure the permissions are correct.");
 					else
 					{
 						if( !e.Message.Deleted )
