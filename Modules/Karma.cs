@@ -204,7 +204,7 @@ namespace Valkyrja.modules
 				{
 					mentionedUser.KarmaCount++;
 
-					userNames.Append((thanked++ == 0 ? "" : thanked == count ? ", and " : ", ") + server.Guild.GetUser(mentionedUser.UserId).GetNickname());
+					userNames.Append((thanked++ == 0 ? "" : thanked == count ? ", and " : ", ") + (server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? "Someone"));
 				}
 			}
 
