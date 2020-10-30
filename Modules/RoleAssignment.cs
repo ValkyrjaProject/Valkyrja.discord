@@ -420,7 +420,7 @@ namespace Valkyrja.modules
 				SocketRole role = foundRoles.First();
 				try
 				{
-					foreach( SocketGuildUser user in users )
+					foreach( IGuildUser user in users )
 					{
 						await user.AddRoleAsync(role);
 
@@ -499,7 +499,7 @@ namespace Valkyrja.modules
 				string response = e.Server.Localisation.GetString("role_demote_done");
 				try
 				{
-					foreach( SocketGuildUser user in users )
+					foreach( IGuildUser user in users )
 					{
 						await user.RemoveRoleAsync(role);
 

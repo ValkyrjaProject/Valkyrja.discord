@@ -1109,7 +1109,7 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private async Task LogPromote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
+		private async Task LogPromote(Server server, IGuildUser user, string roleName, SocketGuildUser issuedBy)
 		{
 			try
 			{
@@ -1141,7 +1141,7 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private async Task LogDemote(Server server, SocketGuildUser user, string roleName, SocketGuildUser issuedBy)
+		private async Task LogDemote(Server server, IGuildUser user, string roleName, SocketGuildUser issuedBy)
 		{
 			try
 			{
