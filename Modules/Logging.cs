@@ -218,6 +218,9 @@ namespace Valkyrja.modules
 								Console.WriteLine("Logging.Queue: group the messages");
 							foreach( Message logMsg in channelQueue )
 							{
+								if( string.IsNullOrWhiteSpace(logMsg.LogString) )
+									continue;
+
 								if( !sendAsFile && logText.Length + logMsg.LogString.Length >= GlobalConfig.MessageCharacterLimit )
 								{
 									await channel.SendMessageSafe(logText.ToString());
