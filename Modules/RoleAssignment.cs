@@ -174,7 +174,7 @@ namespace Valkyrja.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe(e.Command.Description);
+					await e.SendReplySafe(e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
@@ -283,7 +283,7 @@ namespace Valkyrja.modules
 
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe(e.Command.Description);
+					await e.SendReplySafe(e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
@@ -385,7 +385,7 @@ namespace Valkyrja.modules
 				List<SocketGuildUser> users;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count )
 				{
-					await e.SendReplySafe(e.Command.Description);
+					await e.SendReplySafe(e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
@@ -464,7 +464,7 @@ namespace Valkyrja.modules
 				List<SocketGuildUser> users;
 				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count)
 				{
-					await e.SendReplySafe(e.Command.Description);
+					await e.SendReplySafe(e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 

@@ -40,7 +40,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				ServerConfig config = dbContext.ServerConfigurations.AsQueryable().FirstOrDefault(c => c.ServerId == e.Server.Id);
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
-					response = e.Command.Description;
+					response = "Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId);
 				else if( config == null )
 					response = "Server config was not found in the database. Please try again in a few minutes or contact support.";
 				else if( e.MessageArgs[0].ToLower() == "reset" )
@@ -50,7 +50,7 @@ namespace Valkyrja.modules
 					dbContext.SaveChanges();
 				}
 				else if( e.MessageArgs.Length != 2 || e.MessageArgs[0].ToLower() != "set" )
-					response = e.Command.Description;
+					response = "Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId);
 				else if( e.MessageArgs.Length == 2 && guid.TryParse(e.MessageArgs[1].Trim('<', '#', '>'), out ulong channelid) && e.Server.Guild.GetChannel(channelid) != null )
 				{
 					config.AlertWhitelistId = channelid;
@@ -162,7 +162,7 @@ namespace Valkyrja.modules
 				}
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
 				{
-					await e.SendReplySafe(e.Command.Description);
+					await e.SendReplySafe("Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
@@ -192,7 +192,7 @@ namespace Valkyrja.modules
 				}
 				if( e.MessageArgs == null || e.MessageArgs.Length < 2 )
 				{
-					await e.SendReplySafe(e.Command.Description);
+					await e.SendReplySafe("Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
@@ -462,14 +462,14 @@ namespace Valkyrja.modules
 
 			if( e.MessageArgs.Length != 2 )
 			{
-				await e.SendReplySafe(e.Command.Description);
+				await e.SendReplySafe("Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 				return null;
 			}
 
 			TimeSpan? duration = Utils.GetTimespanFromString(e.MessageArgs[1]);
 			if( duration == null )
 			{
-				await e.SendReplySafe(e.Command.Description);
+				await e.SendReplySafe("Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 				dbContext.Dispose();
 				return null;
 			}

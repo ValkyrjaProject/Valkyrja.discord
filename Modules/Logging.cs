@@ -133,7 +133,7 @@ namespace Valkyrja.modules
 				{
 					if( !int.TryParse(e.MessageArgs[0], out int n) )
 					{
-						await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
+						await e.SendReplySafe("Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 						return;
 					}
 
@@ -141,7 +141,7 @@ namespace Valkyrja.modules
 				}
 				else if( e.MessageArgs.Length > 1 && (!DateTime.TryParse(e.MessageArgs[0] + " 00:00:00", out from) || !DateTime.TryParse(e.MessageArgs[1] + " 00:00:00", out to)) )
 				{
-					await e.SendReplySafe("Invalid arguments.\n" + e.Command.Description);
+					await e.SendReplySafe("Invalid arguments.\n" + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
 				}
 
