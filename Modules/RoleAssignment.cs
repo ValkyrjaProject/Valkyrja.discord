@@ -382,8 +382,8 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				List<SocketGuildUser> users;
-				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count )
+				List<IGuildUser> users;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = await this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count )
 				{
 					await e.SendReplySafe(e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
@@ -461,8 +461,8 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				List<SocketGuildUser> users;
-				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count)
+				List<IGuildUser> users;
+				if( string.IsNullOrEmpty(e.TrimmedMessage) || !(users = await this.Client.GetMentionedGuildUsers(e)).Any() || e.MessageArgs.Length <= users.Count)
 				{
 					await e.SendReplySafe(e.Command.ManPage.ToString(e.Server.Config.CommandPrefix + e.CommandId));
 					return;
