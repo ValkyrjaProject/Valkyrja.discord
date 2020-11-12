@@ -910,7 +910,7 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private async Task LogMute(Server server, IGuildUser user, string duration, SocketGuildUser issuedBy)
+		private async Task LogMute(Server server, IGuildUser user, string duration, SocketGuildUser issuedBy, string reason = null)
 		{
 			try
 			{
@@ -927,10 +927,12 @@ namespace Valkyrja.modules
 					LogEmbed = GetLogEmbed(color, user.GetAvatarUrl(), "User muted " + duration,
 						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
 						user.GetUsername(), $"`{user.Id.ToString()}`",
-						DateTime.UtcNow),
+						DateTime.UtcNow,
+						"Reason", reason ?? "<Not specified.>"),
 					LogString = GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						user.GetUsername(), user.Id.ToString(),
-						Utils.GetTimestamp())
+						Utils.GetTimestamp(),
+						"Reason", reason ?? "<Not specified.>")
 				};
 
 				await this.MessageQueueLock.WaitAsync();

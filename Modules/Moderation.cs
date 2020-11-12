@@ -1588,11 +1588,6 @@ namespace Valkyrja.modules
 
 
 // Mute
-		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
-		{
-			await Mute(server, userData, duration, role, mutedBy, null);
-		}
-
 		public async Task Mute(Server server, UserData userData, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null, string reason = null)
 		{
 			if( userData.UserId == this.Client.DiscordClient.CurrentUser.Id )
@@ -1622,12 +1617,7 @@ namespace Valkyrja.modules
 				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, $"<@{userData.UserId}>"));
 
 			if( this.Client.Events.LogMute != null )
-				await this.Client.Events.LogMute(server, user, durationString, mutedBy);
-		}
-
-		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null)
-		{
-			return await Mute(server, users, duration, role, mutedBy, null);
+				await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
 		}
 
 		public async Task<string> Mute(Server server, List<UserData> users, TimeSpan duration, IRole role, SocketGuildUser mutedBy = null, string reason = null)
@@ -1672,7 +1662,7 @@ namespace Valkyrja.modules
 						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
 
 					if( this.Client.Events.LogMute != null )
-						await this.Client.Events.LogMute(server, user, durationString, mutedBy);
+						await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
 
 					await this.Client.SendPmSafe(user, $"You were {warning}\n{(server.Config.MuteMessage ?? "")}");
 				} catch(HttpException exception)
