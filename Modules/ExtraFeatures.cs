@@ -223,7 +223,7 @@ namespace Valkyrja.modules
 				"Where you can repeat the field* options multiple times.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				await this.Client.SendEmbedFromCli(e.TrimmedMessage, e.Server, e.Channel, e.Message.Author);
+				await this.Client.SendEmbedFromCli(e);
 			};
 			commands.Add(newCommand);
 
