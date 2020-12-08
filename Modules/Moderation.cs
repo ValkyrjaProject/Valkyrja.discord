@@ -824,7 +824,7 @@ namespace Valkyrja.modules
 
 				try
 				{
-					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(e.Server.Config.QuickbanDuration), e.Server.Config.QuickbanReason, e.Message.Author as SocketGuildUser);
+					response = await Ban(e.Server, mentionedUsers, TimeSpan.FromHours(e.Server.Config.QuickbanDuration), e.Server.Config.QuickbanReason, e.Message.Author as SocketGuildUser, false, true, false);
 					dbContext.SaveChanges();
 				} catch(Exception exception)
 				{
