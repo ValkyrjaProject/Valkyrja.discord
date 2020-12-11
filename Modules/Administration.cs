@@ -264,11 +264,11 @@ namespace Valkyrja.modules
 					return;
 				}
 				bool prune = e.MessageArgs.Length > 1 && e.MessageArgs[e.MessageArgs.Length-1].ToLower() == "yes";
-				guid[] roleIDs = e.MessageArgs.Length > 2 || (!prune && e.MessageArgs.Length > 1) ? e.MessageArgs.Skip(1).TakeWhile(r => guid.TryParse(r, out guid _)).Select(guid.Parse).ToArray() : null;
+				IEnumerable<guid> roleIDs = e.MessageArgs.Length > 2 || (!prune && e.MessageArgs.Length > 1) ? e.MessageArgs.Skip(1).TakeWhile(r => guid.TryParse(r, out guid _)).Select(guid.Parse) : null;
 				string response = "";
 				try
 				{
-					int count = await e.Server.Guild.PruneUsersAsync(n, !prune, roleIDs);
+					int count = await e.Server.Guild.PruneUsersAsync(n, !prune, includeRoleIds: roleIDs);
 					response = prune ? $"I've kicked out `{count}` humans.\n_\\*waves*_" : $"I can kick out `{count}` humans. Should you wish to proceed, append `yes` to the command arguments (you can edit your message) as follows:\n `{e.Server.Config.CommandPrefix + e.CommandId} {e.TrimmedMessage} yes`";
 				}
 				catch( HttpException exception )
