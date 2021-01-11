@@ -93,6 +93,7 @@ namespace Valkyrja.modules
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.UserJoined += OnUserJoined;
+			this.Client.Events.GuildMemberUpdated += OnMemberUpdated;
 			this.Client.Events.MessageReceived += OnMessageReceived;
 
 // !unverify
@@ -475,6 +476,40 @@ namespace Valkyrja.modules
 			return Task.CompletedTask;
 		}
 
+		private async Task OnMemberUpdated(SocketGuildUser oldUser, SocketGuildUser newUser)
+		{
+			Server server;
+			if( !this.Client.Servers.ContainsKey(newUser.Guild.Id) || (server = this.Client.Servers[newUser.Guild.Id]) == null )
+				return;
+
+			if( server.Config.NativeGatingEnabled && server.Config.VerifyRoleId > 0 && oldUser.IsPending.HasValue && oldUser.IsPending.Value && newUser.IsPending.HasValue && !newUser.IsPending.Value )
+			{
+				IRole role = server.Guild.GetRole(server.Config.VerifyRoleId);
+				if( role == null )
+				{
+					if( this.Client.GlobalConfig.LogDebug )
+						Console.WriteLine("Verification: Role not set.");
+
+					await this.HandleException(new ArgumentException("Role is null"), "Failed to assign verification role.", server.Id);
+					return;
+				}
+
+				try
+				{
+					await newUser.AddRoleAsync(role);
+					if( this.Client.GlobalConfig.LogDebug )
+						Console.WriteLine("Verification: Verified " + newUser.Username);
+				}
+				catch( HttpException e )
+				{
+					await server.HandleHttpException(e, $"Failed to assign a member/verification role to user <@{newUser.Id}>");
+				}
+				catch( Exception e )
+				{
+					await HandleException(e, $"Failed to assign a member/verification role to {newUser.Id}", server.Id);
+				}
+			}
+		}
 		private async Task OnUserJoined(SocketGuildUser user)
 		{
 			Server server;
