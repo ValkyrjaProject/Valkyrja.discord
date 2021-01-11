@@ -138,6 +138,8 @@ namespace Valkyrja.modules
 				return;
 			if( !this.Client.IsPremium(server) && !this.Client.IsTrialServer(server.Id) )
 				return;
+			if( server.Config.ExpIgnoredChannels && server.IgnoredChannels.Contains(message.Channel.Id) )
+				return;
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 			UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
