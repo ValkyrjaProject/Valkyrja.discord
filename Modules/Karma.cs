@@ -140,7 +140,7 @@ namespace Valkyrja.modules
 					userData.KarmaCount--;
 					mentionedUser.KarmaCount++;
 
-					userNames.Append((count++ == 0 ? "" : count == users.Count ? ", and " : ", ") + (e.Server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? "nobody"));
+					userNames.Append((count++ == 0 ? "" : count == users.Count ? ", and " : ", ") + (e.Server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? (await this.Client.DiscordClient.Rest.GetGuildUserAsync(e.Server.Id, mentionedUser.UserId))?.GetNickname() ?? "nobody"));
 				}
 
 				if( count > 0 )
@@ -204,7 +204,7 @@ namespace Valkyrja.modules
 				{
 					mentionedUser.KarmaCount++;
 
-					userNames.Append((thanked++ == 0 ? "" : thanked == count ? ", and " : ", ") + (server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? "Someone"));
+					userNames.Append((thanked++ == 0 ? "" : thanked == count ? ", and " : ", ") + (server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? (await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, mentionedUser.UserId))?.GetNickname() ?? "Someone"));
 				}
 			}
 
