@@ -79,7 +79,7 @@ namespace Valkyrja.modules
 				}
 
 				if( string.IsNullOrEmpty(response) )
-					response = "I didn't find no such quote.";
+					response = "I ain't got no such quote.";
 
 				await e.SendReplySafe(response);
 				dbContext.Dispose();
@@ -117,7 +117,7 @@ namespace Valkyrja.modules
 					}
 					else if( count == 0 )
 					{
-						response.Append("I didn't find no such quote.");
+						response.Append("I ain't got no such quote.");
 					}
 
 					foreach( Quote quote in quotes.Take(3) )
