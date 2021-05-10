@@ -1704,13 +1704,16 @@ namespace Valkyrja.modules
 						continue;
 					}
 
-					if( user.RoleIds.Any(rId => rId == role.Id) )
+					if( user != null && user.RoleIds.Any(rId => rId == role.Id) )
+					{
 						await user.RemoveRoleAsync(role);
-					unmuted.Add(userData.UserId);
+						unmuted.Add(userData.UserId);
+					}
+
 					userData.MutedUntil = DateTime.MinValue;
 					userData.Muted = false;
 
-					if( this.Client.Events.LogUnmute != null )
+					if( user != null && this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
 				} catch(HttpException exception)
 				{
