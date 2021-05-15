@@ -38,22 +38,22 @@ namespace Valkyrja.discord
 
 		public async Task RunAndWait(int shardIdOverride = - 1)
 		{
-			while( true )
+			try
 			{
-				this.Bot = new ValkyrjaClient(shardIdOverride);
-				InitModules();
+				while( true )
+				{
+					this.Bot = new ValkyrjaClient(shardIdOverride);
+					InitModules();
 
-				try
-				{
-					await this.Bot.Connect();
-					this.Bot.Events.Initialize += InitCommands;
-					await Task.Delay(-1);
+						await this.Bot.Connect();
+						this.Bot.Events.Initialize += InitCommands;
+						await Task.Delay(-1);
 				}
-				catch(Exception e)
-				{
-					await this.Bot.LogException(e, "--ValkyrjaClient crashed.");
-					this.Bot.Dispose();
-				}
+			}
+			catch(Exception e)
+			{
+				await this.Bot.LogException(e, "--ValkyrjaClient crashed.");
+				this.Bot.Dispose();
 			}
 		}
 

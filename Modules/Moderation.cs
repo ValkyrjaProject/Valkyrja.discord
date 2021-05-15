@@ -1693,6 +1693,9 @@ namespace Valkyrja.modules
 			{
 				try
 				{
+					userData.MutedUntil = DateTime.MinValue;
+					userData.Muted = false;
+
 					IGuildUser user = server.Guild.GetUser(userData.UserId);
 					if( user == null )
 					{
@@ -1709,9 +1712,6 @@ namespace Valkyrja.modules
 						await user.RemoveRoleAsync(role);
 						unmuted.Add(userData.UserId);
 					}
-
-					userData.MutedUntil = DateTime.MinValue;
-					userData.Muted = false;
 
 					if( user != null && this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
