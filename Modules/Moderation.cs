@@ -30,7 +30,6 @@ namespace Valkyrja.modules
 		private const string KickPmString = "Hello!\nYou have been kicked out of the **{0} server** by its Moderators for the following reason:\n{1}";
 		private const string WarningNotFoundString = "I couldn't find them :(";
 		private const string WarningPmString = "Hello!\nYou have been issued a formal **warning** by the Moderators of the **{0} server** for the following reason:\n{1}";
-		private const string MuteIgnoreChannelString = "{0}, you've been muted.";
 		private const string MuteChannelConfirmString = "Silence!!  ò_ó";
 		private const string UnmuteConfirmString = "Speak {0}!";
 		private const string UnmuteChannelConfirmString = "You may speak now.";
@@ -1614,7 +1613,7 @@ namespace Valkyrja.modules
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-				await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, $"<@{userData.UserId}>"));
+				await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", $"<@{userData.UserId}>"));
 
 			if( this.Client.Events.LogMute != null )
 				await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
@@ -1679,7 +1678,7 @@ namespace Valkyrja.modules
 
 				SocketTextChannel logChannel;
 				if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-					await logChannel.SendMessageSafe(string.Format(MuteIgnoreChannelString, mentions));
+					await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions));
 			}
 
 			return response;
