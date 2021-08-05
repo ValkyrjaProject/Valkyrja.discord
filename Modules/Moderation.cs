@@ -1676,9 +1676,17 @@ namespace Valkyrja.modules
 			{
 				response = server.Localisation.GetString("moderation_mute_done", mentions) + "\n" + infractions.ToString();
 
-				SocketTextChannel logChannel;
-				if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-					await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions));
+				try
+				{
+					SocketTextChannel logChannel;
+					if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
+						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions));
+				}
+				catch( HttpException exception )
+				{
+					await server.HandleHttpException(exception, $"This happened in when trying to send muted notice in <#{server.Config.MuteIgnoreChannelId}>");
+					response = Utils.HandleHttpException(exception);
+				}
 			}
 
 			return response;
