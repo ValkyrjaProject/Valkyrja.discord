@@ -211,6 +211,7 @@ namespace Valkyrja.modules
 			newCommand.ManPage = new ManPage("<options>", "Use any combination of:\n" +
 				"`--channel     ` - Channel where to send the embed.\n" +
 				"`--edit <msgId>` - Replace a MessageId with a new embed (use after --channel)\n" +
+				"`--text        ` - Regular content text\n" +
 				"`--title       ` - Title\n" +
 				"`--description ` - Description\n" +
 				"`--footer      ` - Footer\n" +
