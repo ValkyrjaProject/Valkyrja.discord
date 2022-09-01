@@ -338,17 +338,18 @@ namespace Valkyrja.modules
 			}
 		}
 
-		private async Task OnUserLeft(SocketGuildUser user)
+		private async Task OnUserLeft(SocketGuild guild, SocketUser user)
 		{
 			Server server;
-			if( !this.Client.Servers.ContainsKey(user.Guild.Id) ||
-			    (server = this.Client.Servers[user.Guild.Id]) == null||
+			if( !this.Client.Servers.ContainsKey(guild.Id) ||
+			    (server = this.Client.Servers[guild.Id]) == null||
 			    this.RecentlyBannedUserIDs.Contains(user.Id) )
 				return;
 
-			if( user.JoinedAt.HasValue && DateTime.UtcNow - user.JoinedAt.Value.ToUniversalTime() < TimeSpan.FromSeconds(3) )
-				await StatsIncrement(server, StatsType.KickedByDiscord);
-			else
+			// Sadly JoinedAt is no longer available and I don't have time to figure out the alternative. Thanks D.net <3
+//			if( user.JoinedAt.HasValue && DateTime.UtcNow - user.JoinedAt.Value.ToUniversalTime() < TimeSpan.FromSeconds(3) )
+//				await StatsIncrement(server, StatsType.KickedByDiscord);
+//			else
 				await StatsIncrement(server, StatsType.Left);
 
 			try
@@ -473,7 +474,7 @@ namespace Valkyrja.modules
 				await StatsIncrement(server, StatsType.Verified);
 		}
 
-		private async Task OnMessageDeleted(IMessage message, ISocketMessageChannel c)
+		private async Task OnMessageDeleted(IMessage message, IMessageChannel c)
 		{
 			if( !this.Client.GlobalConfig.ModuleUpdateEnabled )
 				return;

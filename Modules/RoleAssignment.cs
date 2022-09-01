@@ -788,12 +788,12 @@ namespace Valkyrja.modules
 			}
 		}
 
-		public async Task OnReactionAdded(IUserMessage message, ISocketMessageChannel iChannel, SocketReaction reaction)
+		public async Task OnReactionAdded(IUserMessage message, IMessageChannel iChannel, SocketReaction reaction)
 		{
 			await ReactionAssignedRoles(reaction, true);
 		}
 
-		public async Task OnReactionRemoved(IUserMessage message, ISocketMessageChannel iChannel, SocketReaction reaction)
+		public async Task OnReactionRemoved(IUserMessage message, IMessageChannel iChannel, SocketReaction reaction)
 		{
 			await ReactionAssignedRoles(reaction, false);
 		}

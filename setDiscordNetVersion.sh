@@ -5,8 +5,8 @@
 #  exit 1
 #fi
 
-oldVersion="2.2.0-dev-dev"
-newVersion="2.3.0-dev-dev"
+oldVersion="3.8.0-dev-dev"
+newVersion="3.8.0-dev"
 #discordNetDirectory="~/dev/Discord.Net"
 discordNetDirectory="/c/_stuff/dev/Discord.Net"
 
