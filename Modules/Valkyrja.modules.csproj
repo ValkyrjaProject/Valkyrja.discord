@@ -10,8 +10,8 @@
     <ProjectReference Include="..\Core\Valkyrja.core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Core" Version="2.3.0-dev-dev" />
-    <PackageReference Include="Discord.Net.Rest" Version="2.3.0-dev-dev" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.3.0-dev-dev" />
+    <PackageReference Include="Discord.Net.Core" Version="3.8.0-dev-dev" />
+    <PackageReference Include="Discord.Net.Rest" Version="3.8.0-dev-dev" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="3.8.0-dev-dev" />
   </ItemGroup>
 </Project>
