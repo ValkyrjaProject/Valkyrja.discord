@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord.Net;
 using Valkyrja.core;
 using Valkyrja.entities;
 using Discord.WebSocket;
@@ -185,36 +186,43 @@ namespace Valkyrja.modules
 
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 
-			UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-			IEnumerable<UserData> mentionedUserData = message.MentionedUsers.Select(u => dbContext.GetOrAddUser(server.Id, u.Id));
-			int count = mentionedUserData.Count();
-
-			if( (count > server.Config.KarmaLimitMentions || userData.LastThanksTime.AddMinutes(server.Config.KarmaLimitMinutes) > DateTimeOffset.UtcNow) )
+			try
 			{
-				if( server.Config.KarmaLimitResponse )
-					await message.Channel.SendMessageSafe("You're thanking too much ó_ò");
-				return;
-			}
+				UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
+				IEnumerable<UserData> mentionedUserData = message.MentionedUsers.Select(u => dbContext.GetOrAddUser(server.Id, u.Id));
+				int count = mentionedUserData.Count();
 
-			int thanked = 0;
-			StringBuilder userNames = new StringBuilder();
-			foreach(UserData mentionedUser in mentionedUserData)
-			{
-				if( mentionedUser.UserId != user.Id )
+				if( (count > server.Config.KarmaLimitMentions || userData.LastThanksTime.AddMinutes(server.Config.KarmaLimitMinutes) > DateTimeOffset.UtcNow) )
 				{
-					mentionedUser.KarmaCount++;
+					if( server.Config.KarmaLimitResponse )
+						await message.Channel.SendMessageSafe("You're thanking too much ó_ò");
+					return;
+				}
 
-					userNames.Append((thanked++ == 0 ? "" : thanked == count ? ", and " : ", ") + (server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? (await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, mentionedUser.UserId))?.GetNickname() ?? "Someone"));
+				int thanked = 0;
+				StringBuilder userNames = new StringBuilder();
+				foreach( UserData mentionedUser in mentionedUserData )
+				{
+					if( mentionedUser.UserId != user.Id )
+					{
+						mentionedUser.KarmaCount++;
+
+						userNames.Append((thanked++ == 0 ? "" : thanked == count ? ", and " : ", ") + (server.Guild.GetUser(mentionedUser.UserId)?.GetNickname() ?? (await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, mentionedUser.UserId))?.GetNickname() ?? "Someone"));
+					}
+				}
+
+				if( thanked > 0 )
+				{
+					userData.LastThanksTime = DateTime.UtcNow;
+					dbContext.SaveChanges();
+					if( server.Config.IgnoreEveryone )
+						userNames = userNames.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+					await channel.SendMessageSafe($"**{userNames}** received a _thank you_ {server.Config.KarmaCurrencySingular}!");
 				}
 			}
-
-			if( thanked > 0 )
+			catch( HttpException exception )
 			{
-				userData.LastThanksTime = DateTime.UtcNow;
-				dbContext.SaveChanges();
-				if( server.Config.IgnoreEveryone )
-					userNames = userNames.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
-				await channel.SendMessageSafe($"**{userNames}** received a _thank you_ {server.Config.KarmaCurrencySingular}!");
+				await server.HandleHttpException(exception, $"This was a `thank you` karma message in <#{channel.Id}>");
 			}
 
 			dbContext.Dispose();
