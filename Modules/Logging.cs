@@ -368,7 +368,7 @@ namespace Valkyrja.modules
 							user.GetAvatarUrl(), $"UserId: {user.Id}",
 							"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated),
 						LogString = string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname()}**")
+								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname() ?? ""}**")
 							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
 					};
 					await this.MessageQueueLock.WaitAsync();
