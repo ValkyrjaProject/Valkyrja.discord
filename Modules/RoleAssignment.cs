@@ -849,13 +849,14 @@ namespace Valkyrja.modules
 
 			try
 			{
-				if( roleIdsToAssign.Any() )
-					await user.AddRolesAsync(roleIdsToAssign);
+				roleIdsToRemove.RemoveAll(r => roleIdsToAssign.Any(a => a == r));
 				if( roleIdsToRemove.Any() )
 				{
 					await user.RemoveRolesAsync(roleIdsToRemove);
 					reply = "Exclusive role assigned, removed your other roles.";
 				}
+				if( roleIdsToAssign.Any() )
+					await user.AddRolesAsync(roleIdsToAssign);
 			}
 			catch( Exception e )
 			{
