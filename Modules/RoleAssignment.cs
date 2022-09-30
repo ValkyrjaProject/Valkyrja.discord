@@ -48,6 +48,7 @@ namespace Valkyrja.modules
 			this.Client.Events.UserJoined += OnUserJoined;
 			this.Client.Events.ReactionAdded += OnReactionAdded;
 			this.Client.Events.ReactionRemoved += OnReactionRemoved;
+			this.Client.Events.DropdownSelected += OnDropdownSelected;
 
 // !publicRoles
 			Command newCommand = new Command("publicRoles");
@@ -796,6 +797,37 @@ namespace Valkyrja.modules
 		public async Task OnReactionRemoved(IUserMessage message, IMessageChannel iChannel, SocketReaction reaction)
 		{
 			await ReactionAssignedRoles(reaction, false);
+		}
+
+		public async Task OnDropdownSelected(SocketMessageComponent component)
+		{
+			Server server;
+			IGuildUser user = component.User as IGuildUser;
+			if( !component.GuildId.HasValue || !this.Client.Servers.ContainsKey(component.GuildId.Value) || (server = this.Client.Servers[component.GuildId.Value]) == null || server.Config == null || user == null )
+				return;
+
+			List<guid> roleIds = new List<ulong>();
+
+			foreach( string stringValue in component.Data.Values )
+			{
+				SocketRole role;
+				if( guid.TryParse(stringValue, out guid roleId) && (role = server.Guild.GetRole(roleId)) != null )
+				{
+					roleIds.Add(roleId);
+				}
+			}
+
+			if( roleIds.Any() )
+			{
+				try
+				{
+					await user.AddRolesAsync(roleIds);
+				}
+				catch( Exception e )
+				{
+					await this.HandleException(e, $"Failed to assign roles on dropdown selection: {component.Data.Values} | {roleIds}", server.Id);
+				}
+			}
 		}
 
 		public async Task ReactionAssignedRoles(SocketReaction reaction, bool assignRoles)
