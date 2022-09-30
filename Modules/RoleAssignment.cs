@@ -806,28 +806,63 @@ namespace Valkyrja.modules
 			if( !component.GuildId.HasValue || !this.Client.Servers.ContainsKey(component.GuildId.Value) || (server = this.Client.Servers[component.GuildId.Value]) == null || server.Config == null || user == null )
 				return;
 
-			List<guid> roleIds = new List<ulong>();
+			List<guid> roleIdsToAssign = new List<ulong>();
+			List<guid> roleIdsToRemove = new List<ulong>();
+			string reply = null; //null for success
 
 			foreach( string stringValue in component.Data.Values )
 			{
 				SocketRole role;
 				if( guid.TryParse(stringValue, out guid roleId) && (role = server.Guild.GetRole(roleId)) != null )
 				{
-					roleIds.Add(roleId);
+					roleIdsToAssign.Add(roleId);
+
+					Int64 groupId = server.Roles.ContainsKey(roleId) ? server.Roles[roleId].PublicRoleGroupId : 0;
+					if( groupId != 0 )
+					{
+						List<guid> groupRoleIds = server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId).Select(r => r.Value.RoleId).ToList();
+						int userHasCount = user.RoleIds.Count(rId => groupRoleIds.Any(id => id == rId));
+
+						RoleGroupConfig groupConfig = null;
+						if( userHasCount > 0 )
+						{
+							ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+							groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
+							dbContext.Dispose();
+							if( groupConfig != null )
+							{
+								while( userHasCount >= groupConfig.RoleLimit && groupRoleIds.Any() )
+								{
+									guid roleToRemove = groupRoleIds.Last();
+									groupRoleIds.Remove(roleToRemove);
+									if( server.Guild.GetRole(roleToRemove) == null || user.RoleIds.All(rId => rId != roleToRemove) )
+										continue;
+
+									roleIdsToRemove.Add(roleToRemove);
+									userHasCount--;
+								}
+							}
+						}
+					}
 				}
 			}
 
-			if( roleIds.Any() )
+			try
 			{
-				try
+				if( roleIdsToAssign.Any() )
+					await user.AddRolesAsync(roleIdsToAssign);
+				if( roleIdsToRemove.Any() )
 				{
-					await user.AddRolesAsync(roleIds);
-				}
-				catch( Exception e )
-				{
-					await this.HandleException(e, $"Failed to assign roles on dropdown selection: {component.Data.Values} | {roleIds}", server.Id);
+					await user.RemoveRolesAsync(roleIdsToRemove);
+					reply = "Exclusive role assigned, removed your other roles.";
 				}
 			}
+			catch( Exception e )
+			{
+				await this.HandleException(e, $"Failed to assign roles on dropdown selection: {component.Data.Values} | {roleIdsToAssign}", server.Id);
+			}
+
+			await component.RespondAsync(reply, ephemeral: true);
 		}
 
 		public async Task ReactionAssignedRoles(SocketReaction reaction, bool assignRoles)
