@@ -819,31 +819,8 @@ namespace Valkyrja.modules
 
 					Int64 groupId = server.Roles.ContainsKey(roleId) ? server.Roles[roleId].PublicRoleGroupId : 0;
 					if( groupId != 0 )
-					{
-						List<guid> groupRoleIds = server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId).Select(r => r.Value.RoleId).ToList();
-						int userHasCount = user.RoleIds.Count(rId => groupRoleIds.Any(id => id == rId));
-
-						RoleGroupConfig groupConfig = null;
-						if( userHasCount > 0 )
-						{
-							ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-							groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == server.Id && g.GroupId == groupId);
-							dbContext.Dispose();
-							if( groupConfig != null )
-							{
-								while( userHasCount >= groupConfig.RoleLimit && groupRoleIds.Any() )
-								{
-									guid roleToRemove = groupRoleIds.Last();
-									groupRoleIds.Remove(roleToRemove);
-									if( server.Guild.GetRole(roleToRemove) == null || user.RoleIds.All(rId => rId != roleToRemove) )
-										continue;
-
-									roleIdsToRemove.Add(roleToRemove);
-									userHasCount--;
-								}
-							}
-						}
-					}
+						roleIdsToRemove.AddRange(server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId)
+							.Select(r => r.Value.RoleId).Where(rId => user.RoleIds.Contains(rId)));
 				}
 			}
 
