@@ -287,12 +287,25 @@ namespace Valkyrja.modules
 
 		public async Task OnMessageReceived(SocketMessage msg)
 		{
-			if( !(msg.Channel is SocketNewsChannel channel) || !(msg is SocketUserMessage message) ) //Not an announcement channel.
+			if( msg.Channel is not SocketTextChannel channel || msg is not SocketUserMessage message ) //Not an announcement channel.
 				return;
 
 			Server server = null;
-			if( this.Client.Servers.ContainsKey(channel.Guild.Id) && (server = this.Client.Servers[channel.Guild.Id]) != null && server.AutoAnnounceChannels.Contains(channel.Id) )
-				await message.CrosspostAsync();
+			if( this.Client.Servers.ContainsKey(channel.Guild.Id) && (server = this.Client.Servers[channel.Guild.Id]) != null )
+			{
+				if( msg.Channel is SocketNewsChannel && server.AutoAnnounceChannels.Contains(channel.Id) )
+					await message.CrosspostAsync();
+				if( msg.Channel is not SocketThreadChannel && server.MediaOnlyChannels.Contains(channel.Id) && !message.Attachments.Any() )
+				{
+					string pm = $"The below message was removed because the channel is set as media only. Please use threads to comment on the content.\n```\n{message.Content}";
+					if( pm.Length > GlobalConfig.MessageCharacterLimit - 5 )
+						pm.Substring(0, GlobalConfig.MessageCharacterLimit - 5);
+					pm += "\n```";
+					if( await this.Client.SendPmSafe(message.Author, pm) != PmErrorCode.Success )
+						await channel.SendMessageSafe($"<@{msg.Author.Id}> This is a media-only channel, please use threads to comment on the content.\n_(I failed to PM you your deleted message.)_");
+					await message.DeleteAsync();
+				}
+			}
 		}
 
 		public async Task Update(IValkyrjaClient iClient)
