@@ -295,7 +295,7 @@ namespace Valkyrja.modules
 			{
 				if( msg.Channel is SocketNewsChannel && server.AutoAnnounceChannels.Contains(channel.Id) )
 					await message.CrosspostAsync();
-				if( msg.Channel is not SocketThreadChannel && server.MediaOnlyChannels.Contains(channel.Id) && !message.Attachments.Any() )
+				if( msg.Channel is not SocketThreadChannel && server.MediaOnlyChannels.Contains(channel.Id) && !message.Attachments.Any() && !server.IsSubModerator(server.Guild.GetUser(message.Author.Id)) )
 				{
 					string pm = $"The below message was removed because the channel is set as media only. Please use threads to comment on the content.\n```\n{message.Content}";
 					if( pm.Length > GlobalConfig.MessageCharacterLimit - 5 )
