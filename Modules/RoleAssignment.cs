@@ -812,15 +812,26 @@ namespace Valkyrja.modules
 
 			foreach( string stringValue in component.Data.Values )
 			{
-				SocketRole role;
-				if( guid.TryParse(stringValue, out guid roleId) && (role = server.Guild.GetRole(roleId)) != null )
-				{
-					roleIdsToAssign.Add(roleId);
+				if( !guid.TryParse(stringValue, out guid roleId) || roleId == 0 || server.Guild.GetRole(roleId) == null || !server.Roles.ContainsKey(roleId) || server.Roles[roleId].PermissionLevel != RolePermissionLevel.Public )
+					continue;
+				roleIdsToAssign.Add(roleId);
 
-					Int64 groupId = server.Roles.ContainsKey(roleId) ? server.Roles[roleId].PublicRoleGroupId : 0;
-					if( groupId != 0 )
-						roleIdsToRemove.AddRange(server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId)
-							.Select(r => r.Value.RoleId).Where(rId => user.RoleIds.Contains(rId)));
+				Int64 groupId = server.Roles[roleId].PublicRoleGroupId;
+				if( groupId != 0 )
+					roleIdsToRemove.AddRange(server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId)
+						.Select(r => r.Value.RoleId).Where(rId => user.RoleIds.Contains(rId)));
+			}
+
+			if( !roleIdsToAssign.Any() )
+			{
+				RoleGroupConfig groupConfig = null;
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == server.Id && g.Name == component.Data.CustomId);
+				dbContext.Dispose();
+				if( groupConfig != null )
+				{
+					roleIdsToRemove.AddRange(server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupConfig.GroupId)
+						.Select(r => r.Value.RoleId).Where(rId => user.RoleIds.Contains(rId)));
 				}
 			}
 
