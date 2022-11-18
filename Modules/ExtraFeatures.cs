@@ -221,6 +221,7 @@ namespace Valkyrja.modules
 				"`--fieldName   ` - Create a new field with specified name.\n" +
 				"`--fieldValue  ` - Text value of a field - has to follow a name.\n" +
 				"`--fieldInline ` - Use to set the field as inline.\n" +
+				"`--reactions   ` - Adds emotes as reactions.\n" +
 				"Where you can repeat the field* options multiple times.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
