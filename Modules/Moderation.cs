@@ -1172,11 +1172,11 @@ namespace Valkyrja.modules
 					            (u.Nickname != null && u.Nickname.ToLower().Contains(expression))))
 					.Select(u => u.Id).ToList();
 
-				foundUserIds.AddRange(e.Message.MentionedUsers.Select(u => u.Id));
+				foundUserIds.AddRange(e.Message.MentionedUsers.Where(u => !foundUserIds.Contains(u.Id)).Select(u => u.Id));
 
 				for( int i = 0; i < e.MessageArgs.Length; i++ )
 				{
-					if( guid.TryParse(e.MessageArgs[i], out guid id) )
+					if( guid.TryParse(e.MessageArgs[i], out guid id) && !foundUserIds.Contains(id) )
 						foundUserIds.Add(id);
 				}
 
@@ -1233,7 +1233,7 @@ namespace Valkyrja.modules
 
 				for( int i = 0; i < e.MessageArgs.Length; i++ )
 				{
-					if( guid.TryParse(e.MessageArgs[i].Trim('<', '@', '!', '>'), out guid id) )
+					if( guid.TryParse(e.MessageArgs[i].Trim('<', '@', '!', '>'), out guid id) && !foundUserIds.Contains(id) )
 						foundUserIds.Add(id);
 				}
 
