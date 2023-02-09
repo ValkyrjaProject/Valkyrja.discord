@@ -319,7 +319,7 @@ namespace Valkyrja.modules
 							footer: "Account created: " + Utils.GetTimestamp(accountCreated)),
 						LogEmbedText = server.Config.LogMentionJoin || server.Config.LogTimestampJoin ? (server.Config.LogMentionJoin ? $"<@{user.Id}>" : "") + (server.Config.LogTimestampJoin ? $" at `{Utils.GetTimestamp()}`" : "") : null,
 						LogString = (string.Format((server.Config.LogTimestampJoin ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageJoin,
-								server.Config.LogMentionJoin ? $"<@{user.Id}>" : $"**{user.GetNickname()}**") +
+							         server.Config.LogMentionJoin ? $"<@{user.Id}>" : string.IsNullOrEmpty(user.Nickname) ? $"**{user.Username}**" : $"**{user.Nickname}**") +
 						             (server.Config.LogTimestampJoin && accountCreated + TimeSpan.FromDays(90) > DateTime.UtcNow ? $"\n(Account created: `{Utils.GetTimestamp(accountCreated)}`)" : ""))
 							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
 					};
@@ -368,7 +368,7 @@ namespace Valkyrja.modules
 						user.GetAvatarUrl(), $"UserId: {user.Id}",
 						"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated);
 					msg.LogString = string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-							server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname() ?? ""}**")
+						server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.Username}**")
 						.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
 
 					await this.MessageQueueLock.WaitAsync();
