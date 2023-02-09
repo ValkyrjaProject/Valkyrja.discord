@@ -360,17 +360,17 @@ namespace Valkyrja.modules
 					string leaveMessage = string.Format(server.Config.LogMessageLeave, user.GetUsername());
 					DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 
-					Message msg = new Message(){
-						Channel = logChannel,
-						DesiredType = (server.Config.ActivityChannelEmbeds && leaveMessage.Length < 255) ? MessageType.Embed : MessageType.String,
-						LogEmbed = GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
-							leaveMessage,
-							user.GetAvatarUrl(), $"UserId: {user.Id}",
-							"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated),
-						LogString = string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
-								server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname() ?? ""}**")
-							.Replace("@everyone", "@-everyone").Replace("@here", "@-here")
-					};
+					Message msg = new Message();
+					msg.Channel = logChannel;
+					msg.DesiredType = (server.Config.ActivityChannelEmbeds && leaveMessage.Length < 255) ? MessageType.Embed : MessageType.String;
+					msg.LogEmbed = GetLogSmolEmbed(new Color(server.Config.ActivityChannelColor),
+						leaveMessage,
+						user.GetAvatarUrl(), $"UserId: {user.Id}",
+						"Account created: " + Utils.GetTimestamp(accountCreated), accountCreated);
+					msg.LogString = string.Format((server.Config.LogTimestampLeave ? $"`{Utils.GetTimestamp()}`: " : "") + server.Config.LogMessageLeave,
+							server.Config.LogMentionLeave ? $"<@{user.Id}>" : $"**{user.GetNickname() ?? ""}**")
+						.Replace("@everyone", "@-everyone").Replace("@here", "@-here");
+
 					await this.MessageQueueLock.WaitAsync();
 					this.MessageQueue.Add(msg);
 					this.MessageQueueLock.Release();
