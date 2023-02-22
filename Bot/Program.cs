@@ -101,7 +101,7 @@ namespace Valkyrja.discord
 			newCommand.OnExecute += async e => {
 				if( Directory.Exists(GlobalConfig.DataFolder) && Directory.Exists(Path.Combine(GlobalConfig.DataFolder, BunnehDataFolder)) )
 				{
-					Regex validExtensions = new Regex(".*(jpg|png|gif).*");
+					Regex validExtensions = new Regex(".*(jpg|png|gif|mp4).*");
 					DirectoryInfo folder = new DirectoryInfo(Path.Combine(GlobalConfig.DataFolder, BunnehDataFolder));
 					FileInfo[] files = folder.GetFiles();
 					for( int i = 0; files != null && i < 5; i++ )
