@@ -808,7 +808,7 @@ namespace Valkyrja.modules
 
 			List<guid> roleIdsToAssign = new List<ulong>();
 			List<guid> roleIdsToRemove = new List<ulong>();
-			string reply = null; //null for success
+			string reply = null;
 
 			foreach( string stringValue in component.Data.Values )
 			{
@@ -851,7 +851,10 @@ namespace Valkyrja.modules
 				await this.HandleException(e, $"Failed to assign roles on dropdown selection: {component.Data.Values} | {roleIdsToAssign}", server.Id);
 			}
 
-			await component.RespondAsync(reply, ephemeral: true);
+			if( string.IsNullOrEmpty(reply) )
+				await component.DeferAsync(true);
+			else
+				await component.RespondAsync(reply, ephemeral: true);
 		}
 
 		public async Task ReactionAssignedRoles(SocketReaction reaction, bool assignRoles)
