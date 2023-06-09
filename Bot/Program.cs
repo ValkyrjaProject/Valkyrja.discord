@@ -76,6 +76,7 @@ namespace Valkyrja.discord
 
 			#if VALKYRJASPECIFIC
 			this.Bot.Modules.Add(new Recruitment());
+			this.Bot.Modules.Add(new MessageFilter());
 			#endif
 		}
 
