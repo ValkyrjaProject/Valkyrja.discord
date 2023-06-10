@@ -46,6 +46,7 @@ namespace Valkyrja.modules
 			List<Command> commands = new List<Command>();
 
 			this.Client.Events.UserJoined += OnUserJoined;
+			this.Client.Events.UserUpdated += OnUserUpdated;
 			this.Client.Events.ReactionAdded += OnReactionAdded;
 			this.Client.Events.ReactionRemoved += OnReactionRemoved;
 			this.Client.Events.DropdownSelected += OnDropdownSelected;
@@ -805,6 +806,26 @@ namespace Valkyrja.modules
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
+			if( server.Config.VerifyRoleId != 0 && server.Guild.GetRole(server.Config.VerifyRoleId) != null && (server.Config.VerifyOnWelcome || server.Config.CaptchaVerificationEnabled || server.Config.CodeVerificationEnabled) )
+				return;
+
+			await OnUserJoinedRoles(server, user, false);
+		}
+
+		private async Task OnUserUpdated(SocketUser sOldUser, SocketUser sUser)
+		{
+			Server server;
+			if( sOldUser is not SocketGuildUser oldUser || sUser is not SocketGuildUser user ||
+			    !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
+				return;
+
+			if( server.Config.VerifyRoleId != 0 && server.Guild.GetRole(server.Config.VerifyRoleId) != null && (server.Config.VerifyOnWelcome || server.Config.CaptchaVerificationEnabled || server.Config.CodeVerificationEnabled) &&
+			    oldUser.Roles.All(r => r.Id != server.Config.VerifyRoleId) && user.Roles.Any(r => r.Id == server.Config.VerifyRoleId) )
+				await OnUserJoinedRoles(server, user, true);
+		}
+
+		private async Task OnUserJoinedRoles(Server server, SocketGuildUser user, bool verificationEnabled)
+		{
 			if( server.Config.WelcomeMessageEnabled && !string.IsNullOrWhiteSpace(server.Config.WelcomeMessage) )
 			{
 				string welcomePm = server.Config.WelcomeMessage;
@@ -826,7 +847,7 @@ namespace Valkyrja.modules
 				}
 				catch( Exception ex )
 				{
-					await this.HandleException(ex, "RoleAssignment - OnUserJoined - welcome role assignment", server.Id);
+					await this.HandleException(ex, "RoleAssignment - welcome role assignment", server.Id);
 				}
 			}
 
@@ -837,7 +858,7 @@ namespace Valkyrja.modules
 			{
 				await user.AddRolesAsync(server.Roles.Values.Where(r => 
 					r.InversePersistence ^ ((userData.PersistenceFlags & (1 << (int)r.PersistenceUserFlag)) > 0)
-					).Select(r => r.RoleId));
+				).Select(r => r.RoleId));
 			}
 			catch( HttpException ex )
 			{
@@ -845,7 +866,7 @@ namespace Valkyrja.modules
 			}
 			catch( Exception ex )
 			{
-				await this.HandleException(ex, "RoleAssignment - OnUserJoined - persistent role assignment", server.Id);
+				await this.HandleException(ex, "RoleAssignment - persistent role assignment", server.Id);
 			}
 			dbContext.Dispose();
 		}
