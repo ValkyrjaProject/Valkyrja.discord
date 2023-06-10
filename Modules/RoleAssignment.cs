@@ -814,13 +814,14 @@ namespace Valkyrja.modules
 
 		private async Task OnUserUpdated(SocketUser sOldUser, SocketUser sUser)
 		{
+			Console.WriteLine($"{sOldUser.GetType()} | {sUser.GetType()}");
 			Server server;
-			if( sOldUser is not SocketGuildUser oldUser || sUser is not SocketGuildUser user ||
+			if( sOldUser is not IGuildUser oldUser || sUser is not SocketGuildUser user ||
 			    !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
 			if( server.Config.VerifyRoleId != 0 && server.Guild.GetRole(server.Config.VerifyRoleId) != null && (server.Config.VerifyOnWelcome || server.Config.CaptchaVerificationEnabled || server.Config.CodeVerificationEnabled) &&
-			    oldUser.Roles.All(r => r.Id != server.Config.VerifyRoleId) && user.Roles.Any(r => r.Id == server.Config.VerifyRoleId) )
+			    oldUser.RoleIds.All(rId => rId != server.Config.VerifyRoleId) && user.Roles.Any(r => r.Id == server.Config.VerifyRoleId) )
 				await OnUserJoinedRoles(server, user, true);
 		}
 
