@@ -814,7 +814,6 @@ namespace Valkyrja.modules
 
 		private async Task OnUserUpdated(SocketUser sOldUser, SocketUser sUser)
 		{
-			Console.WriteLine($"{sOldUser.GetType()} | {sUser.GetType()}");
 			Server server;
 			if( sOldUser is not IGuildUser oldUser || sUser is not SocketGuildUser user ||
 			    !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
