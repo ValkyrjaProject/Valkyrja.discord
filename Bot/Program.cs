@@ -93,6 +93,27 @@ namespace Valkyrja.discord
 			};
 			this.Bot.Commands.Add(newCommand.Id.ToLower(), newCommand);
 
+// !pacman
+			newCommand = new Command("pacman");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "The best command of all time.";
+			newCommand.ManPage = new ManPage("", "");
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				await e.SendReplySafe("> You know what Pac-Man stands for?\n" +
+				                      "> Program and control.\n" +
+				                      "> He's program and control man, the whole thing is a metaphor.\n" +
+				                      "> All he can do is consume.\n" +
+				                      "> He's pursued by demons, that are probably just in his own head.\n" +
+				                      "> And even if he does manage to escape by slipping out one side of the maze, what happens?\n" +
+				                      "> He comes right back in the other side.\n" +
+				                      "> People think it's a happy game, well, it's not a happy game.\n" +
+				                      "> But luckily, Pac-Man didn't affect us as kids.\n" +
+				                      "> Otherwise we'd be running around in dark rooms, munching pills, and listening to repetitive electronic music\n");
+			};
+			this.Bot.Commands.Add(newCommand.Id.ToLower(), newCommand);
+			this.Bot.Commands.Add("wakawaka", newCommand.CreateAlias("wakawaka"));
+
 // !bunneh
 			newCommand = new Command("bunneh");
 			newCommand.Type = CommandType.Standard;
