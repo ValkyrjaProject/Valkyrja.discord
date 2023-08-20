@@ -51,10 +51,12 @@ namespace Valkyrja.modules
 			this.Client.Events.ReactionRemoved += OnReactionRemoved;
 			this.Client.Events.DropdownSelected += OnDropdownSelected;
 
+			this.Client.DiscordClient.ButtonExecuted += FixRoles;
+
 // !publicRoles
 			Command newCommand = new Command("publicRoles");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "See what Public Roles can you join on this server.";
+			newCommand.Description = "See what Public Roles you can join on this server.";
 			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
@@ -250,16 +252,13 @@ namespace Valkyrja.modules
 						}
 					}
 
-					await user.AddRoleAsync(roleToAssign);
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					if( dbContext.GetOrAddUser(e.Server.Id, user.Id).IsAllowedRole(roleConfig) )
+						await user.AddRoleAsync(roleToAssign);
+					else
+						response = e.Server.Localisation.GetString("role_join_denied");
+					dbContext.Dispose();
 
-					if( roleConfig.PersistenceUserFlag > 0 && !roleConfig.InversePersistence )
-					{
-						ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-						UserData userData = dbContext.GetOrAddUser(e.Server.Id, user.Id);
-						userData.AssignPersistence(roleConfig);
-						dbContext.SaveChanges();
-						dbContext.Dispose();
-					}
 				} catch(HttpException exception)
 				{
 					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
@@ -328,16 +327,6 @@ namespace Valkyrja.modules
 					SocketRole roleToRemove = foundRoles.First();
 					SocketGuildUser user = e.Message.Author as SocketGuildUser ?? throw new NullReferenceException("Author is not a SocketGuildUser");
 					await user.RemoveRoleAsync(roleToRemove);
-
-					RoleConfig roleConfig = publicRoles.First(r => r.RoleId == roleToRemove.Id);
-					if( roleConfig.PersistenceUserFlag > 0 && roleConfig.InversePersistence )
-					{
-						ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-						UserData userData = dbContext.GetOrAddUser(e.Server.Id, user.Id);
-						userData.RemovePersistence(roleConfig);
-						dbContext.SaveChanges();
-						dbContext.Dispose();
-					}
 				} catch(HttpException exception)
 				{
 					await e.Server.HandleHttpException(exception, $"This happened in <#{e.Channel.Id}> when executing command `{e.CommandId}`");
@@ -800,6 +789,22 @@ namespace Valkyrja.modules
 			return commands;
 		}
 
+		private async Task FixRoles(SocketMessageComponent component)
+		{
+			try
+			{
+				Server server = null;
+				if( component.Data.CustomId != "fix-roles" || !component.GuildId.HasValue || this.Client.Servers.ContainsKey(component.GuildId.Value) || (server = this.Client.Servers[component.GuildId.Value]) == null )
+					return;
+
+				await OnUserJoinedRoles(server, component.User as SocketGuildUser);
+			}
+			catch( Exception exception )
+			{
+				await this.HandleException(exception, "FixRolesCommand", 0);
+			}
+		}
+
 		private async Task OnUserJoined(SocketGuildUser user)
 		{
 			Server server;
@@ -809,7 +814,7 @@ namespace Valkyrja.modules
 			if( server.Config.VerifyRoleId != 0 && server.Guild.GetRole(server.Config.VerifyRoleId) != null && (server.Config.VerifyOnWelcome || server.Config.CaptchaVerificationEnabled || server.Config.CodeVerificationEnabled) )
 				return;
 
-			await OnUserJoinedRoles(server, user, false);
+			await OnUserJoinedRoles(server, user);
 		}
 
 		private async Task OnUserUpdated(SocketUser sOldUser, SocketUser sUser)
@@ -821,11 +826,14 @@ namespace Valkyrja.modules
 
 			if( server.Config.VerifyRoleId != 0 && server.Guild.GetRole(server.Config.VerifyRoleId) != null && (server.Config.VerifyOnWelcome || server.Config.CaptchaVerificationEnabled || server.Config.CodeVerificationEnabled) &&
 			    oldUser.RoleIds.All(rId => rId != server.Config.VerifyRoleId) && user.Roles.Any(r => r.Id == server.Config.VerifyRoleId) )
-				await OnUserJoinedRoles(server, user, true);
+				await OnUserJoinedRoles(server, user);
 		}
 
-		private async Task OnUserJoinedRoles(Server server, SocketGuildUser user, bool verificationEnabled)
+		private async Task OnUserJoinedRoles(Server server, SocketGuildUser user)
 		{
+			if( user == null )
+				return;
+
 			if( server.Config.WelcomeMessageEnabled && !string.IsNullOrWhiteSpace(server.Config.WelcomeMessage) )
 			{
 				string welcomePm = server.Config.WelcomeMessage;
@@ -857,7 +865,7 @@ namespace Valkyrja.modules
 			try
 			{
 				await user.AddRolesAsync(server.Roles.Values.Where(r => 
-					r.InversePersistence ^ ((userData.PersistenceFlags & (1 << (int)r.PersistenceUserFlag)) > 0)
+					r.PersistenceUserFlag > 0 && (r.InversePersistence ^ ((userData.PersistenceFlags & (1 << (int)r.PersistenceUserFlag)) > 0))
 				).Select(r => r.RoleId));
 			}
 			catch( HttpException ex )
@@ -892,13 +900,19 @@ namespace Valkyrja.modules
 			List<guid> roleIdsToRemove = new List<ulong>();
 			string reply = null;
 
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 			foreach( string stringValue in component.Data.Values )
 			{
-				if( !guid.TryParse(stringValue, out guid roleId) || roleId == 0 || server.Guild.GetRole(roleId) == null || !server.Roles.ContainsKey(roleId) || server.Roles[roleId].PermissionLevel != RolePermissionLevel.Public )
+				RoleConfig roleConfig = null;
+				if( !guid.TryParse(stringValue, out guid roleId) || roleId == 0 || server.Guild.GetRole(roleId) == null || !server.Roles.ContainsKey(roleId) ||  (roleConfig = server.Roles[roleId]) == null || server.Roles[roleId].PermissionLevel != RolePermissionLevel.Public )
 					continue;
-				roleIdsToAssign.Add(roleId);
 
-				Int64 groupId = server.Roles[roleId].PublicRoleGroupId;
+				if( dbContext.GetOrAddUser(server.Id, user.Id).IsAllowedRole(roleConfig) )
+					roleIdsToAssign.Add(roleId);
+				else
+					reply = "You're not allowed to have that role.";
+
+				Int64 groupId = roleConfig.PublicRoleGroupId;
 				if( groupId != 0 )
 					roleIdsToRemove.AddRange(server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId)
 						.Select(r => r.Value.RoleId).Where(rId => user.RoleIds.Contains(rId)));
@@ -907,15 +921,14 @@ namespace Valkyrja.modules
 			if( !roleIdsToAssign.Any() )
 			{
 				RoleGroupConfig groupConfig = null;
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				groupConfig = dbContext.PublicRoleGroups.AsQueryable().FirstOrDefault(g => g.ServerId == server.Id && g.Name == component.Data.CustomId);
-				dbContext.Dispose();
 				if( groupConfig != null )
 				{
 					roleIdsToRemove.AddRange(server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupConfig.GroupId)
 						.Select(r => r.Value.RoleId).Where(rId => user.RoleIds.Contains(rId)));
 				}
 			}
+			dbContext.Dispose();
 
 			try
 			{
@@ -927,25 +940,6 @@ namespace Valkyrja.modules
 				}
 				if( roleIdsToAssign.Any() )
 					await user.AddRolesAsync(roleIdsToAssign);
-
-				bool save = false;
-				List<RoleConfig> persistenceToAssign = server.Roles.Values.Where(r => r.PersistenceUserFlag > 0 && roleIdsToAssign.Contains(r.RoleId)).ToList();
-				List<RoleConfig> persistenceToRemove = server.Roles.Values.Where(r => r.PersistenceUserFlag > 0 && roleIdsToRemove.Contains(r.RoleId)).ToList();
-				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-				foreach( RoleConfig persistentRole in persistenceToAssign )
-				{
-					userData.AssignPersistence(persistentRole);
-					save = true;
-				}
-				foreach( RoleConfig persistentRole in persistenceToRemove )
-				{
-					userData.RemovePersistence(persistentRole);
-					save = true;
-				}
-				if( save )
-					dbContext.SaveChanges();
-				dbContext.Dispose();
 			}
 			catch( Exception e )
 			{
@@ -999,7 +993,6 @@ namespace Valkyrja.modules
 					}
 
 					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-					bool save = false;
 
 					try
 					{
@@ -1012,29 +1005,22 @@ namespace Valkyrja.modules
 							if( discordRole == null )
 								continue;
 
+							RoleConfig roleConfig = !server.Roles.ContainsKey(discordRole.Id) ? null : server.Roles[discordRole.Id];
+							if( dbContext.GetOrAddUser(server.Id, user.Id).IsAllowedRole(roleConfig) )
+								continue;
 
 							if( !assignRoles )
 							{
 								await user.RemoveRoleAsync(discordRole);
 								this.ReactionUsers.Remove(reaction.UserId);
 
-								RoleConfig persistenceToRemove = server.Roles.Values.FirstOrDefault(r => r.PersistenceUserFlag > 0 && r.RoleId == discordRole.Id);
-								if( persistenceToRemove != null )
-								{
-									UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-									userData.RemovePersistence(persistenceToRemove);
-									save = true;
-								}
-
-								if( save )
-									dbContext.SaveChanges();
 								dbContext.Dispose();
 								server.ReactionRolesLock.Release();
 								return;
 							}
 
 							//else...
-							Int64 groupId = server.Roles.ContainsKey(discordRole.Id) ? server.Roles[discordRole.Id].PublicRoleGroupId : 0;
+							Int64 groupId = roleConfig?.PublicRoleGroupId ?? 0;
 							if( groupId != 0 )
 							{
 								List<guid> groupRoleIds = server.Roles.Where(r => r.Value.PermissionLevel == RolePermissionLevel.Public && r.Value.PublicRoleGroupId == groupId).Select(r => r.Value.RoleId).ToList();
@@ -1054,14 +1040,6 @@ namespace Valkyrja.modules
 
 										await user.RemoveRoleAsync(roleToRemove);
 
-										RoleConfig persistenceToRemove = server.Roles.Values.FirstOrDefault(r => r.PersistenceUserFlag > 0 && r.RoleId == discordRole.Id);
-										if( persistenceToRemove != null )
-										{
-											UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-											userData.RemovePersistence(persistenceToRemove);
-											save = true;
-										}
-
 										try
 										{
 											if( await reaction.Channel.GetMessageAsync(reaction.MessageId) is SocketUserMessage sMsg )
@@ -1080,14 +1058,6 @@ namespace Valkyrja.modules
 							}
 
 							await user.AddRoleAsync(discordRole);
-
-							RoleConfig persistenceToAssign = server.Roles.Values.FirstOrDefault(r => r.PersistenceUserFlag > 0 && r.RoleId == discordRole.Id);
-							if( persistenceToAssign != null )
-							{
-								UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-								userData.AssignPersistence(persistenceToAssign);
-								save = true;
-							}
 						}
 					}
 					catch( HttpException e )
@@ -1099,8 +1069,6 @@ namespace Valkyrja.modules
 						await this.HandleException(e, "Reaction Assigned Roles", server.Id);
 					}
 
-					if( save )
-						dbContext.SaveChanges();
 					dbContext.Dispose();
 				}
 			}
