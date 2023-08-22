@@ -794,10 +794,12 @@ namespace Valkyrja.modules
 			try
 			{
 				Server server = null;
-				if( component.Data.CustomId != "fix-roles" || !component.GuildId.HasValue || this.Client.Servers.ContainsKey(component.GuildId.Value) || (server = this.Client.Servers[component.GuildId.Value]) == null )
+				if( component.Data.CustomId != "fix-roles" || !component.GuildId.HasValue || !this.Client.Servers.ContainsKey(component.GuildId.Value) || (server = this.Client.Servers[component.GuildId.Value]) == null )
 					return;
 
 				await OnUserJoinedRoles(server, component.User as SocketGuildUser);
+
+				await component.RespondAsync("Done, contact the Moderators if you're still missing something.", ephemeral: true);
 			}
 			catch( Exception exception )
 			{
