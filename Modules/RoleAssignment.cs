@@ -1008,7 +1008,7 @@ namespace Valkyrja.modules
 								continue;
 
 							RoleConfig roleConfig = !server.Roles.ContainsKey(discordRole.Id) ? null : server.Roles[discordRole.Id];
-							if( dbContext.GetOrAddUser(server.Id, user.Id).IsAllowedRole(roleConfig) )
+							if( !dbContext.GetOrAddUser(server.Id, user.Id).IsAllowedRole(roleConfig) )
 								continue;
 
 							if( !assignRoles )
