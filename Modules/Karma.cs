@@ -56,13 +56,19 @@ namespace Valkyrja.modules
 					n = 20;
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<UserData> userData = dbContext.UserDatabase.Where(u => u.ServerId == e.Server.Id && u.KarmaCount > 0).OrderByDescending(u => u.KarmaCount).Take(maxUsers).SkipWhile(u => e.Server.Guild.GetUser(u.UserId) == null).Take(n);
+				IEnumerable<UserData> users = dbContext.UserDatabase.Where(u => u.ServerId == e.Server.Id && u.KarmaCount > 0).OrderByDescending(u => u.KarmaCount).Take(maxUsers);
 
-				int i = 1;
+				int i = 0;
 				StringBuilder response = new StringBuilder($"Here is the top {n} {e.Server.Config.KarmaCurrencySingular} holders:");
-				foreach( UserData user in userData )
+				foreach( UserData userData in users )
 				{
-					response.AppendLine($"**{i++})** {e.Server.Guild.GetUser(user.UserId)?.GetNickname().Replace("@everyone", "@-everyone").Replace("@here", "@-here")} : `{user.KarmaCount}`");
+					if( i++ == n )
+						return;
+
+					SocketGuildUser user = null;
+					if( (user = e.Server.Guild.GetUser(userData.UserId)) == null )
+						continue;
+					response.AppendLine($"**{i})** {user.GetNickname().Replace("@everyone", "@-everyone").Replace("@here", "@-here")} : `{userData.KarmaCount}`");
 				}
 
 				await e.SendReplySafe(response.ToString());
