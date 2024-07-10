@@ -44,8 +44,9 @@ namespace Valkyrja.modules
 					return;
 				}
 
+				const int maxUsers = 200;
 				int n = 5;
-				if( e.MessageArgs.Length > 0 && !int.TryParse(e.MessageArgs[0], out n) )
+				if( e.MessageArgs != null && e.MessageArgs.Length > 0 && !int.TryParse(e.MessageArgs[0], out n) )
 				{
 					await e.SendReplySafe("Invalid argument.");
 					return;
@@ -55,15 +56,13 @@ namespace Valkyrja.modules
 					n = 20;
 
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-				IEnumerable<UserData> userData = dbContext.UserDatabase.Where(u => u.ServerId == e.Server.Id && u.KarmaCount > 0).OrderByDescending(u => u.KarmaCount).Take(n);
+				IEnumerable<UserData> userData = dbContext.UserDatabase.Where(u => u.ServerId == e.Server.Id && u.KarmaCount > 0).OrderByDescending(u => u.KarmaCount).Take(maxUsers).SkipWhile(u => e.Server.Guild.GetUser(u.UserId) == null).Take(n);
 
-				int articleIndex = e.Server.Config.KarmaCurrencySingular[0] == ':' ? 1 : 0;
-				string article = e.Server.Config.KarmaCurrencySingular[articleIndex] == 'a' ? "an" : "a";
+				int i = 1;
 				StringBuilder response = new StringBuilder($"Here is the top {n} {e.Server.Config.KarmaCurrencySingular} holders:");
-
 				foreach( UserData user in userData )
 				{
-					response.AppendLine($"{e.Server.Guild.GetUser(user.UserId).GetNickname()} : `{user.KarmaCount}`");
+					response.AppendLine($"**{i++})** {e.Server.Guild.GetUser(user.UserId)?.GetNickname().Replace("@everyone", "@-everyone").Replace("@here", "@-here")} : `{user.KarmaCount}`");
 				}
 
 				await e.SendReplySafe(response.ToString());
