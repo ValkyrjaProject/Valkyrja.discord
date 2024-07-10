@@ -30,8 +30,50 @@ namespace Valkyrja.modules
 
 			this.Client.Events.MessageReceived += OnMessageReceived;
 
+// !top
+			Command newCommand = new Command("top");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "Check how many cookies you've got.";
+			newCommand.ManPage = new ManPage("[n]", "`[n]` - Optional argument specifying how many members with the highest count you would like to fetch. Default 5.");
+			newCommand.IsPremiumServerwideCommand = true;
+			newCommand.RequiredPermissions = PermissionType.Everyone;
+			newCommand.OnExecute += async e => {
+				if( !e.Server.Config.KarmaEnabled )
+				{
+					await e.SendReplySafe(KarmaDisabledString);
+					return;
+				}
+
+				int n = 5;
+				if( e.MessageArgs.Length > 0 && !int.TryParse(e.MessageArgs[0], out n) )
+				{
+					await e.SendReplySafe("Invalid argument.");
+					return;
+				}
+
+				if( n > 20 )
+					n = 20;
+
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				IEnumerable<UserData> userData = dbContext.UserDatabase.Where(u => u.ServerId == e.Server.Id && u.KarmaCount > 0).OrderByDescending(u => u.KarmaCount).Take(n);
+
+				int articleIndex = e.Server.Config.KarmaCurrencySingular[0] == ':' ? 1 : 0;
+				string article = e.Server.Config.KarmaCurrencySingular[articleIndex] == 'a' ? "an" : "a";
+				StringBuilder response = new StringBuilder($"Here is the top {n} {e.Server.Config.KarmaCurrencySingular} holders:");
+
+				foreach( UserData user in userData )
+				{
+					response.AppendLine($"{e.Server.Guild.GetUser(user.UserId).GetNickname()} : `{user.KarmaCount}`");
+				}
+
+				await e.SendReplySafe(response.ToString());
+
+				dbContext.Dispose();
+			};
+			commands.Add(newCommand);
+
 // !cookies
-			Command newCommand = new Command("cookies");
+			newCommand = new Command("cookies");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Check how many cookies you've got.";
 			newCommand.ManPage = new ManPage("", "");
