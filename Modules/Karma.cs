@@ -33,7 +33,7 @@ namespace Valkyrja.modules
 // !top
 			Command newCommand = new Command("top");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Check how many cookies you've got.";
+			newCommand.Description = "List the top karma holders.";
 			newCommand.ManPage = new ManPage("[n]", "`[n]` - Optional argument specifying how many members with the highest count you would like to fetch. Default 5.");
 			newCommand.IsPremiumServerwideCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
@@ -63,7 +63,7 @@ namespace Valkyrja.modules
 				foreach( UserData userData in users )
 				{
 					if( i++ == n )
-						return;
+						break;
 
 					SocketGuildUser user = null;
 					if( (user = e.Server.Guild.GetUser(userData.UserId)) == null )
