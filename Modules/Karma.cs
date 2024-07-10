@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Net;
 using Valkyrja.core;
 using Valkyrja.entities;
@@ -62,13 +63,18 @@ namespace Valkyrja.modules
 				StringBuilder response = new StringBuilder($"Here is the top {n} {e.Server.Config.KarmaCurrencySingular} holders:");
 				foreach( UserData userData in users )
 				{
-					if( i++ == n )
-						break;
-
-					SocketGuildUser user = null;
-					if( (user = e.Server.Guild.GetUser(userData.UserId)) == null )
+					IGuildUser user = e.Server.Guild.GetUser(userData.UserId);
+					if( user == null )
+					{
+						user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(e.Server.Id, userData.UserId);
+					}
+					if( user == null )
 						continue;
-					response.AppendLine($"**{i})** {user.GetNickname().Replace("@everyone", "@-everyone").Replace("@here", "@-here")} : `{userData.KarmaCount}`");
+
+					response.AppendLine($"**{++i})** {user.GetNickname().Replace("@everyone", "@-everyone").Replace("@here", "@-here")} : `{userData.KarmaCount}`");
+
+					if( i == n )
+						break;
 				}
 
 				await e.SendReplySafe(response.ToString());
