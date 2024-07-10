@@ -61,6 +61,7 @@ namespace Valkyrja.modules
 
 				int i = 0;
 				StringBuilder response = new StringBuilder($"Here is the top {n} {e.Server.Config.KarmaCurrencySingular} holders:");
+				response.AppendLine();
 				foreach( UserData userData in users )
 				{
 					IGuildUser user = e.Server.Guild.GetUser(userData.UserId);
