@@ -244,13 +244,6 @@ namespace Valkyrja.modules
 			{
 				UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
 				IEnumerable<UserData> mentionedUserData = message.MentionedUsers.Select(u => dbContext.GetOrAddUser(server.Id, u.Id));
-				if( message.Reference != null && message.Reference.MessageId.IsSpecified )
-				{
-					IMessage referenceMessage = await channel.GetMessageAsync(message.Reference.MessageId.Value);
-					IUser referenceAuthor = referenceMessage.Author;
-					if( referenceAuthor != null )
-						mentionedUserData = mentionedUserData.Append(dbContext.GetOrAddUser(server.Id, referenceAuthor.Id));
-				}
 				int count = mentionedUserData.Count();
 
 				if( (count > server.Config.KarmaLimitMentions || userData.LastThanksTime.AddMinutes(server.Config.KarmaLimitMinutes) > DateTimeOffset.UtcNow) )
