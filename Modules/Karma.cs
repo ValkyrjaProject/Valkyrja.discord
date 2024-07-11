@@ -246,7 +246,8 @@ namespace Valkyrja.modules
 				IEnumerable<UserData> mentionedUserData = message.MentionedUsers.Select(u => dbContext.GetOrAddUser(server.Id, u.Id));
 				if( message.Reference != null && message.Reference.MessageId.IsSpecified )
 				{
-					SocketUser referenceAuthor = channel.GetCachedMessage(message.Reference.MessageId.Value)?.Author;
+					IMessage referenceMessage = await channel.GetMessageAsync(message.Reference.MessageId.Value);
+					IUser referenceAuthor = referenceMessage.Author;
 					if( referenceAuthor != null )
 						mentionedUserData = mentionedUserData.Append(dbContext.GetOrAddUser(server.Id, referenceAuthor.Id));
 				}
