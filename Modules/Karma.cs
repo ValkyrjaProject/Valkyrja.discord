@@ -18,7 +18,7 @@ namespace Valkyrja.modules
 		private const string KarmaDisabledString = "Karma is disabled on this server.";
 
 		private ValkyrjaClient Client;
-		private readonly Regex RegexKarma = new Regex(".*(?<!\\\\)(thank(?!sgiving)|thx|ʞuɐɥʇ|danke|dankje|dankjewel|vielen dank|gracias|merci(?!al)|grazie|arigato|dziękuję|dziekuje|obrigad|(?:^|\\W)ty(sm)?(?:$|\\W)).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private readonly Regex RegexKarma = new Regex(".*(?<!\\\\)(thank(?!sgiving)|thx|ʞuɐɥʇ|dankj?e(wel)?|vielen dank|gracias|merci(?!al)|grazie|arigato|dziękuję|dziekuje|obrigad|(?:^|\\W)ty(sm)?(?:$|\\W)).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 
 		public Func<Exception, string, guid, Task> HandleException{ get; set; }
