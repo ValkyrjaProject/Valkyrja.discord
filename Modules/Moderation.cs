@@ -36,6 +36,7 @@ namespace Valkyrja.modules
 		private const string MuteNotFoundString = "And who would you like me to ~~kill~~ _silence_?";
 		private const string InvalidArgumentsString = "Invalid arguments.\n";
 		private const string BanReasonTooLongString = "Mute, Kick & Ban reason has 512 characters limit.\n";
+		private const string BanExceedsLimit = "Trying to kick or ban too many.\n_(This is a limit configurable on the web config under the Moderation section)_\n";
 		private const string RoleNotFoundString = "The Muted role is not configured - head to <https://valkyrja.app/config>";
 
 		private ValkyrjaClient Client;
@@ -624,6 +625,13 @@ namespace Valkyrja.modules
 					return;
 				}
 
+				if( e.Server.Config.BanLimit > 0 && mentionedUsers.Count > e.Server.Config.BanLimit && e.Command.Id.ToLower() != "kickmany" )
+				{
+					await e.SendReplySafe(BanExceedsLimit);
+					dbContext.Dispose();
+					return;
+				}
+
 				string response = "";
 				List<string> usernames = new List<string>();
 				StringBuilder infractions = new StringBuilder();
@@ -674,6 +682,11 @@ namespace Valkyrja.modules
 				dbContext.Dispose();
 				await e.SendReplySafe(response);
 			};
+			commands.Add(newCommand);
+
+			newCommand = newCommand.CreateCopy("kickMany");
+			newCommand.Description = "Kick many, exceeding the limits.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			commands.Add(newCommand);
 
 // !ban
@@ -755,6 +768,13 @@ namespace Valkyrja.modules
 					return;
 				}
 
+				if( e.Server.Config.BanLimit > 0 && mentionedUsers.Count > e.Server.Config.BanLimit && e.Command.Id.ToLower() != "banmany" )
+				{
+					await e.SendReplySafe(BanExceedsLimit);
+					dbContext.Dispose();
+					return;
+				}
+
 				try
 				{
 					response = await Ban(e.Server, mentionedUsers, duration.Value, warning.ToString(), e.Message.Author as SocketGuildUser,
@@ -781,6 +801,11 @@ namespace Valkyrja.modules
 
 			newCommand = newCommand.CreateCopy("redactedBan");
 			newCommand.Description = "Ban someone just like the usual, but do not log their user ID or #discrim.";
+			commands.Add(newCommand);
+
+			newCommand = newCommand.CreateCopy("banMany");
+			newCommand.Description = "Ban many, exceeding the limits.";
+			newCommand.RequiredPermissions = PermissionType.ServerOwner;
 			commands.Add(newCommand);
 
 // !quickBan
