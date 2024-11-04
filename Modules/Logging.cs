@@ -793,7 +793,7 @@ namespace Valkyrja.modules
 			try
 			{
 				this.Client.Monitoring.Bans.Inc();
-				if( string.IsNullOrEmpty(userName) )
+				if( issuedBy == null )
 					await this.Client.LogMessageUnknown(LogType.None, server.Id, "Unknown Ban Event");
 				if( issuedBy?.Id == server.Guild.CurrentUser.Id )
 					await StatsIncrement(server, StatsType.BannedByValk);
