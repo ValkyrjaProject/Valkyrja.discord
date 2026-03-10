@@ -541,7 +541,7 @@ namespace Valkyrja.modules
 							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString() + ""),
 						LogString = GetLogMessage(title, "#" + channel.Name,
-							message.Author.GetUsernameSanitized(), message.Author.Id.ToString(),
+							message.Author.GetUsername(), message.Author.Id.ToString(),
 							message.Id,
 							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString() + "")
@@ -600,7 +600,7 @@ namespace Valkyrja.modules
 							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? ""),
 						LogString = GetLogMessage("Message Edited", "#" + channel.Name,
-							updatedMessage.Author.GetUsernameSanitized(), updatedMessage.Author.Id.ToString(),
+							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
 							updatedMessage.Id,
 							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "")
@@ -769,7 +769,7 @@ namespace Valkyrja.modules
 						userNames.ToNamesList() ?? "<unknown>", userIds.Select(id => id.ToString()).ToNamesList(),
 						DateTime.UtcNow,
 						"Warning", warning),
-					LogString = GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						userNames.ToNamesList() ?? "", userIds.Select(id => id.ToString()).ToNamesList(),
 						Utils.GetTimestamp(),
 						"Warning", warning)
@@ -813,7 +813,7 @@ namespace Valkyrja.modules
 						userName ?? "<unknown>", $"`{(userName?.EndsWith("#redacted") ?? false ? "redacted" : userId.ToString())}`",
 						DateTime.UtcNow,
 						"Reason", reason),
-					LogString = GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						userName ?? "", userId.ToString(),
 						Utils.GetTimestamp(),
 						"Reason", reason)
@@ -853,7 +853,7 @@ namespace Valkyrja.modules
 						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						userName, $"`{userId.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						userName, userId.ToString(),
 						Utils.GetTimestamp())
 				};
@@ -894,7 +894,7 @@ namespace Valkyrja.modules
 						userName ?? "<unknown>", $"`{userId.ToString()}`",
 						DateTime.UtcNow,
 						"Reason", reason),
-					LogString = GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						userName ?? "", userId.ToString(),
 						Utils.GetTimestamp(),
 						"Reason", reason)
@@ -932,7 +932,7 @@ namespace Valkyrja.modules
 						user.GetUsernameSanitized(), $"`{user.Id.ToString()}`",
 						DateTime.UtcNow,
 						"Reason", reason ?? "<Not specified.>"),
-					LogString = GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						user.GetUsernameSanitized(), user.Id.ToString(),
 						Utils.GetTimestamp(),
 						"Reason", reason ?? "<Not specified.>")
@@ -967,7 +967,7 @@ namespace Valkyrja.modules
 						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						user.GetUsernameSanitized(), $"`{user.Id.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						user.GetUsernameSanitized(), user.Id.ToString(),
 						Utils.GetTimestamp())
 				};
@@ -1000,7 +1000,7 @@ namespace Valkyrja.modules
 						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						"#" + channel.Name, $"`{channel.Id.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("Channel Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("Channel Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						"#" + channel.Name, channel.Id.ToString(),
 						Utils.GetTimestamp())
 				};
@@ -1033,7 +1033,7 @@ namespace Valkyrja.modules
 						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						"#" + channel.Name, $"`{channel.Id.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("Channel Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+					LogString = GetLogMessage("Channel Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						"#" + channel.Name, channel.Id.ToString(),
 						Utils.GetTimestamp())
 				};
