@@ -357,7 +357,7 @@ namespace Valkyrja.modules
 				SocketTextChannel logChannel = server.Guild.GetTextChannel(server.Config.ActivityChannelId);
 				if( server.Config.LogLeave && logChannel != null && !string.IsNullOrWhiteSpace(server.Config.LogMessageLeave) )
 				{
-					string leaveMessage = string.Format(server.Config.LogMessageLeave, user.GetUsername());
+					string leaveMessage = string.Format(server.Config.LogMessageLeave, user.GetUsernameSanitized());
 					DateTime accountCreated = Utils.GetTimeFromId(user.Id);
 
 					Message msg = new Message();
@@ -417,21 +417,21 @@ namespace Valkyrja.modules
 						case -1:
 							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
 							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
-								user.GetUsername() + " left the voice channel:",
+								user.GetUsernameSanitized() + " left the voice channel:",
 								user.GetAvatarUrl(), $"{originalState.VoiceChannel.Name}",
 								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
 						case 1:
 							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
 							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
-								user.GetUsername() + " joined the voice channel:",
+								user.GetUsernameSanitized() + " joined the voice channel:",
 								user.GetAvatarUrl(), $"{newState.VoiceChannel.Name}",
 								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
 						case 0:
 							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
 							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
-								user.GetUsername() + " switched voice channels:",
+								user.GetUsernameSanitized() + " switched voice channels:",
 								user.GetAvatarUrl(), $"From {originalState.VoiceChannel.Name} to {newState.VoiceChannel.Name}",
 								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
@@ -530,18 +530,18 @@ namespace Valkyrja.modules
 
 					bool byClear = this.Client.ClearedMessageIDs.ContainsKey(server.Id) && this.Client.ClearedMessageIDs[server.Id].Contains(message.Id);
 					bool byAntispam = this.Client.AntispamMessageIDs.Contains(message.Id);
-					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsername()) : byClear ? " by a command" : "");
+					string title = "Message Deleted" + (byAntispam ? " by Antispam" : auditEntry != null ? (" by " + auditEntry.User.GetUsernameSanitized()) : byClear ? " by a command" : "");
 					Color color = byAntispam ? this.AntispamLightColor : new Color(server.Config.LogMessagesColor);
 					Message msg = new Message(){
 						Channel = logChannel,
 						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogEmbed(color, user?.GetAvatarUrl(), title, $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
-							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Author.GetUsernameSanitized(), message.Author.Id.ToString(),
 							message.Id,
 							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString() + ""),
 						LogString = GetLogMessage(title, "#" + channel.Name,
-							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Author.GetUsernameSanitized(), message.Author.Id.ToString(),
 							message.Id,
 							"Message", message.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							message.Attachments?.Any() ?? false ? "Files" : "", attachment.ToString() + "")
@@ -595,12 +595,12 @@ namespace Valkyrja.modules
 						DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 						LogEmbed = GetLogEmbed(new Color(red + green + blue), user.GetAvatarUrl(),
 							"Message Edited", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{updatedMessage.Id})",
-							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+							updatedMessage.Author.GetUsernameSanitized(), updatedMessage.Author.Id.ToString(),
 							updatedMessage.Id,
 							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? ""),
 						LogString = GetLogMessage("Message Edited", "#" + channel.Name,
-							updatedMessage.Author.GetUsername(), updatedMessage.Author.Id.ToString(),
+							updatedMessage.Author.GetUsernameSanitized(), updatedMessage.Author.Id.ToString(),
 							updatedMessage.Id,
 							"Before", originalMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "",
 							"After", updatedMessage.Content?.Replace("@everyone", "@-everyone").Replace("@here", "@-here") ?? "")
@@ -661,7 +661,7 @@ namespace Valkyrja.modules
 						DesiredType = MessageType.Embed,
 						LogEmbed = GetLogEmbed(new Color(server.Config.AlertChannelColor), message.Author.GetAvatarUrl(),
 							"Alert triggered", $"in [#{channel.Name}](https://discordapp.com/channels/{server.Id}/{channel.Id}/{message.Id})",
-							message.Author.GetUsername(), message.Author.Id.ToString(),
+							message.Author.GetUsernameSanitized(), message.Author.Id.ToString(),
 							message.Id,
 							"Content", message.Content.Replace("@everyone", "@-everyone").Replace("@here", "@-here")),
 						LogEmbedText = server.Config.AlertRoleMention == 0 ? null : $"<@&{server.Config.AlertRoleMention}>",
@@ -737,7 +737,7 @@ namespace Valkyrja.modules
 				await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
 			}
 
-			await LogBan(server, user.GetUsername(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
+			await LogBan(server, user.GetUsernameSanitized(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);
 		}
 
 		private async Task OnUserUnbanned(SocketUser user, SocketGuild guild)
@@ -749,7 +749,7 @@ namespace Valkyrja.modules
 			    this.RecentlyUnbannedUserIDs.Contains(user.Id) )
 				return;
 
-			await LogUnban(server, user.GetUsername(), user.Id, null);
+			await LogUnban(server, user.GetUsernameSanitized(), user.Id, null);
 		}
 
 		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy)
@@ -765,11 +765,11 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(color, "", "User warned",
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						userNames.ToNamesList() ?? "<unknown>", userIds.Select(id => id.ToString()).ToNamesList(),
 						DateTime.UtcNow,
 						"Warning", warning),
-					LogString = GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					LogString = GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
 						userNames.ToNamesList() ?? "", userIds.Select(id => id.ToString()).ToNamesList(),
 						Utils.GetTimestamp(),
 						"Warning", warning)
@@ -809,11 +809,11 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(color, "", "User Banned " + duration,
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						userName ?? "<unknown>", $"`{(userName?.EndsWith("#redacted") ?? false ? "redacted" : userId.ToString())}`",
 						DateTime.UtcNow,
 						"Reason", reason),
-					LogString = GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					LogString = GetLogMessage("User Banned " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
 						userName ?? "", userId.ToString(),
 						Utils.GetTimestamp(),
 						"Reason", reason)
@@ -850,10 +850,10 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), "", "User Unbanned",
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						userName, $"`{userId.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					LogString = GetLogMessage("User Unbanned", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
 						userName, userId.ToString(),
 						Utils.GetTimestamp())
 				};
@@ -890,11 +890,11 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(color, "", "User Kicked",
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						userName ?? "<unknown>", $"`{userId.ToString()}`",
 						DateTime.UtcNow,
 						"Reason", reason),
-					LogString = GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					LogString = GetLogMessage("User Kicked", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
 						userName ?? "", userId.ToString(),
 						Utils.GetTimestamp(),
 						"Reason", reason)
@@ -928,12 +928,12 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(color, user.GetAvatarUrl(), "User muted " + duration,
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-						user.GetUsername(), $"`{user.Id.ToString()}`",
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
+						user.GetUsernameSanitized(), $"`{user.Id.ToString()}`",
 						DateTime.UtcNow,
 						"Reason", reason ?? "<Not specified.>"),
-					LogString = GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						user.GetUsername(), user.Id.ToString(),
+					LogString = GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+						user.GetUsernameSanitized(), user.Id.ToString(),
 						Utils.GetTimestamp(),
 						"Reason", reason ?? "<Not specified.>")
 				};
@@ -964,11 +964,11 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), user.GetAvatarUrl(), "User Unmuted",
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
-						user.GetUsername(), $"`{user.Id.ToString()}`",
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
+						user.GetUsernameSanitized(), $"`{user.Id.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						user.GetUsername(), user.Id.ToString(),
+					LogString = GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
+						user.GetUsernameSanitized(), user.Id.ToString(),
 						Utils.GetTimestamp())
 				};
 				await this.MessageQueueLock.WaitAsync();
@@ -997,10 +997,10 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(color, "", "Channel muted " + duration,
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						"#" + channel.Name, $"`{channel.Id.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("Channel Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					LogString = GetLogMessage("Channel Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
 						"#" + channel.Name, channel.Id.ToString(),
 						Utils.GetTimestamp())
 				};
@@ -1030,10 +1030,10 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogEmbed(new Color(server.Config.ModChannelColor), "", "Channel Unmuted",
-						"by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						"#" + channel.Name, $"`{channel.Id.ToString()}`",
 						DateTime.UtcNow),
-					LogString = GetLogMessage("Channel Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					LogString = GetLogMessage("Channel Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsernameSanitized()),
 						"#" + channel.Name, channel.Id.ToString(),
 						Utils.GetTimestamp())
 				};
@@ -1064,10 +1064,10 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-						user.GetUsername() + " joined a publicRole:",
+						user.GetUsernameSanitized() + " joined a publicRole:",
 						user.GetAvatarUrl(), roleName,
 						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
-					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** joined the `{roleName}` public role."
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsernameSanitized()}** joined the `{roleName}` public role."
 				};
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);
@@ -1095,10 +1095,10 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-						user.GetUsername() + " left a publicRole:",
+						user.GetUsernameSanitized() + " left a publicRole:",
 						user.GetAvatarUrl(), roleName,
 						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
-					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** left the `{roleName}` public role."
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsernameSanitized()}** left the `{roleName}` public role."
 				};
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);
@@ -1126,11 +1126,11 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-						user.GetUsername() + $" was promoted to the {roleName} memberRole.",
+						user.GetUsernameSanitized() + $" was promoted to the {roleName} memberRole.",
 						user.GetAvatarUrl(),
-						"Promoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"Promoted by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
-					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsername()}__"
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsernameSanitized()}** was promoted to the `{roleName}` member role by __{issuedBy.GetUsernameSanitized()}__"
 				};
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);
@@ -1158,11 +1158,11 @@ namespace Valkyrja.modules
 					Channel = logChannel,
 					DesiredType = (server.Config.LogChannelEmbeds) ? MessageType.Embed : MessageType.String,
 					LogEmbed = GetLogSmolEmbed(new Color(server.Config.LogChannelColor),
-						user.GetUsername() + $" was demoted from the {roleName} memberRole.",
+						user.GetUsernameSanitized() + $" was demoted from the {roleName} memberRole.",
 						user.GetAvatarUrl(),
-						"Demoted by: " + (issuedBy?.GetUsername() ?? "<unknown>"),
+						"Demoted by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow),
-					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsername()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsername()}__"
+					LogString = $"`{Utils.GetTimestamp()}`: **{user.GetUsernameSanitized()}** was demoted from the `{roleName}` member role by __{issuedBy.GetUsernameSanitized()}__"
 				};
 				await this.MessageQueueLock.WaitAsync();
 				this.MessageQueue.Add(msg);

@@ -115,7 +115,7 @@ namespace Valkyrja.modules
 				}
 
 				await e.Server.Guild.DownloadUsersAsync();
-				List<string> names = role.Members.Select(u => u.GetUsername()).ToList();
+				List<string> names = role.Members.Select(u => u.GetUsernameSanitized()).ToList();
 				names.Sort();
 
 				response = names.Count == 0 ? "Nobody has this role." : $"Members of `{role.Name}` are:\n" + names.ToNamesList();

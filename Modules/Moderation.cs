@@ -651,13 +651,13 @@ namespace Valkyrja.modules
 						await Task.Delay(300);
 
 						if( this.Client.Events.LogKick != null ) // This is in "wrong" order to prevent false positive "user left" logging.
-							await this.Client.Events.LogKick(e.Server, user?.GetUsername(), userData.UserId, warning.ToString(), e.Message.Author as SocketGuildUser);
+							await this.Client.Events.LogKick(e.Server, user?.GetUsernameSanitized(), userData.UserId, warning.ToString(), e.Message.Author as SocketGuildUser);
 
 						await user.KickAsync(warning.ToString());
 						userData.AddWarning(warning.ToString());
-						usernames.Add(user.GetUsername());
+						usernames.Add(user.GetUsernameSanitized());
 						if( userData.WarningCount > 1 && user != null )
-							infractions.AppendLine(e.Server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
+							infractions.AppendLine(e.Server.Localisation.GetString("moderation_nth_infraction", user.GetUsernameSanitized(), userData.WarningCount));
 					}
 				} catch(HttpException exception)
 				{
@@ -957,11 +957,11 @@ namespace Valkyrja.modules
 					{
 						user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(e.Server.Id, userData.UserId);
 					}
-					userNames.Add(user?.GetUsername() ?? "<unknown>");
+					userNames.Add(user?.GetUsernameSanitized() ?? "<unknown>");
 					userIds.Add(userData.UserId);
 					userData.AddWarning(warning.ToString());
 					if( userData.WarningCount > 1 && user != null )
-						infractions.AppendLine(e.Server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
+						infractions.AppendLine(e.Server.Localisation.GetString("moderation_nth_infraction", user.GetUsernameSanitized(), userData.WarningCount));
 
 					if( sendMessage )
 					{
@@ -1113,7 +1113,7 @@ namespace Valkyrja.modules
 						{
 							user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(e.Server.Id, userData.UserId);
 						}
-						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{(user?.GetUsername() ?? "<User Not Present>")}`");
+						responseBuilder.AppendLine($"`{userData.UserId}` | `{userData.WarningCount}` | `{(user?.GetUsernameSanitized() ?? "<User Not Present>")}`");
 					}
 
 					response = responseBuilder.ToString();
@@ -1525,16 +1525,16 @@ namespace Valkyrja.modules
 				{
 					Task logBan = null;
 					if( this.Client.Events.LogBan != null ) // This is in "wrong" order to prevent false positive "user left" logging.
-						logBan = this.Client.Events.LogBan(server, redacted ? user?.Username + "#redacted" : user?.GetUsername(), userData.UserId, reason, durationString.ToString(), bannedBy);
+						logBan = this.Client.Events.LogBan(server, redacted ? user?.Username + "#redacted" : user?.GetUsernameSanitized(), userData.UserId, reason, durationString.ToString(), bannedBy);
 
 					string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
-					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsername() ?? "") + " " + logMessage);
+					await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), (bannedBy?.GetUsernameSanitized() ?? "") + " " + logMessage);
 					userData.BannedUntil = bannedUntil;
 					userData.Banned = true;
 					userData.AddWarning(logMessage);
 					banned.Add(userData.UserId);
 					if( userData.WarningCount > 1 && user != null )
-						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
+						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsernameSanitized(), userData.WarningCount));
 					if( logBan != null )
 						await logBan;
 				} catch(HttpException exception)
@@ -1571,7 +1571,7 @@ namespace Valkyrja.modules
 			if( this.Client.Events.LogBan != null && userData.UserId != this.JustBannedId )
 			{
 				this.JustBannedId = userData.UserId;
-				logBan = this.Client.Events.LogBan(server, user?.GetUsername(), userData.UserId, reason, durationString, bannedBy);
+				logBan = this.Client.Events.LogBan(server, user?.GetUsernameSanitized(), userData.UserId, reason, durationString, bannedBy);
 			}
 
 			await server.Guild.AddBanAsync(userData.UserId, (deleteMessages ? 1 : 0), reason);
@@ -1683,7 +1683,7 @@ namespace Valkyrja.modules
 					userData.Muted = true;
 					muted.Add(userData.UserId);
 					if( userData.WarningCount > 1 && user != null )
-						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
+						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsernameSanitized(), userData.WarningCount));
 
 					if( this.Client.Events.LogMute != null )
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
