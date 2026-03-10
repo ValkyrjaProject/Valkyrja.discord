@@ -933,7 +933,7 @@ namespace Valkyrja.modules
 						DateTime.UtcNow,
 						"Reason", reason ?? "<Not specified.>"),
 					LogString = GetLogMessage("User Muted " + duration, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						user.GetUsernameSanitized(), user.Id.ToString(),
+						user.GetUsername(), user.Id.ToString(),
 						Utils.GetTimestamp(),
 						"Reason", reason ?? "<Not specified.>")
 				};
@@ -968,7 +968,7 @@ namespace Valkyrja.modules
 						user.GetUsernameSanitized(), $"`{user.Id.ToString()}`",
 						DateTime.UtcNow),
 					LogString = GetLogMessage("User Unmuted ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
-						user.GetUsernameSanitized(), user.Id.ToString(),
+						user.GetUsername(), user.Id.ToString(),
 						Utils.GetTimestamp())
 				};
 				await this.MessageQueueLock.WaitAsync();
