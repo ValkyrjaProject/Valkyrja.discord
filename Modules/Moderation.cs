@@ -146,7 +146,7 @@ namespace Valkyrja.modules
 					try
 					{
 						//Avoid using IAsyncEnumerator the way it's supposed to as a means to solve magic download failures.
-						IEnumerable<IMessage> batch = await e.Message.Channel.GetMessagesAsync(lastMessageId-1, Direction.Before, 100, CacheMode.AllowDownload).FlattenAsync();
+						IEnumerable<IMessage> batch = await e.Message.Channel.GetMessagesAsync(lastMessageId-1, Direction.Before, 100, CacheMode.AllowDownload).Where(m => m != null).FlattenAsync();
 						if( batch == null || !batch.Any() )
 							return true;
 						lastMessageId = batch.OrderBy(m => m.Id).First().Id;
