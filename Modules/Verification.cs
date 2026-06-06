@@ -516,6 +516,28 @@ namespace Valkyrja.modules
 			if( !this.Client.Servers.ContainsKey(user.Guild.Id) || (server = this.Client.Servers[user.Guild.Id]) == null )
 				return;
 
+			if( server.Config.BanNewAccounts && server.Config.VerifyAccountAgeDays > 0 && Utils.GetTimeFromId(user.Id) + TimeSpan.FromDays(server.Config.VerifyAccountAgeDays) > DateTime.UtcNow )
+			{
+				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+				try
+				{
+					UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
+					await this.Client.Events.BanUser(server, userData, TimeSpan.FromDays(30), "New accounts are not allowed (by Valkyrja)", server.Guild.CurrentUser, false, false);
+				}
+				catch( HttpException e )
+				{
+					await server.HandleHttpException(e, $"Failed to ban a new account <@{user.Id}>");
+				}
+				catch( Exception e )
+				{
+					await HandleException(e, $"Failed to ban a new account {user.Id}", server.Id);
+				}
+
+				dbContext.SaveChanges();
+				dbContext.Dispose();
+				return;
+			}
+
 			bool verifiedByAge = false;
 			IRole role = null;
 			if( server.Config.VerifyRoleId > 0 && server.Config.VerifyAccountAgeDays > 0 && server.Config.VerifyAccountAge && Utils.GetTimeFromId(user.Id) + TimeSpan.FromDays(server.Config.VerifyAccountAgeDays) < DateTime.UtcNow && (role = server.Guild.GetRole(server.Config.VerifyRoleId)) != null )
