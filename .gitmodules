@@ -1,4 +1,3 @@
 [submodule "Botwinder.core"]
   path = Core
   url = git@github.com:ValkyrjaProject/Valkyrja.core.git
-  ignore = all
