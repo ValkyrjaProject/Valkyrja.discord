@@ -522,7 +522,8 @@ namespace Valkyrja.modules
 				try
 				{
 					UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
-					await this.Client.Events.BanUser(server, userData, TimeSpan.FromDays(30), "New accounts are not allowed (by Valkyrja)", server.Guild.CurrentUser, false, false);
+					TimeSpan duration = Utils.GetTimespanFromString(server.Config.BanDuration) ?? TimeSpan.FromDays(30);
+					await this.Client.Events.BanUser(server, userData, duration, "New accounts are not allowed (by Valkyrja)", server.Guild.CurrentUser, false, false);
 				}
 				catch( HttpException e )
 				{
