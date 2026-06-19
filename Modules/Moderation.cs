@@ -348,7 +348,7 @@ namespace Valkyrja.modules
 				}
 
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
-				if( role == null )
+				if( role == null && !e.Server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
 				{
 					await e.SendReplySafe(RoleNotFoundString);
 					return;
@@ -433,9 +433,9 @@ namespace Valkyrja.modules
 				}
 
 				IRole role = e.Server.Guild.GetRole(e.Server.Config.MuteRoleId);
-				if( role == null || string.IsNullOrEmpty(e.TrimmedMessage) )
+				if( role == null && !e.Server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
 				{
-					await e.SendReplySafe(InvalidArgumentsString + e.Command.ManPage.ToString(e.Server.Config.CommandPrefix+e.CommandId));
+					await e.SendReplySafe(RoleNotFoundString);
 					return;
 				}
 
@@ -1627,7 +1627,10 @@ namespace Valkyrja.modules
 			{
 				user = await this.Client.DiscordClient.Rest.GetGuildUserAsync(server.Id, userData.UserId);
 			}
-			await user.AddRoleAsync(role);
+			if( role != null )
+				await user.AddRoleAsync(role);
+			if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
+				await user.SetTimeOutAsync(duration);
 
 			string warning = $"Muted {durationString}";
 			if( !string.IsNullOrEmpty(reason) )
@@ -1673,7 +1676,10 @@ namespace Valkyrja.modules
 						continue;
 					}
 
-					await user.AddRoleAsync(role);
+					if( role != null )
+						await user.AddRoleAsync(role);
+					if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
+						await user.SetTimeOutAsync(duration);
 
 					string warning = $"Muted {durationString}";
 					if( !string.IsNullOrEmpty(reason) )
@@ -1739,11 +1745,19 @@ namespace Valkyrja.modules
 						continue;
 					}
 
-					if( user != null && user.RoleIds.Any(rId => rId == role.Id) )
+					bool unmute = false;
+					if( role != null && user != null && user.RoleIds.Any(rId => rId == role.Id) )
 					{
 						await user.RemoveRoleAsync(role);
-						unmuted.Add(userData.UserId);
+						unmute = true;
 					}
+					if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
+					{
+						await user.RemoveTimeOutAsync();
+						unmute = true;
+					}
+					if( unmute )
+						unmuted.Add(userData.UserId);
 
 					if( user != null && this.Client.Events.LogUnmute != null )
 						await this.Client.Events.LogUnmute(server, user, unmutedBy);
