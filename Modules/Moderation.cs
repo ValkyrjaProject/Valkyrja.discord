@@ -1630,7 +1630,7 @@ namespace Valkyrja.modules
 			if( role != null )
 				await user.AddRoleAsync(role);
 			if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
-				await user.SetTimeOutAsync(duration);
+				await user.SetTimeOutAsync(duration > TimeSpan.FromDays(28) ? TimeSpan.FromDays(28) : duration);
 
 			string warning = $"Muted {durationString}";
 			if( !string.IsNullOrEmpty(reason) )
@@ -1679,7 +1679,7 @@ namespace Valkyrja.modules
 					if( role != null )
 						await user.AddRoleAsync(role);
 					if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
-						await user.SetTimeOutAsync(duration);
+						await user.SetTimeOutAsync(duration > TimeSpan.FromDays(28) ? TimeSpan.FromDays(28) : duration);
 
 					string warning = $"Muted {durationString}";
 					if( !string.IsNullOrEmpty(reason) )
