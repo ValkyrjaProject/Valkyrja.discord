@@ -1594,6 +1594,7 @@ namespace Valkyrja.modules
 					unbanned.Add(userData.UserId);
 					userData.BannedUntil = DateTime.MinValue;
 					userData.Banned = false;
+					userData.AddWarning($"Manually Unbanned.");
 
 					if( this.Client.Events.LogUnban != null )
 						await this.Client.Events.LogUnban(server, userData.LastUsername, userData.UserId, unbannedBy);
