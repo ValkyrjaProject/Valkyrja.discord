@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -56,7 +57,7 @@ namespace Valkyrja.modules
 
 		private ValkyrjaClient Client;
 
-		private readonly List<guid> RecentlyBannedUserIDs = new List<guid>();
+		private readonly ConcurrentBag<guid> RecentlyBannedUserIDs = new ConcurrentBag<guid>();
 		private readonly List<guid> RecentlyUnbannedUserIDs = new List<guid>();
 
 		private const int MessageQueueThreshold = 10;
