@@ -734,7 +734,7 @@ namespace Valkyrja.modules
 			if( ban != null )
 			{
 				reason = ban.Reason;
-				await this.Client.Events.AddBan(guild.Id, user.Id, TimeSpan.Zero, reason);
+				await this.Client.Events.AddBanReason(guild.Id, user.Id, reason);
 			}
 
 			await LogBan(server, user.GetUsernameSanitized(), user.Id, reason, "permanently", auditEntry?.User as SocketGuildUser);

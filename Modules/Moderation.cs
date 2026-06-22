@@ -52,7 +52,7 @@ namespace Valkyrja.modules
 			this.Client = iClient as ValkyrjaClient;
 			List<Command> commands = new List<Command>();
 
-			this.Client.Events.AddBan += AddBan;
+			this.Client.Events.AddBanReason += AddBanReason;
 			this.Client.Events.BanUser += Ban;
 			this.Client.Events.BanUsers += Ban;
 			this.Client.Events.UnBanUsers += UnBan;
@@ -1473,22 +1473,18 @@ namespace Valkyrja.modules
 
 // Ban
 
-		public Task AddBan(guid serverid, guid userid, TimeSpan duration, string reason)
+		public Task AddBanReason(guid serverid, guid userid, string reason)
 		{
-			DateTime bannedUntil = DateTime.MaxValue;
-			if( duration.TotalHours >= 1 )
-				bannedUntil = DateTime.UtcNow + duration;
-			else
-				duration = TimeSpan.Zero;
-
-			string durationString = Utils.GetDurationString(duration);
-			string logMessage = $"Banned {durationString.ToString()} with reason: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
-
 			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
-
 			UserData userData = dbContext.GetOrAddUser(serverid, userid);
-			userData.BannedUntil = bannedUntil;
-			userData.Banned = true;
+
+			if( userData.Banned && userData.GetWarningsString().Contains(string.Join(" ", reason.Split(' ').Skip(1))) )
+			{
+				dbContext.Dispose();
+				return Task.CompletedTask;
+			}
+
+			string logMessage = $"Ban reason added: {reason.Replace("@everyone", "@-everyone").Replace("@here", "@-here")}";
 			userData.AddWarning(logMessage);
 
 			dbContext.SaveChanges();
