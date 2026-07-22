@@ -48,29 +48,10 @@ namespace Valkyrja.modules
 
 					using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
 					Chat chat = ollama.Chat(this.OllamaModel);
-					await e.SendReplySafe("Executing in VRAM");
+					await e.SendReplySafe("Executing in VRAM...");
 
-					ChatMessage message = await chat.SendAsync(
-					message: e.TrimmedMessage); //,
-					// onResponseChunk: (isFirstChunk, chunk) =>
-					// {
-					// 		if( isFirstChunk )
-					// 		{
-					// 				Console.Write("");
-					// 		}
-					// 		Console.Write(chunk);
-					// });
-
-					await e.SendReplySafe(message.Content);
-
-					// bool canceled = await e.Operation.While(() => n > 0, async () => {
-					// });
-					// if( canceled )
-					// {
-					// 	await e.SendReplySafe($"The command `{e.CommandId}` was cancelled.");
-					// 	return;
-					// }
-
+					ChatMessage message = await chat.SendAsync(message: e.TrimmedMessage);
+					reply = message.Content;
 				}
 				catch(Exception exception)
 				{
@@ -99,7 +80,7 @@ namespace Valkyrja.modules
 					StringBuilder stringBuilder = new StringBuilder();
 					foreach(Ps entry in response.Models)
 					{
-						stringBuilder.AppendLine($"{entry.Name} = {entry.SizeVram/1024/1024/1024:0.00} GiB VRAM");
+						stringBuilder.AppendLine($"`{entry.Name}` = `{entry.SizeVram/1024/1024/1024:0.00} GiB VRAM`");
 					}
 
 					if(stringBuilder.Length > 0)
