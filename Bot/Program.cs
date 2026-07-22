@@ -73,6 +73,7 @@ namespace Valkyrja.discord
 			this.Bot.Modules.Add(new Karma());
 			this.Bot.Modules.Add(new Memo());
 			this.Bot.Modules.Add(new Quotes());
+			this.Bot.Modules.Add(new Llm());
 
 			#if VALKYRJASPECIFIC
 			this.Bot.Modules.Add(new Recruitment());
