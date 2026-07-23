@@ -45,7 +45,7 @@ namespace Valkyrja.modules
 			newCommand.IsPremiumServerwideCommand = true;
 			newCommand.RequiredPermissions = PermissionType.Everyone;
 			newCommand.OnExecute += async e => {
-				if( !e.Server.Config.ExpEnabled )
+				if( !e.Server.Config.ExpEnabled && e.Server.Config.ExpMemberMessages == 0 )
 				{
 					await e.SendReplySafe(ExpDisabledString);
 					return;
@@ -54,27 +54,36 @@ namespace Valkyrja.modules
 				ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
 				UserData userData = dbContext.GetOrAddUser(e.Server.Id, e.Message.Author.Id);
 
-				string response = string.Format(LevelNullString, userData.Level);
+				string response = null;
 
-				SocketRole role = null;
-				if( userData.Level > 0 &&
-				    (role = e.Server.Roles.Values.Where(r => r.ExpLevel == userData.Level)
-					    .Select(r => e.Server.Guild.GetRole(r.RoleId)).FirstOrDefault()) != null )
+				if( e.Server.Config.ExpEnabled )
 				{
-					response = string.Format(LevelString, role.Name, userData.Level);
+					response = string.Format(LevelNullString, userData.Level);
+					SocketRole role = null;
+					if( userData.Level > 0 &&
+							(role = e.Server.Roles.Values.Where(r => r.ExpLevel == userData.Level)
+								.Select(r => e.Server.Guild.GetRole(r.RoleId)).FirstOrDefault()) != null )
+					{
+						response = string.Format(LevelString, role.Name, userData.Level);
+					}
+
+					Int64 expAtLevel = GetTotalExpAtLevel(e.Server.Config.BaseExpToLevelup, userData.Level + 1);
+					Int64 expToLevel = expAtLevel - userData.Exp;
+
+					if( e.Server.Config.ExpPerMessage != 0 && e.Server.Config.ExpPerAttachment != 0 )
+						response += string.Format(ThingsToLevel, expToLevel / e.Server.Config.ExpPerMessage, expToLevel / e.Server.Config.ExpPerAttachment);
+					else if( e.Server.Config.ExpPerMessage != 0 )
+						response += string.Format(MessagesToLevel, expToLevel / e.Server.Config.ExpPerMessage);
+					else if( e.Server.Config.ExpPerAttachment != 0 )
+						response += string.Format(ImagesToLevel, expToLevel / e.Server.Config.ExpPerAttachment);
+				}
+				else
+				{
+					response = $"I counted `{userData.CountMessages}` messages and `{userData.CountAttachments}` images. _(Levels are not enabled.)_";
 				}
 
-				Int64 expAtLevel = GetTotalExpAtLevel(e.Server.Config.BaseExpToLevelup, userData.Level + 1);
-				Int64 expToLevel = expAtLevel - userData.Exp;
-
-				if( e.Server.Config.ExpPerMessage != 0 && e.Server.Config.ExpPerAttachment != 0 )
-					response += string.Format(ThingsToLevel, expToLevel / e.Server.Config.ExpPerMessage, expToLevel / e.Server.Config.ExpPerAttachment);
-				else if( e.Server.Config.ExpPerMessage != 0 )
-					response += string.Format(MessagesToLevel, expToLevel / e.Server.Config.ExpPerMessage);
-				else if( e.Server.Config.ExpPerAttachment != 0 )
-					response += string.Format(ImagesToLevel, expToLevel / e.Server.Config.ExpPerAttachment);
-
-				await e.SendReplySafe(response);
+				if( !string.IsNullOrEmpty(response) )
+					await e.SendReplySafe(response);
 				dbContext.Dispose();
 			};
 			commands.Add(newCommand);
