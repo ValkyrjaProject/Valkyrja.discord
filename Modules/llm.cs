@@ -80,7 +80,7 @@ namespace Valkyrja.modules
 					StringBuilder stringBuilder = new StringBuilder();
 					foreach(Ps entry in response.Models)
 					{
-						stringBuilder.AppendLine($"`{entry.Name}` = `{entry.SizeVram/1024/1024/1024:0.00} GiB VRAM`");
+						stringBuilder.AppendLine($"`{entry.Name}` = `{entry.SizeVram/1024.0f/1024.0f/1024.0f:0.00} GiB VRAM`");
 					}
 
 					if(stringBuilder.Length > 0)
