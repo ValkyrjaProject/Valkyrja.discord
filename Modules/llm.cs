@@ -152,7 +152,7 @@ namespace Valkyrja.modules
 
 				string prompt = null;
 				if( thinkInstruction )
-					prompt = $"What do you think about this chat message? (Keep it short.) \n{refMsg.Content}";
+					prompt = $"What do you think about this chat message and what it says? (Keep it short.) \n{refMsg.Content}";
 				if( moderationInstruction )
 				{
 					if( refMsg.Author.Id == this.Client.DiscordClient.CurrentUser.Id )
