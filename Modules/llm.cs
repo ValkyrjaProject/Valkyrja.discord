@@ -24,7 +24,6 @@ namespace Valkyrja.modules
 
 		private Uri OllamaUri = new Uri("http://127.0.0.1:11434");
 		private string OllamaModel = "hf.co/unsloth/Qwen3.5-4B-GGUF:UD-Q4_K_XL";
-		private readonly Regex RegexThink = new Regex(".*(think|thoughts).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		public List<Command> Init(IValkyrjaClient iClient)
 		{
@@ -113,17 +112,36 @@ namespace Valkyrja.modules
 			if( !this.Client.IsGlobalAdmin(message.Author.Id) )
 				return;
 
-			if( message.Reference == null || message.Channel.Id != message.Reference.ChannelId || !message.Reference.MessageId.IsSpecified || !message.MentionedUsers.Any(u => u.Id == this.Client.DiscordClient.CurrentUser.Id) || !this.RegexThink.IsMatch(message.Content) )
+			if( message.Reference == null || message.Channel.Id != message.Reference.ChannelId || !message.Reference.MessageId.IsSpecified || !message.MentionedUsers.Any(u => u.Id == this.Client.DiscordClient.CurrentUser.Id) )
+				return;
+
+			bool thinkInstruction = this.Client.RegexThink.IsMatch(message.Content);
+			bool moderationInstruction = this.Client.RegexThinkMod.IsMatch(message.Content);
+			if( !thinkInstruction && !moderationInstruction)
 				return;
 
 			try{
 				IMessage refMsg = await message.Channel.GetMessageAsync(message.Reference.MessageId.Value);
+				if( refMsg == null )
+					return;
+
+				string prompt = null;
+				if( thinkInstruction )
+					prompt = $"What do you think about this chat message? \n{refMsg.Content}";
+				if( moderationInstruction )
+				{
+					if( refMsg.Author.Id == this.Client.DiscordClient.CurrentUser.Id )
+						prompt = $"What do you think about this chat user? How should we moderate this behaviour further? \n{refMsg.Content}";
+					else
+						prompt = $"What do you think about this chat message? How should we moderate this behaviour? \n{refMsg.Content}";
+				}
+
 				using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
 				Chat chat = ollama.Chat(this.OllamaModel);
 				await message.Channel.SendMessageSafe("Let me take a look...", messageReference: new MessageReference(message.Id, message.Channel.Id));
 
-				// ChatMessage chatmsg = await chat.SendAsync(message: refMsg.Content);
-				// await message.Channel.SendMessageSafe(chatmsg.Content, messageReference: new MessageReference(message.Id, message.Channel.Id));
+				ChatMessage chatmsg = await chat.SendAsync(message: prompt);
+				await message.Channel.SendMessageSafe(chatmsg.Content, messageReference: new MessageReference(message.Id, message.Channel.Id));
 			}
 			catch(Exception e)
 			{
