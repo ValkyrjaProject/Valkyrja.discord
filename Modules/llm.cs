@@ -24,6 +24,29 @@ namespace Valkyrja.modules
 
 		private Uri OllamaUri = new Uri("http://127.0.0.1:11434");
 		private string OllamaModel = "hf.co/unsloth/Qwen3.5-4B-GGUF:UD-Q4_K_XL";
+		private string ModPrompt = "You are a precise Discord Moderation Analyst. Evaluate the provided user context and output strictly structured, concise moderation guidance.\n\n"+
+			"CORE RULES:\n"+
+			"1. Output ONLY the specified fields. No introductory remarks, explanations of your process, or conversational filler.\n"+
+			"2. Weight past infractions by recency (e.g., active escalation vs. stale warnings from months ago).\n"+
+			"3. Keep all explanations direct and capped at 1–2 sentences.\n"+
+			"4. Community rules are: No spam, no nsfw, no racial slurs, no technical advice sourced by AI, no shitposting, no memes, no insults or disrespect towards others, respect pronouns of others.\n\n"+
+			"--- INPUT DATA ---\n"+
+			"Flagged Message: {0}\n"+
+			"Warning History: {1}\n\n"+
+			"--- OUTPUT FORMAT ---\n"+
+			"## 1. Classification & Audit\n"+
+			"- Classification: [Moderation Issue | Community Support Issue] — [1-sentence explanation]\n"+
+			"- Policy Violation: [Violates Discord ToS / Community Rules | No Violation] — [Specific rule or ToS clause]\n"+
+			"- Watchlist Status: [Flag User | Do Not Flag] — [1-sentence reason]\n\n"+
+			"## 2. Context & Pattern\n"+
+			"- Assessment: [1-2 sentences on user standing, account tenure, and infraction recency]\n\n"+
+			"## 3. Action Options\n"+
+			"### A) De-escalation\n"+
+			"- Action: [Warn | Temporary Ban | Permanent Ban]\n"+
+			"- Message: [Exact warning message or reason for ban]\n\n"+
+			"### B) Escalation\n"+
+			"- Action: [Warn only | Temporary Ban | Permanent Ban]\n"+
+			"- Message: [Exact warning message or reason for ban]\n";
 
 		public List<Command> Init(IValkyrjaClient iClient)
 		{
@@ -120,6 +143,8 @@ namespace Valkyrja.modules
 			if( !thinkInstruction && !moderationInstruction)
 				return;
 
+			ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+
 			try{
 				IMessage refMsg = await message.Channel.GetMessageAsync(message.Reference.MessageId.Value);
 				if( refMsg == null )
@@ -127,16 +152,23 @@ namespace Valkyrja.modules
 
 				string prompt = null;
 				if( thinkInstruction )
-					prompt = $"What do you think about this chat message? \n{refMsg.Content}";
+					prompt = $"What do you think about this chat message? (Keep it short.) \n{refMsg.Content}";
 				if( moderationInstruction )
 				{
 					if( refMsg.Author.Id == this.Client.DiscordClient.CurrentUser.Id )
-						prompt = $"What do you think about this chat user? How should we moderate this behaviour further? \n{refMsg.Content}";
+						prompt = $"What do you think about this chat user? How should we moderate this behaviour further? (Keep it short.) \n{refMsg.Content}";
 					else
+					{
+						IGuildChannel channel = message.Channel as IGuildChannel;
+						UserData userData = channel == null ? null : dbContext.GetOrAddUser(channel.GuildId, refMsg.Author.Id);
+						prompt = string.Format(this.ModPrompt, refMsg.Content, userData?.Notes ?? "none");
 						prompt = $"What do you think about this chat message? How should we moderate this behaviour? \n{refMsg.Content}";
+					}
 				}
 
-				using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
+				var httpClient = new System.Net.Http.HttpClient();
+				httpClient.Timeout = TimeSpan.FromMinutes(10);
+				using OllamaClient ollama = new OllamaClient(httpClient, baseUri: OllamaUri);
 				Chat chat = ollama.Chat(this.OllamaModel);
 				await message.Channel.SendMessageSafe("Let me take a look...", messageReference: new MessageReference(message.Id, message.Channel.Id));
 
