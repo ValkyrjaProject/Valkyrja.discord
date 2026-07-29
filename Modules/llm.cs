@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Valkyrja.core;
 using Valkyrja.entities;
@@ -23,10 +24,12 @@ namespace Valkyrja.modules
 
 		private Uri OllamaUri = new Uri("http://127.0.0.1:11434");
 		private string OllamaModel = "hf.co/unsloth/Qwen3.5-4B-GGUF:UD-Q4_K_XL";
+		private readonly Regex RegexThink = new Regex(".*(think|thoughts).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		public List<Command> Init(IValkyrjaClient iClient)
 		{
 			this.Client = iClient as ValkyrjaClient;
+			this.Client.Events.MessageReceived += HandleMessage;
 			List<Command> commands = new List<Command>();
 
 // !ollama
@@ -103,6 +106,30 @@ namespace Valkyrja.modules
 		public Task Update(IValkyrjaClient iClient)
 		{
 			return Task.CompletedTask;
+		}
+
+		private async Task HandleMessage(SocketMessage message)
+		{
+			if( !this.Client.IsGlobalAdmin(message.Author.Id) )
+				return;
+
+			if( message.Reference == null || message.Channel.Id != message.Reference.ChannelId || !message.Reference.MessageId.IsSpecified || !message.MentionedUsers.Any(u => u.Id == this.Client.DiscordClient.CurrentUser.Id) || !this.RegexThink.IsMatch(message.Content) )
+				return;
+
+			try{
+				IMessage refMsg = await message.Channel.GetMessageAsync(message.Reference.MessageId.Value);
+				using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
+				Chat chat = ollama.Chat(this.OllamaModel);
+				await message.Channel.SendMessageSafe("Let me take a look...", messageReference: new MessageReference(message.Id, message.Channel.Id));
+
+				// ChatMessage chatmsg = await chat.SendAsync(message: refMsg.Content);
+				// await message.Channel.SendMessageSafe(chatmsg.Content, messageReference: new MessageReference(message.Id, message.Channel.Id));
+			}
+			catch(Exception e)
+			{
+				await message.Channel.SendMessageSafe($"Error: {e.Message}", messageReference: new MessageReference(message.Id, message.Channel.Id));
+				return;
+			}
 		}
 	}
 }
