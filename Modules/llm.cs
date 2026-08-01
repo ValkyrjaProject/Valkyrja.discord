@@ -203,7 +203,6 @@ namespace Valkyrja.modules
 						IGuildChannel channel = message.Channel as IGuildChannel;
 						UserData userData = channel == null ? null : dbContext.GetOrAddUser(channel.GuildId, refMsg.Author.Id);
 						prompt = string.Format(this.ModPrompt, refMsg.Content, userData?.Notes ?? "none");
-						prompt = $"What do you think about this chat message? How should we moderate this behaviour? \n{refMsg.Content}";
 					}
 				}
 
