@@ -122,6 +122,40 @@ namespace Valkyrja.modules
 			commands.Add(newCommand.CreateAlias("aiPs"));
 			commands.Add(newCommand.CreateAlias("llmPs"));
 
+// !translate
+			newCommand = new Command("translate");
+			newCommand.IsCoreCommand = true;
+			newCommand.IsSupportCommand = true;
+			newCommand.Type = CommandType.Operation;
+			newCommand.Description = "Translate a replied-to message using LLM.";
+			newCommand.ManPage = new ManPage("", "Reply-to a message to translate.");
+			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
+			newCommand.OnExecute += async e => {
+				string reply = "I have failed you, I'm sorry :(";
+				try{
+					IMessage refMsg = null;
+					if( e.Message.Reference == null || e.Message.Channel.Id != e.Message.Reference.ChannelId || !e.Message.Reference.MessageId.IsSpecified || (refMsg = await e.Message.Channel.GetMessageAsync(e.Message.Reference.MessageId.Value)) == null )
+					{
+						await e.SendReplySafe("Hmm?");
+						return;
+					}
+
+					using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
+					Chat chat = ollama.Chat(this.OllamaModel);
+					await e.SendReplySafe("Let me pull up a dictionary...");
+
+					ChatMessage message = await chat.SendAsync(message: $"Translate this message: {refMsg.Content}");
+					reply = message.Content;
+				}
+				catch(Exception exception)
+				{
+					reply = reply + $"\n\n{exception.Message}";
+				}
+
+				await e.SendReplySafe(reply);
+			};
+			commands.Add(newCommand);
+
 			return commands;
 		}
 
