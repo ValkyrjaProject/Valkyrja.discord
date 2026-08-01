@@ -148,7 +148,7 @@ namespace Valkyrja.modules
 					Chat chat = ollama.Chat(this.OllamaModel);
 					await e.SendReplySafe("Let me pull up a dictionary...");
 
-					ChatMessage message = await chat.SendAsync(message: $"Translate this message: {refMsg.Content}");
+					ChatMessage message = await chat.SendAsync(message: $"Translate this message (keep it short): {refMsg.Content}");
 					reply = message.Content;
 				}
 				catch(Exception exception)
