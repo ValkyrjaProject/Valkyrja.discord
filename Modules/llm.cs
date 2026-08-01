@@ -71,7 +71,9 @@ namespace Valkyrja.modules
 						return;
 					}
 
-					using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
+					var httpClient = new System.Net.Http.HttpClient();
+					httpClient.Timeout = TimeSpan.FromMinutes(10);
+					using OllamaClient ollama = new OllamaClient(httpClient, baseUri: OllamaUri);
 					Chat chat = ollama.Chat(this.OllamaModel);
 					await e.SendReplySafe("Executing in VRAM...");
 
@@ -140,7 +142,9 @@ namespace Valkyrja.modules
 						return;
 					}
 
-					using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
+					var httpClient = new System.Net.Http.HttpClient();
+					httpClient.Timeout = TimeSpan.FromMinutes(10);
+					using OllamaClient ollama = new OllamaClient(httpClient, baseUri: OllamaUri);
 					Chat chat = ollama.Chat(this.OllamaModel);
 					await e.SendReplySafe("Let me pull up a dictionary...");
 
