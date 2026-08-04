@@ -39,14 +39,23 @@ namespace Valkyrja.modules
 			"- Policy Violation: [Violates Discord ToS / Community Rules | No Violation] — [Specific rule or ToS clause]\n"+
 			"- Watchlist Status: [Flag User | Do Not Flag] — [1-sentence reason]\n\n"+
 			"## 2. Context & Pattern\n"+
-			"- Assessment: [1-2 sentences on user standing, account tenure, and infraction recency]\n\n"+
-			"## 3. Action Options\n"+
-			"### A) De-escalation\n"+
-			"- Action: [Warn | Temporary Ban | Permanent Ban]\n"+
-			"- Message: [Exact warning message or reason for ban]\n\n"+
-			"### B) Escalation\n"+
-			"- Action: [Warn only | Temporary Ban | Permanent Ban]\n"+
-			"- Message: [Exact warning message or reason for ban]\n";
+			"- Assessment: [1-2 sentences on user standing, account tenure, and infraction recency]";
+
+		private string ModPromptFunny = "You are an entertaining Discord Moderation Analyst. Evaluate the provided user context and output funny, entertaining, strictly structured, concise moderation guidance.\n\n"+
+			"CORE RULES:\n"+
+			"1. Output ONLY the specified fields. No introductory remarks, explanations of your process, or conversational filler.\n"+
+			"2. Weight past infractions by recency (e.g., active escalation vs. stale warnings from months ago).\n"+
+			"3. Keep all explanations direct and capped at 1–2 sentences.\n"+
+			"4. Community rules are: No spam, no nsfw, no racial slurs, no technical advice sourced by AI, no shitposting, no memes, no insults or disrespect towards others, respect pronouns of others.\n\n"+
+			"--- INPUT DATA ---\n"+
+			"Warning History: {0}\n\n"+
+			"--- OUTPUT FORMAT ---\n"+
+			"## 1. Classification & Audit\n"+
+			"- Classification: [Moderation Issue | Community Support Issue] — [1-sentence explanation]\n"+
+			"- Policy Violation: [Violates Discord ToS / Community Rules | No Violation] — [Specific rule or ToS clause]\n"+
+			"- Watchlist Status: [Flag User | Do Not Flag] — [1-sentence reason]\n\n"+
+			"## 2. Context & Pattern\n"+
+			"- Assessment: [1-2 sentences on user standing, account tenure, and infraction recency]";
 
 		public List<Command> Init(IValkyrjaClient iClient)
 		{
@@ -54,53 +63,75 @@ namespace Valkyrja.modules
 			this.Client.Events.MessageReceived += HandleMessage;
 			List<Command> commands = new List<Command>();
 
-// !ollama
-			Command newCommand = new Command("ollama");
+// !ollamaUser
+			Command newCommand = new Command("aiUser");
 			newCommand.IsCoreCommand = true;
-			newCommand.IsSupportCommand = true;
-			newCommand.Type = CommandType.Operation;
-			newCommand.Description = "Execute an LLM prompt.";
-			newCommand.ManPage = new ManPage("<prompt>", "`<prompt>` - The text prompt to shove into the LLM.");
+			newCommand.Type = CommandType.Standard;
+			newCommand.Description = "";
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
 			newCommand.OnExecute += async e => {
-				string reply = "I have failed you, I'm sorry :(";
-				try{
-					if( string.IsNullOrEmpty(e.TrimmedMessage) )
+				guid id = 0;
+				string responseString = "Invalid parameters.";
+				if( e.MessageArgs == null || e.MessageArgs.Length < 2 ||
+				    !guid.TryParse(e.MessageArgs[1], out id) )
+				{
+					if( !e.Message.MentionedUsers.Any() )
 					{
-						await e.SendReplySafe("Hmm?");
+						await e.SendReplySafe(responseString);
 						return;
 					}
 
-					var httpClient = new System.Net.Http.HttpClient();
-					httpClient.Timeout = TimeSpan.FromMinutes(10);
-					using OllamaClient ollama = new OllamaClient(httpClient, baseUri: OllamaUri);
-					Chat chat = ollama.Chat(this.OllamaModel);
-					await e.SendReplySafe("Executing in VRAM...");
-
-					ChatMessage message = await chat.SendAsync(message: e.TrimmedMessage);
-					reply = message.Content;
+					id = e.Message.MentionedUsers.First().Id;
 				}
-				catch(Exception exception)
+
+				GlobalContext dbContext = GlobalContext.Create(this.Client.DbConnectionString);
+				AiUser aiUser = dbContext.AiUsers.AsQueryable().FirstOrDefault(s => s.UserId == id);
+				switch(e.MessageArgs[0])
 				{
-					reply = reply + $"\n\n{exception.Message}";
+					case "add":
+						if( aiUser == null )
+						{
+							dbContext.AiUsers.Add(aiUser = new AiUser(){UserId = id});
+							dbContext.SaveChanges();
+						}
+
+						responseString = "Done.";
+						break;
+					case "remove":
+						if( aiUser == null )
+						{
+							responseString = "ID not found.";
+							break;
+						}
+
+						dbContext.AiUsers.Remove(aiUser);
+						dbContext.SaveChanges();
+
+						responseString = "Done.";
+						break;
+					default:
+						responseString = "Invalid keyword.";
+						break;
 				}
 
-				await e.SendReplySafe(reply);
+				this.Client.AiUsers = dbContext.AiUsers.AsEnumerable().Select(u => u.UserId).ToList();
+				dbContext.Dispose();
+				await e.SendReplySafe(responseString);
 			};
 			commands.Add(newCommand);
-			commands.Add(newCommand.CreateAlias("ai"));
-			commands.Add(newCommand.CreateAlias("llm"));
+			commands.Add(newCommand.CreateAlias("aiUser"));
+			commands.Add(newCommand.CreateAlias("llmUser"));
 
 // !ollamaPs
 			newCommand = new Command("ollamaPs");
-			newCommand.IsCoreCommand = true;
-			newCommand.IsSupportCommand = true;
+			newCommand.IsAiCommand = true;
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Execute an LLM prompt.";
-			newCommand.ManPage = new ManPage("<prompt>", "`<prompt>` - The text prompt to shove into the LLM.");
+			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
 			newCommand.OnExecute += async e => {
-				string reply = "I have failed you, I'm sorry :(";
+				string responseString = "I have failed you, I'm sorry :(";
 				try{
 					using OllamaClient ollama = new OllamaClient(baseUri: OllamaUri);
 					PsResponse response = await ollama.PsAsync();
@@ -111,29 +142,71 @@ namespace Valkyrja.modules
 					}
 
 					if(stringBuilder.Length > 0)
-						reply = stringBuilder.ToString();
+						responseString = stringBuilder.ToString();
 				}
 				catch(Exception exception)
 				{
-					reply = reply + $"\n\n{exception.Message}";
+					responseString = responseString + $"\n\n{exception.Message}";
 				}
 
-				await e.SendReplySafe(reply);
+				await e.SendReplySafe(responseString);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("aiPs"));
 			commands.Add(newCommand.CreateAlias("llmPs"));
 
+// !ollama
+			newCommand = new Command("ollama");
+			newCommand.IsAiCommand = true;
+			newCommand.Type = CommandType.Operation;
+			newCommand.Description = "Execute an LLM prompt.";
+			newCommand.ManPage = new ManPage("<prompt>", "`<prompt>` - The text prompt to shove into the LLM.");
+			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
+			newCommand.OnExecute += async e => {
+				string responseString = "I have failed you, I'm sorry :(";
+				try{
+					if( string.IsNullOrEmpty(e.TrimmedMessage) )
+					{
+						await e.SendReplySafe("Hmm?");
+						return;
+					}
+
+					string prompt = e.TrimmedMessage + " (Keep it short.)";
+					IMessage refMsg = null;
+					if( e.Message.Reference != null && e.Message.Channel.Id == e.Message.Reference.ChannelId && e.Message.Reference.MessageId.IsSpecified && (refMsg = await e.Message.Channel.GetMessageAsync(e.Message.Reference.MessageId.Value)) != null )
+					{
+						prompt = $"{e.TrimmedMessage} (Keep it short.)\n\n{refMsg.Content}";
+					}
+
+					var httpClient = new System.Net.Http.HttpClient();
+					httpClient.Timeout = TimeSpan.FromMinutes(10);
+					using OllamaClient ollama = new OllamaClient(httpClient, baseUri: OllamaUri);
+					Chat chat = ollama.Chat(this.OllamaModel);
+					await e.SendReplySafe("Executing in VRAM...");
+
+					ChatMessage message = await chat.SendAsync(message: e.TrimmedMessage);
+					responseString = message.Content;
+				}
+				catch(Exception exception)
+				{
+					responseString = responseString + $"\n\n{exception.Message}";
+				}
+
+				await e.SendReplySafe(responseString);
+			};
+			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("ai"));
+			commands.Add(newCommand.CreateAlias("llm"));
+
 // !translate
 			newCommand = new Command("translate");
-			newCommand.IsCoreCommand = true;
-			newCommand.IsSupportCommand = true;
+			newCommand.IsAiCommand = true;
 			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Translate a replied-to message using LLM.";
 			newCommand.ManPage = new ManPage("", "Reply-to a message to translate.");
 			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
 			newCommand.OnExecute += async e => {
-				string reply = "I have failed you, I'm sorry :(";
+				string responseString = "I have failed you, I'm sorry :(";
 				try{
 					IMessage refMsg = null;
 					if( e.Message.Reference == null || e.Message.Channel.Id != e.Message.Reference.ChannelId || !e.Message.Reference.MessageId.IsSpecified || (refMsg = await e.Message.Channel.GetMessageAsync(e.Message.Reference.MessageId.Value)) == null )
@@ -151,17 +224,64 @@ namespace Valkyrja.modules
 
 					bool tldr = e.Command.Id.ToLower() != "translateLong";
 					ChatMessage message = await chat.SendAsync(message: $"Translate this message{(tldr ? " (keep it short)" : "")}: {refMsg.Content}");
-					reply = message.Content;
+					responseString = message.Content;
 				}
 				catch(Exception exception)
 				{
-					reply = reply + $"\n\n{exception.Message}";
+					responseString = responseString + $"\n\n{exception.Message}";
 				}
 
-				await e.SendReplySafe(reply);
+				await e.SendReplySafe(responseString);
 			};
 			commands.Add(newCommand);
 			commands.Add(newCommand.CreateAlias("translateLong"));
+
+// !aiMod
+			newCommand = new Command("aiMod");
+			newCommand.IsAiCommand = true;
+			newCommand.Type = CommandType.Operation;
+			newCommand.Description = "Execute an LLM prompt.";
+			newCommand.ManPage = new ManPage("<UserID>", "`<UserID>` - User ID or mention to look for.");
+			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
+			newCommand.OnExecute += async e => {
+				string responseString = "I have failed you, I'm sorry :(";
+				ServerContext dbContext = null;
+				try{
+					guid foundId = 0;
+					if( e.MessageArgs.Length != 1 || !guid.TryParse(e.MessageArgs[0].Trim('<', '@', '!', '>'), out guid id) )
+					{
+						await e.SendReplySafe("Hmm?");
+						return;
+					}
+
+					dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundId);
+					string prompt = string.Format(this.ModPromptFunny, userData?.Notes ?? "none");
+
+					IMessage refMsg = null;
+					if( e.Message.Reference != null && e.Message.Channel.Id == e.Message.Reference.ChannelId && e.Message.Reference.MessageId.IsSpecified && (refMsg = await e.Message.Channel.GetMessageAsync(e.Message.Reference.MessageId.Value)) != null )
+					{
+						prompt = $"{e.TrimmedMessage} (Keep it short.)\n\n{refMsg.Content}";
+					}
+
+					var httpClient = new System.Net.Http.HttpClient();
+					httpClient.Timeout = TimeSpan.FromMinutes(10);
+					using OllamaClient ollama = new OllamaClient(httpClient, baseUri: OllamaUri);
+					Chat chat = ollama.Chat(this.OllamaModel);
+					await e.SendReplySafe("Executing in VRAM...");
+
+					ChatMessage message = await chat.SendAsync(message: e.TrimmedMessage);
+					responseString = message.Content;
+				}
+				catch(Exception exception)
+				{
+					responseString = responseString + $"\n\n{exception.Message}";
+				}
+
+				dbContext?.Dispose();
+				await e.SendReplySafe(responseString);
+			};
+			commands.Add(newCommand);
 
 			return commands;
 		}
