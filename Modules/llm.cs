@@ -248,7 +248,7 @@ namespace Valkyrja.modules
 				ServerContext dbContext = null;
 				try{
 					guid foundId = 0;
-					if( e.MessageArgs.Length != 1 || !guid.TryParse(e.MessageArgs[0].Trim('<', '@', '!', '>'), out guid id) )
+					if( e.MessageArgs.Length != 1 || !guid.TryParse(e.MessageArgs[0].Trim('<', '@', '!', '>'), out foundId) )
 					{
 						await e.SendReplySafe("Hmm?");
 						return;
@@ -258,19 +258,13 @@ namespace Valkyrja.modules
 					UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundId);
 					string prompt = string.Format(this.ModPromptFunny, userData?.Notes ?? "none");
 
-					IMessage refMsg = null;
-					if( e.Message.Reference != null && e.Message.Channel.Id == e.Message.Reference.ChannelId && e.Message.Reference.MessageId.IsSpecified && (refMsg = await e.Message.Channel.GetMessageAsync(e.Message.Reference.MessageId.Value)) != null )
-					{
-						prompt = $"{e.TrimmedMessage} (Keep it short.)\n\n{refMsg.Content}";
-					}
-
 					var httpClient = new System.Net.Http.HttpClient();
 					httpClient.Timeout = TimeSpan.FromMinutes(10);
 					using OllamaClient ollama = new OllamaClient(httpClient, baseUri: OllamaUri);
 					Chat chat = ollama.Chat(this.OllamaModel);
 					await e.SendReplySafe("Executing in VRAM...");
 
-					ChatMessage message = await chat.SendAsync(message: e.TrimmedMessage);
+					ChatMessage message = await chat.SendAsync(message: prompt);
 					responseString = message.Content;
 				}
 				catch(Exception exception)
