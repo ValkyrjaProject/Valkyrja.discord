@@ -24,14 +24,13 @@ namespace Valkyrja.modules
 
 		private Uri OllamaUri = new Uri("http://127.0.0.1:11434");
 		private string OllamaModel = "hf.co/unsloth/Qwen3.5-4B-GGUF:UD-Q4_K_XL";
-		private string ModPrompt = "You are a precise Discord Moderation Analyst. Evaluate the provided user context and output strictly structured, concise moderation guidance.\n\n"+
+		private string ModPrompt = "You are an entertaining Discord Moderation Analyst. Evaluate the provided user context and output funny, entertaining, strictly structured, concise moderation guidance.\n\n"+
 			"CORE RULES:\n"+
 			"1. Output ONLY the specified fields. No introductory remarks, explanations of your process, or conversational filler.\n"+
 			"2. Weight past infractions by recency (e.g., active escalation vs. stale warnings from months ago).\n"+
 			"3. Keep all explanations direct and capped at 1–2 sentences.\n"+
 			"4. Community rules are: No spam, no nsfw, no racial slurs, no technical advice sourced by AI, no shitposting, no memes, no insults or disrespect towards others, respect pronouns of others.\n\n"+
-			"--- INPUT DATA ---\n"+
-			"Flagged Message: {0}\n"+
+			"--- INPUT DATA ---\n{0}"+
 			"Warning History: {1}\n\n"+
 			"--- OUTPUT FORMAT ---\n"+
 			"## 1. Classification & Audit\n"+
@@ -39,23 +38,7 @@ namespace Valkyrja.modules
 			"- Policy Violation: [Violates Discord ToS / Community Rules | No Violation] — [Specific rule or ToS clause]\n"+
 			"- Watchlist Status: [Flag User | Do Not Flag] — [1-sentence reason]\n\n"+
 			"## 2. Context & Pattern\n"+
-			"- Assessment: [1-2 sentences on user standing, account tenure, and infraction recency]";
-
-		private string ModPromptFunny = "You are an entertaining Discord Moderation Analyst. Evaluate the provided user context and output funny, entertaining, strictly structured, concise moderation guidance.\n\n"+
-			"CORE RULES:\n"+
-			"1. Output ONLY the specified fields. No introductory remarks, explanations of your process, or conversational filler.\n"+
-			"2. Weight past infractions by recency (e.g., active escalation vs. stale warnings from months ago).\n"+
-			"3. Keep all explanations direct and capped at 1–2 sentences.\n"+
-			"4. Community rules are: No spam, no nsfw, no racial slurs, no technical advice sourced by AI, no shitposting, no memes, no insults or disrespect towards others, respect pronouns of others.\n\n"+
-			"--- INPUT DATA ---\n"+
-			"Warning History: {0}\n\n"+
-			"--- OUTPUT FORMAT ---\n"+
-			"## 1. Classification & Audit\n"+
-			"- Classification: [Moderation Issue | Community Support Issue] — [1-sentence explanation]\n"+
-			"- Policy Violation: [Violates Discord ToS / Community Rules | No Violation] — [Specific rule or ToS clause]\n"+
-			"- Watchlist Status: [Flag User | Do Not Flag] — [1-sentence reason]\n\n"+
-			"## 2. Context & Pattern\n"+
-			"- Assessment: [1-2 funny sentences on user standing, account tenure, and infraction recency]";
+			"- Assessment: [1-2 funny sentences on user standing and infraction history]";
 
 		public List<Command> Init(IValkyrjaClient iClient)
 		{
@@ -67,7 +50,7 @@ namespace Valkyrja.modules
 			Command newCommand = new Command("aiUser");
 			newCommand.IsCoreCommand = true;
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "";
+			newCommand.Description = "Add or remove a userId to allow the use of the ollama api.";
 			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
 			newCommand.OnExecute += async e => {
@@ -127,7 +110,7 @@ namespace Valkyrja.modules
 			newCommand = new Command("ollamaPs");
 			newCommand.IsAiCommand = true;
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Execute an LLM prompt.";
+			newCommand.Description = "ollama ps";
 			newCommand.ManPage = new ManPage("", "");
 			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
 			newCommand.OnExecute += async e => {
@@ -160,7 +143,7 @@ namespace Valkyrja.modules
 			newCommand.IsAiCommand = true;
 			newCommand.Type = CommandType.Operation;
 			newCommand.Description = "Execute an LLM prompt.";
-			newCommand.ManPage = new ManPage("<prompt>", "`<prompt>` - The text prompt to shove into the LLM.");
+			newCommand.ManPage = new ManPage("<prompt>", "`<prompt>` - The text prompt to shove into the LLM.\nOptionally also include a replied-to message.");
 			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
 			newCommand.OnExecute += async e => {
 				string responseString = "I have failed you, I'm sorry :(";
@@ -240,8 +223,8 @@ namespace Valkyrja.modules
 			newCommand = new Command("aiMod");
 			newCommand.IsAiCommand = true;
 			newCommand.Type = CommandType.Operation;
-			newCommand.Description = "Execute an LLM prompt.";
-			newCommand.ManPage = new ManPage("<UserID>", "`<UserID>` - User ID or mention to look for.");
+			newCommand.Description = "Send an LLM prompt to evaluate a user and their infraction history.";
+			newCommand.ManPage = new ManPage("<UserID>", "`<UserID>` - User ID or mention to look for.\nOptionally also include a replied-to message.");
 			newCommand.RequiredPermissions = PermissionType.OwnerOnly;
 			newCommand.OnExecute += async e => {
 				string responseString = "I have failed you, I'm sorry :(";
@@ -254,9 +237,16 @@ namespace Valkyrja.modules
 						return;
 					}
 
+					string reference = "";
+					IMessage refMsg = null;
+					if( e.Message.Reference != null && e.Message.Channel.Id == e.Message.Reference.ChannelId && e.Message.Reference.MessageId.IsSpecified && (refMsg = await e.Message.Channel.GetMessageAsync(e.Message.Reference.MessageId.Value)) != null )
+					{
+						reference = $"Flagged Message: {refMsg.Content}\n";
+					}
+
 					dbContext = ServerContext.Create(this.Client.DbConnectionString);
 					UserData userData = dbContext.GetOrAddUser(e.Server.Id, foundId);
-					string prompt = string.Format(this.ModPromptFunny, userData?.Notes ?? "none");
+					string prompt = string.Format(this.ModPrompt, reference, userData?.Notes ?? "none");
 
 					var httpClient = new System.Net.Http.HttpClient();
 					httpClient.Timeout = TimeSpan.FromMinutes(10);
@@ -316,7 +306,7 @@ namespace Valkyrja.modules
 					{
 						IGuildChannel channel = message.Channel as IGuildChannel;
 						UserData userData = channel == null ? null : dbContext.GetOrAddUser(channel.GuildId, refMsg.Author.Id);
-						prompt = string.Format(this.ModPrompt, refMsg.Content, userData?.Notes ?? "none");
+						prompt = string.Format(this.ModPrompt, $"Flagged Message: {refMsg.Content}\n", userData?.Notes ?? "none");
 					}
 				}
 
