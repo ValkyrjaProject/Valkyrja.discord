@@ -1650,6 +1650,7 @@ namespace Valkyrja.modules
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 			string durationString = Utils.GetDurationString(duration);
 
+			StringBuilder allWarnings = new StringBuilder();
 			string response = "";
 			List<guid> muted = new List<guid>();
 			StringBuilder infractions = new StringBuilder();
@@ -1679,6 +1680,9 @@ namespace Valkyrja.modules
 					if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
 						await user.SetTimeOutAsync(TimeSpan.FromSeconds(10));
 
+					string userWarnings = userData.GetWarningsString();
+					if( string.IsNullOrEmpty(userWarnings))
+					allWarnings.AppendLine($"Previous infractions of `{user.Username}`:\n{userWarnings}\n\n");
 					string warning = $"Muted {durationString}";
 					if( !string.IsNullOrEmpty(reason) )
 						warning += $" with reason: {reason}";
@@ -1709,7 +1713,7 @@ namespace Valkyrja.modules
 				{
 					SocketTextChannel logChannel;
 					if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions));
+						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions) + $"\n\n{allWarnings.ToString()}");
 				}
 				catch( HttpException exception )
 				{
