@@ -55,7 +55,7 @@ namespace Valkyrja.modules
 			"- Policy Violation: [Violates Discord ToS / Community Rules | No Violation] — [Specific rule or ToS clause]\n"+
 			"- Watchlist Status: [Flag User | Do Not Flag] — [1-sentence reason]\n\n"+
 			"## 2. Context & Pattern\n"+
-			"- Assessment: [1-2 sentences on user standing, account tenure, and infraction recency]";
+			"- Assessment: [1-2 funny sentences on user standing, account tenure, and infraction recency]";
 
 		public List<Command> Init(IValkyrjaClient iClient)
 		{
