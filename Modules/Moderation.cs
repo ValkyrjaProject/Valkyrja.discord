@@ -1630,6 +1630,12 @@ namespace Valkyrja.modules
 			if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
 				await user.SetTimeOutAsync(TimeSpan.FromSeconds(10));
 
+			string userWarnings = userData.GetWarningsString();
+			if( !string.IsNullOrEmpty(userWarnings))
+				userWarnings = $"Previous infractions:\n{userWarnings}";
+			else
+				userWarnings = $"No previous infractions.";
+
 			string warning = $"Muted {durationString}";
 			if( !string.IsNullOrEmpty(reason) )
 				warning += $" with reason: {reason}";
@@ -1639,7 +1645,7 @@ namespace Valkyrja.modules
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-				await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", $"<@{userData.UserId}>"));
+				await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", $"<@{userData.UserId}>") + $"\n\n{userWarnings}");
 
 			if( this.Client.Events.LogMute != null )
 				await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
@@ -1650,10 +1656,10 @@ namespace Valkyrja.modules
 			DateTime mutedUntil = DateTime.UtcNow + (duration.TotalMinutes < 5 ? TimeSpan.FromMinutes(5) : duration);
 			string durationString = Utils.GetDurationString(duration);
 
-			StringBuilder allWarnings = new StringBuilder();
 			string response = "";
 			List<guid> muted = new List<guid>();
-			StringBuilder infractions = new StringBuilder();
+			StringBuilder infractionsList = new StringBuilder();
+			StringBuilder infractionsReply = new StringBuilder();
 			foreach( UserData userData in users )
 			{
 				try
@@ -1681,8 +1687,11 @@ namespace Valkyrja.modules
 						await user.SetTimeOutAsync(TimeSpan.FromSeconds(10));
 
 					string userWarnings = userData.GetWarningsString();
-					if( string.IsNullOrEmpty(userWarnings))
-					allWarnings.AppendLine($"Previous infractions of `{user.Username}`:\n{userWarnings}\n\n");
+					if( !string.IsNullOrEmpty(userWarnings))
+						infractionsList.AppendLine($"Previous infractions of `{user.Username}`:\n{userWarnings}\n");
+					else
+						infractionsList.AppendLine($"`{user.Username}` has no previous infractions.\n");
+
 					string warning = $"Muted {durationString}";
 					if( !string.IsNullOrEmpty(reason) )
 						warning += $" with reason: {reason}";
@@ -1691,7 +1700,7 @@ namespace Valkyrja.modules
 					userData.Muted = true;
 					muted.Add(userData.UserId);
 					if( userData.WarningCount > 1 && user != null )
-						infractions.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
+						infractionsReply.AppendLine(server.Localisation.GetString("moderation_nth_infraction", user.GetUsername(), userData.WarningCount));
 
 					if( this.Client.Events.LogMute != null )
 						await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
@@ -1707,13 +1716,13 @@ namespace Valkyrja.modules
 			string mentions = muted.ToMentions();
 			if( muted.Any() )
 			{
-				response = server.Localisation.GetString("moderation_mute_done", mentions) + "\n" + infractions.ToString();
+				response = server.Localisation.GetString("moderation_mute_done", mentions) + "\n" + infractionsReply.ToString();
 
 				try
 				{
 					SocketTextChannel logChannel;
 					if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions) + $"\n\n{allWarnings.ToString()}");
+						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions) + $"\n\n{infractionsList.ToString()}");
 				}
 				catch( HttpException exception )
 				{
