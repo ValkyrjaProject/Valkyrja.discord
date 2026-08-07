@@ -1631,7 +1631,9 @@ namespace Valkyrja.modules
 				await user.SetTimeOutAsync(TimeSpan.FromSeconds(10));
 
 			string userWarnings = userData.GetWarningsString(true);
-			if( !string.IsNullOrEmpty(userWarnings))
+			if( server.Config.MuteAddContext )
+				userWarnings = "";
+			else if( !string.IsNullOrEmpty(userWarnings))
 				userWarnings = $"Previous infractions:\n{userWarnings}";
 			else
 				userWarnings = $"No previous infractions.";
@@ -1686,11 +1688,14 @@ namespace Valkyrja.modules
 					if( server.Guild.CurrentUser.GuildPermissions.ModerateMembers )
 						await user.SetTimeOutAsync(TimeSpan.FromSeconds(10));
 
-					string userWarnings = userData.GetWarningsString(true);
-					if( !string.IsNullOrEmpty(userWarnings))
-						infractionsList.AppendLine($"Previous infractions of `{user.Username}`:\n{userWarnings}\n");
-					else
-						infractionsList.AppendLine($"`{user.Username}` has no previous infractions.\n");
+					if( server.Config.MuteAddContext )
+					{
+						string userWarnings = userData.GetWarningsString(true);
+						if( !string.IsNullOrEmpty(userWarnings))
+							infractionsList.AppendLine($"Previous infractions of `{user.Username}`:\n{userWarnings}\n");
+						else
+							infractionsList.AppendLine($"`{user.Username}` has no previous infractions.\n");
+					}
 
 					string warning = $"Muted {durationString}";
 					if( !string.IsNullOrEmpty(reason) )
