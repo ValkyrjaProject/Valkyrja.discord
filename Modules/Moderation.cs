@@ -1634,9 +1634,9 @@ namespace Valkyrja.modules
 			if( server.Config.MuteAddContext )
 				userWarnings = "";
 			else if( !string.IsNullOrEmpty(userWarnings))
-				userWarnings = $"Previous infractions:\n{userWarnings}";
+				userWarnings = $"Mutedd for: {reason}\nPrevious infractions:\n{userWarnings}";
 			else
-				userWarnings = $"No previous infractions.";
+				userWarnings = $"Mutedd for: {reason}\nNo previous infractions.";
 
 			string warning = $"Muted {durationString}";
 			if( !string.IsNullOrEmpty(reason) )
@@ -1647,7 +1647,7 @@ namespace Valkyrja.modules
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-				await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", $"<@{userData.UserId}>") + $"\n\n{userWarnings}");
+				await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", $"<@{userData.UserId}>") + $"\n\n\n{userWarnings}");
 
 			if( this.Client.Events.LogMute != null )
 				await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
@@ -1692,9 +1692,9 @@ namespace Valkyrja.modules
 					{
 						string userWarnings = userData.GetWarningsString(true);
 						if( !string.IsNullOrEmpty(userWarnings))
-							infractionsList.AppendLine($"Previous infractions of `{user.Username}`:\n{userWarnings}\n");
+							infractionsList.AppendLine($"Mutedd for: {reason}\nPrevious infractions of `{user.Username}`:\n{userWarnings}\n");
 						else
-							infractionsList.AppendLine($"`{user.Username}` has no previous infractions.\n");
+							infractionsList.AppendLine($"Mutedd for: {reason}\n`{user.Username}` has no previous infractions.\n");
 					}
 
 					string warning = $"Muted {durationString}";
@@ -1727,7 +1727,7 @@ namespace Valkyrja.modules
 				{
 					SocketTextChannel logChannel;
 					if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions) + $"\n\n{infractionsList.ToString()}");
+						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions) + $"\n\n\n{infractionsList.ToString()}");
 				}
 				catch( HttpException exception )
 				{
