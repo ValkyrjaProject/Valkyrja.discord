@@ -847,6 +847,11 @@ namespace Valkyrja.modules
 			SocketRole role;
 			if( server.Config.WelcomeRoleId != 0 && (role = server.Guild.GetRole(server.Config.WelcomeRoleId)) != null )
 			{
+				SocketTextChannel channel = null;
+				if( server.Config.VerifyChannelId != 0 && (channel = server.Guild.GetTextChannel(server.Config.VerifyChannelId)) != null )
+				{
+					await channel.SendMessageSafe($"<@{user.Id}> joined the afterlife.");
+				}
 				try
 				{
 					await user.AddRoleAsync(role);
