@@ -1631,12 +1631,12 @@ namespace Valkyrja.modules
 				await user.SetTimeOutAsync(TimeSpan.FromSeconds(10));
 
 			string userWarnings = userData.GetWarningsString(true);
-			if( server.Config.MuteAddContext )
+			if( !server.Config.MuteAddContext )
 				userWarnings = "";
 			else if( !string.IsNullOrEmpty(userWarnings))
-				userWarnings = $"Mutedd for: {reason}\nPrevious infractions:\n{userWarnings}";
+				userWarnings = $"Muted for: {reason}\nPrevious infractions:\n{userWarnings}";
 			else
-				userWarnings = $"Mutedd for: {reason}\nNo previous infractions.";
+				userWarnings = $"Muted for: {reason}\nNo previous infractions.";
 
 			string warning = $"Muted {durationString}";
 			if( !string.IsNullOrEmpty(reason) )
@@ -1692,9 +1692,9 @@ namespace Valkyrja.modules
 					{
 						string userWarnings = userData.GetWarningsString(true);
 						if( !string.IsNullOrEmpty(userWarnings))
-							infractionsList.AppendLine($"Mutedd for: {reason}\nPrevious infractions of `{user.Username}`:\n{userWarnings}\n");
+							infractionsList.AppendLine($"Muted for: {reason}\nPrevious infractions of `{user.Username}`:\n{userWarnings}\n");
 						else
-							infractionsList.AppendLine($"Mutedd for: {reason}\n`{user.Username}` has no previous infractions.\n");
+							infractionsList.AppendLine($"Muted for: {reason}\n`{user.Username}` has no previous infractions.\n");
 					}
 
 					string warning = $"Muted {durationString}";
