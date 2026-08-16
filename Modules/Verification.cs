@@ -103,7 +103,7 @@ namespace Valkyrja.modules
 			newCommand.ManPage = new ManPage("<@user>", "`<@user>` - User mention of a user to have their verified status removed.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				if( (!e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled) || e.Server.Config.VerifyRoleId == 0 )
+				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled && e.Server.Config.VerifyRoleId == 0 )
 				{
 					await e.SendReplySafe("Verification is disabled on this server.");
 					return;
