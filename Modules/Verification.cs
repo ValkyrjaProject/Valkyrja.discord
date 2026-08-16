@@ -103,7 +103,7 @@ namespace Valkyrja.modules
 			newCommand.ManPage = new ManPage("<@user>", "`<@user>` - User mention of a user to have their verified status removed.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin;
 			newCommand.OnExecute += async e => {
-				if( !e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled )
+				if( (!e.Server.Config.CodeVerificationEnabled && !e.Server.Config.CaptchaVerificationEnabled) || e.Server.Config.VerifyRoleId == 0 )
 				{
 					await e.SendReplySafe("Verification is disabled on this server.");
 					return;
@@ -392,7 +392,7 @@ namespace Valkyrja.modules
 				}
 
 				RoleConfig roleConfig = server.Roles.ContainsKey(role.Id) ? server.Roles[role.Id] : null;
-				if( roleConfig.InversePersistence && !userData.IsAllowedRole(roleConfig) )
+				if( roleConfig != null && roleConfig.InversePersistence && !userData.IsAllowedRole(roleConfig) )
 					continue;
 
 				try
@@ -499,6 +499,19 @@ namespace Valkyrja.modules
 
 					await this.HandleException(new ArgumentException("Role is null"), "Failed to assign verification role.", server.Id);
 					return;
+				}
+				RoleConfig roleConfig = server.Roles.ContainsKey(role.Id) ? server.Roles[role.Id] : null;
+				if( roleConfig != null && roleConfig.InversePersistence )
+				{
+					ServerContext dbContext = ServerContext.Create(this.Client.DbConnectionString);
+					UserData userData = dbContext.GetOrAddUser(server.Id, newUser.Id);
+					dbContext.Dispose();
+					if( !userData.IsAllowedRole(roleConfig) )
+					{
+						dbContext.Dispose();
+						return;
+					}
+					dbContext.Dispose();
 				}
 
 				try
