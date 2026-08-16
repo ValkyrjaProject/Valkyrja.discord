@@ -124,6 +124,9 @@ namespace Valkyrja.modules
 				{
 					foreach( UserData userData in mentionedUsers )
 					{
+						RoleConfig roleConfig = e.Server.Roles.ContainsKey(role.Id) ? e.Server.Roles[role.Id] : null;
+						if( roleConfig.InversePersistence )
+							userData.RemovePersistence(roleConfig);
 						userData.Verified = false;
 						SocketGuildUser user = e.Server.Guild.GetUser(userData.UserId);
 						if( user != null )
@@ -387,6 +390,10 @@ namespace Valkyrja.modules
 					verified = true; //Remove them from the list.
 					continue;
 				}
+
+				RoleConfig roleConfig = server.Roles.ContainsKey(role.Id) ? server.Roles[role.Id] : null;
+				if( roleConfig.InversePersistence && !userData.IsAllowedRole(roleConfig) )
+					continue;
 
 				try
 				{
