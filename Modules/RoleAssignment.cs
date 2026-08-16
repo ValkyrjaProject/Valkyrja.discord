@@ -1023,10 +1023,14 @@ namespace Valkyrja.modules
 
 								dbContext.Dispose();
 								server.ReactionRolesLock.Release();
-								return;
+								return; //was this supposed to be a continue?
 							}
 
 							//else...
+							UserData userData = dbContext.GetOrAddUser(server.Id, user.Id);
+							if( !userData.IsAllowedRole(roleConfig) )
+								continue;
+
 							Int64 groupId = roleConfig?.PublicRoleGroupId ?? 0;
 							if( groupId != 0 )
 							{
