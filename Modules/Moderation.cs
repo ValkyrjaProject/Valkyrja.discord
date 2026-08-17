@@ -1647,7 +1647,7 @@ namespace Valkyrja.modules
 
 			SocketTextChannel logChannel;
 			if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-				await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", $"<@{userData.UserId}>") + $"\n\n\n{userWarnings}");
+				await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", $"<@{userData.UserId}>") + $"\n\n\n{userWarnings}", allowedMentions: AllowedMentions.All);
 
 			if( this.Client.Events.LogMute != null )
 				await this.Client.Events.LogMute(server, user, durationString, mutedBy, reason);
