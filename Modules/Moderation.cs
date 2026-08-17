@@ -1729,7 +1729,7 @@ namespace Valkyrja.modules
 					if( server.Config.MuteAddContext )
 						infractionsList.AppendLine($"\nMuted for: {reason ?? ""}");
 					if( (logChannel = server.Guild.GetTextChannel(server.Config.MuteIgnoreChannelId)) != null )
-						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions) + $"\n\n\n{infractionsList.ToString()}");
+						await logChannel.SendMessageSafe(server.Localisation.GetString("moderation_mute_ignorechannel", mentions) + $"\n\n\n{infractionsList.ToString()}", allowedMentions: AllowedMentions.All);
 				}
 				catch( HttpException exception )
 				{
