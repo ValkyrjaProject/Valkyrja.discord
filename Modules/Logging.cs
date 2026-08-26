@@ -416,21 +416,21 @@ namespace Valkyrja.modules
 					switch( change )
 					{
 						case -1:
-							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** left the `{originalState.VoiceChannel.Name}` voice channel.";
+							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname(true)}** left the `{originalState.VoiceChannel.Name}` voice channel.";
 							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
 								user.GetUsernameSanitized() + " left the voice channel:",
 								user.GetAvatarUrl(), $"{originalState.VoiceChannel.Name}",
 								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
 						case 1:
-							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** joined the `{newState.VoiceChannel.Name}` voice channel.";
+							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname(true)}** joined the `{newState.VoiceChannel.Name}` voice channel.";
 							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
 								user.GetUsernameSanitized() + " joined the voice channel:",
 								user.GetAvatarUrl(), $"{newState.VoiceChannel.Name}",
 								Utils.GetTimestamp(DateTime.UtcNow), DateTime.UtcNow);
 							break;
 						case 0:
-							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname()}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
+							message = $"`{Utils.GetTimestamp()}`:  **{user.GetNickname(true)}** switched from the `{originalState.VoiceChannel.Name}` voice channel, to the `{newState.VoiceChannel.Name}` voice channel.";
 							embed = GetLogSmolEmbed(new Color(server.Config.VoiceChannelColor),
 								user.GetUsernameSanitized() + " switched voice channels:",
 								user.GetAvatarUrl(), $"From {originalState.VoiceChannel.Name} to {newState.VoiceChannel.Name}",
