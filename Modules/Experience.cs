@@ -76,7 +76,7 @@ namespace Valkyrja.modules
 						response += string.Format(MessagesToLevel, expToLevel / e.Server.Config.ExpPerMessage);
 					else if( e.Server.Config.ExpPerAttachment != 0 )
 						response += string.Format(ImagesToLevel, expToLevel / e.Server.Config.ExpPerAttachment);
-					response += $"You have a total of `{userData.CountMessages}` message{(userData.CountMessages == 1 ? "" : "s")} and `{userData.CountAttachments}` image{(userData.CountAttachments == 1 ? "" : "s")}.";
+					response += $"\nYou have a total of `{userData.CountMessages}` message{(userData.CountMessages == 1 ? "" : "s")} and `{userData.CountAttachments}` image{(userData.CountAttachments == 1 ? "" : "s")}.";
 				}
 				else
 				{
