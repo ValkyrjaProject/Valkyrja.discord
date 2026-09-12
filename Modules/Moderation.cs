@@ -911,8 +911,8 @@ namespace Valkyrja.modules
 // !addWarning
 			newCommand = new Command("addNote");
 			newCommand.Type = CommandType.Standard;
-			newCommand.Description = "Adds a warning note to the database for a specific user.";
-			newCommand.ManPage = new ManPage("<UserIDs> <warning>", "`<UserIDs>` - User ID(s) or mention(s) to have a warning recorded.\n\n`<warning>` - A warning message to be recorded.");
+			newCommand.Description = "Adds a moderation note to the database for a specific user.";
+			newCommand.ManPage = new ManPage("<UserIDs> <note>", "`<UserIDs>` - User ID(s) or mention(s) to have a note recorded.\n\n`<note>` - A note message to be recorded.");
 			newCommand.RequiredPermissions = PermissionType.ServerOwner | PermissionType.Admin | PermissionType.Moderator | PermissionType.SubModerator;
 			newCommand.OnExecute += async e => {
 				if( string.IsNullOrEmpty(e.TrimmedMessage) )
