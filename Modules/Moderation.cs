@@ -938,14 +938,15 @@ namespace Valkyrja.modules
 					return;
 				}
 
-				StringBuilder warning = new StringBuilder();
+				bool sendMessage = e.Command.Id.ToLower() == "issuewarning";
+
+				StringBuilder warning = new StringBuilder(sendMessage ? "Warned: " : "Note: ");
 				for(int i = mentionedUsers.Count; i < e.MessageArgs.Length; i++)
 				{
 					warning.Append(e.MessageArgs[i]);
 					warning.Append(" ");
 				}
 
-				bool sendMessage = e.Command.Id.ToLower() == "issuewarning";
 				List<UserData> failedToPmUsers = new List<UserData>();
 				List<string> userNames = new List<string>();
 				List<guid> userIds = new List<guid>();
