@@ -753,7 +753,7 @@ namespace Valkyrja.modules
 			await LogUnban(server, user.GetUsernameSanitized(), user.Id, null);
 		}
 
-		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy)
+		private async Task LogWarning(Server server, List<string> userNames, List<guid> userIds, string warning, SocketGuildUser issuedBy, bool issuedDm)
 		{
 			try
 			{
@@ -761,16 +761,17 @@ namespace Valkyrja.modules
 				if( !server.Config.LogWarnings || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
+				string title = issuedDm ? "Moderation Note added" : "User warned";
 				Color color = new Color(server.Config.LogWarningColor);
 				Message msg = new Message(){
 					Channel = logChannel,
 					DesiredType = (server.Config.ModChannelEmbeds) ? MessageType.Embed : MessageType.String,
-					LogEmbed = GetLogEmbed(color, "", "User warned",
+					LogEmbed = GetLogEmbed(color, "", title,
 						"by: " + (issuedBy?.GetUsernameSanitized() ?? "<unknown>"),
 						userNames.ToNamesList() ?? "<unknown>", userIds.Select(id => id.ToString()).ToNamesList(),
 						DateTime.UtcNow,
 						"Warning", warning),
-					LogString = GetLogMessage("User warned ", (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
+					LogString = GetLogMessage(title, (issuedBy == null ? "by unknown" : "by " + issuedBy.GetUsername()),
 						userNames.ToNamesList() ?? "", userIds.Select(id => id.ToString()).ToNamesList(),
 						Utils.GetTimestamp(),
 						"Warning", warning)

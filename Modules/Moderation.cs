@@ -909,7 +909,7 @@ namespace Valkyrja.modules
 			commands.Add(newCommand);
 
 // !addWarning
-			newCommand = new Command("addWarning");
+			newCommand = new Command("addNote");
 			newCommand.Type = CommandType.Standard;
 			newCommand.Description = "Adds a warning note to the database for a specific user.";
 			newCommand.ManPage = new ManPage("<UserIDs> <warning>", "`<UserIDs>` - User ID(s) or mention(s) to have a warning recorded.\n\n`<warning>` - A warning message to be recorded.");
@@ -971,7 +971,7 @@ namespace Valkyrja.modules
 				}
 
 				if( this.Client.Events.LogWarning != null )
-					await this.Client.Events.LogWarning(e.Server, userNames, userIds, warning.ToString(), e.Message.Author as SocketGuildUser);
+					await this.Client.Events.LogWarning(e.Server, userNames, userIds, warning.ToString(), e.Message.Author as SocketGuildUser, sendMessage);
 
 				string response = "Done.\n" + infractions.ToString();
 				if( failedToPmUsers.Any() )
@@ -983,6 +983,7 @@ namespace Valkyrja.modules
 				await e.SendReplySafe(response);
 			};
 			commands.Add(newCommand);
+			commands.Add(newCommand.CreateAlias("addWarning"));
 
 			newCommand = newCommand.CreateCopy("issueWarning");
 			newCommand.Description = "Adds a warning note to the database, and also PMs it to the user.";
