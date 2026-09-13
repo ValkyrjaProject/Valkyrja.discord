@@ -761,7 +761,7 @@ namespace Valkyrja.modules
 				if( !server.Config.LogWarnings || (logChannel = server.Guild.GetTextChannel(server.Config.ModChannelId)) == null )
 					return;
 
-				string title = issuedDm ? "Moderation Note added" : "User warned";
+				string title = issuedDm ? "User warned" : "Moderation Note added";
 				Color color = new Color(server.Config.LogWarningColor);
 				Message msg = new Message(){
 					Channel = logChannel,
